@@ -7,6 +7,198 @@ const AppContext = createContext();
 
 const useApp = () => useContext(AppContext);
 
+// ===== サウンドシステム =====
+class SoundSystem {
+  constructor() {
+    this.audioContext = null;
+    this.enabled = true;
+  }
+
+  init() {
+    if (!this.audioContext) {
+      this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+  }
+
+  // ボタンクリック音（短いポップ音）
+  playClick() {
+    if (!this.enabled) return;
+    this.init();
+    const oscillator = this.audioContext.createOscillator();
+    const gainNode = this.audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(this.audioContext.destination);
+    
+    oscillator.frequency.value = 800;
+    oscillator.type = 'sine';
+    
+    gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.1);
+    
+    oscillator.start(this.audioContext.currentTime);
+    oscillator.stop(this.audioContext.currentTime + 0.1);
+  }
+
+  // 成功音（上昇音階）
+  playSuccess() {
+    if (!this.enabled) return;
+    this.init();
+    const oscillator = this.audioContext.createOscillator();
+    const gainNode = this.audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(this.audioContext.destination);
+    
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(523, this.audioContext.currentTime); // C5
+    oscillator.frequency.setValueAtTime(659, this.audioContext.currentTime + 0.1); // E5
+    oscillator.frequency.setValueAtTime(784, this.audioContext.currentTime + 0.2); // G5
+    
+    gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.4);
+    
+    oscillator.start(this.audioContext.currentTime);
+    oscillator.stop(this.audioContext.currentTime + 0.4);
+  }
+
+  // エラー音（下降音）
+  playError() {
+    if (!this.enabled) return;
+    this.init();
+    const oscillator = this.audioContext.createOscillator();
+    const gainNode = this.audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(this.audioContext.destination);
+    
+    oscillator.type = 'sawtooth';
+    oscillator.frequency.setValueAtTime(400, this.audioContext.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(200, this.audioContext.currentTime + 0.3);
+    
+    gainNode.gain.setValueAtTime(0.2, this.audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
+    
+    oscillator.start(this.audioContext.currentTime);
+    oscillator.stop(this.audioContext.currentTime + 0.3);
+  }
+
+  // レベルアップ音（祝福の音階）
+  playLevelUp() {
+    if (!this.enabled) return;
+    this.init();
+    const notes = [523, 659, 784, 1047]; // C5-E5-G5-C6
+    notes.forEach((freq, index) => {
+      const oscillator = this.audioContext.createOscillator();
+      const gainNode = this.audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(this.audioContext.destination);
+      
+      oscillator.frequency.value = freq;
+      oscillator.type = 'sine';
+      
+      const startTime = this.audioContext.currentTime + index * 0.15;
+      gainNode.gain.setValueAtTime(0.3, startTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
+      
+      oscillator.start(startTime);
+      oscillator.stop(startTime + 0.3);
+    });
+  }
+
+  // コイン獲得音（キラキラ音）
+  playCoin() {
+    if (!this.enabled) return;
+    this.init();
+    const oscillator = this.audioContext.createOscillator();
+    const gainNode = this.audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(this.audioContext.destination);
+    
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(1000, this.audioContext.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(2000, this.audioContext.currentTime + 0.1);
+    
+    gainNode.gain.setValueAtTime(0.2, this.audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.2);
+    
+    oscillator.start(this.audioContext.currentTime);
+    oscillator.stop(this.audioContext.currentTime + 0.2);
+  }
+
+  // 通知音（ポロン）
+  playNotification() {
+    if (!this.enabled) return;
+    this.init();
+    const oscillator = this.audioContext.createOscillator();
+    const gainNode = this.audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(this.audioContext.destination);
+    
+    oscillator.frequency.value = 880;
+    oscillator.type = 'sine';
+    
+    gainNode.gain.setValueAtTime(0.2, this.audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
+    
+    oscillator.start(this.audioContext.currentTime);
+    oscillator.stop(this.audioContext.currentTime + 0.3);
+  }
+
+  // 購入音（レジの音）
+  playPurchase() {
+    if (!this.enabled) return;
+    this.init();
+    // チーン！という音
+    const oscillator = this.audioContext.createOscillator();
+    const gainNode = this.audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(this.audioContext.destination);
+    
+    oscillator.type = 'sine';
+    oscillator.frequency.value = 1200;
+    
+    gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.5);
+    
+    oscillator.start(this.audioContext.currentTime);
+    oscillator.stop(this.audioContext.currentTime + 0.5);
+  }
+
+  // ストリーク音（炎の音）
+  playStreak() {
+    if (!this.enabled) return;
+    this.init();
+    const oscillator = this.audioContext.createOscillator();
+    const gainNode = this.audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(this.audioContext.destination);
+    
+    oscillator.type = 'sawtooth';
+    oscillator.frequency.setValueAtTime(300, this.audioContext.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(600, this.audioContext.currentTime + 0.2);
+    
+    gainNode.gain.setValueAtTime(0.2, this.audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
+    
+    oscillator.start(this.audioContext.currentTime);
+    oscillator.stop(this.audioContext.currentTime + 0.3);
+  }
+
+  toggle() {
+    this.enabled = !this.enabled;
+    return this.enabled;
+  }
+}
+
+// グローバルサウンドインスタンス
+const soundSystem = new SoundSystem();
+
 // ===== ユーティリティ関数 =====
 
 // 数値フォーマット
@@ -22,6 +214,8 @@ const formatCurrency = (value) => {
 const createConfetti = () => {
   const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
   const confettiCount = 50;
+  
+  soundSystem.playSuccess(); // 成功音を再生
   
   for (let i = 0; i < confettiCount; i++) {
     const confetti = document.createElement('div');
@@ -125,11 +319,18 @@ const Button = ({ children, onClick, variant = 'primary', disabled = false, clas
     outline: 'border-2 border-white text-white hover:bg-white hover:text-purple-600'
   };
 
+  const handleClick = (e) => {
+    soundSystem.playClick(); // クリック音を再生
+    if (onClick) {
+      onClick(e);
+    }
+  };
+
   return (
     <motion.button
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
-      onClick={onClick}
+      onClick={handleClick}
       disabled={disabled}
       className={`${variants[variant]} px-6 py-3 rounded-xl font-bold text-lg shadow-lg disabled:opacity-50 disabled:cursor-not-allowed btn-bounce ${className}`}
     >
@@ -162,14 +363,17 @@ const AuthScreen = ({ onLogin }) => {
       const data = await response.json();
 
       if (response.ok) {
+        soundSystem.playSuccess(); // 成功音を再生
         if (!isLogin) {
           createConfetti();
         }
         onLogin(data.user, data.asset);
       } else {
+        soundSystem.playError(); // エラー音を再生
         setError(data.error || 'エラーが発生しました');
       }
     } catch (err) {
+      soundSystem.playError(); // エラー音を再生
       setError('ネットワークエラーが発生しました');
     } finally {
       setLoading(false);
@@ -270,6 +474,13 @@ const HomeScreen = ({ user, asset, onNavigate }) => {
   const xpPerLevel = 1000;
   const currentLevelXp = user.xp % xpPerLevel;
   const xpProgress = (currentLevelXp / xpPerLevel) * 100;
+
+  useEffect(() => {
+    // ストリーク音を再生（画面表示時に1回だけ）
+    if (user.streak_count > 0) {
+      soundSystem.playStreak();
+    }
+  }, []);
 
   return (
     <div className="min-h-screen p-6">
@@ -458,7 +669,10 @@ const MarketScreen = ({ user, onNavigate }) => {
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: index * 0.05 }}
               whileHover={{ scale: 1.02 }}
-              onClick={() => setSelectedStock(market)}
+              onClick={() => {
+                soundSystem.playNotification();
+                setSelectedStock(market);
+              }}
               className="bg-white rounded-2xl p-6 card-shadow cursor-pointer hover:shadow-2xl transition-shadow"
             >
               <div className="flex justify-between items-center">
@@ -539,10 +753,12 @@ const TradeModal = ({ stock, userId, onClose, onSuccess }) => {
       const data = await response.json();
 
       if (response.ok) {
+        soundSystem.playPurchase(); // 購入音を再生
         createConfetti();
         alert(data.message);
         onSuccess();
       } else {
+        soundSystem.playError(); // エラー音を再生
         alert(data.error || '購入に失敗しました');
       }
     } catch (err) {
@@ -680,12 +896,16 @@ const QuizScreen = ({ user, onNavigate, onXpEarned }) => {
       setResult(data);
 
       if (data.correct) {
+        soundSystem.playCoin(); // コイン獲得音を再生
         createConfetti();
         if (onXpEarned) {
           onXpEarned(data.xpReward);
         }
+      } else {
+        soundSystem.playError(); // エラー音を再生
       }
     } catch (err) {
+      soundSystem.playError(); // エラー音を再生
       alert('エラーが発生しました');
     }
   };
@@ -825,7 +1045,10 @@ const QuizScreen = ({ user, onNavigate, onXpEarned }) => {
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: index * 0.1 }}
               whileHover={{ scale: 1.02 }}
-              onClick={() => setCurrentQuiz(quiz)}
+              onClick={() => {
+                soundSystem.playNotification();
+                setCurrentQuiz(quiz);
+              }}
               className="bg-white rounded-2xl p-6 card-shadow cursor-pointer hover:shadow-2xl transition-shadow"
             >
               <div className="flex items-center justify-between">
@@ -1088,6 +1311,7 @@ const App = () => {
   const [asset, setAsset] = useState(null);
   const [buddyMood, setBuddyMood] = useState('happy');
   const [buddyMessage, setBuddyMessage] = useState('');
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
   const handleLogin = (userData, assetData) => {
     setUser(userData);
@@ -1095,18 +1319,43 @@ const App = () => {
     setCurrentScreen('home');
     setBuddyMood('excited');
     setBuddyMessage(`ようこそ、${userData.username}さん！`);
+    soundSystem.playNotification(); // 通知音を再生
     setTimeout(() => setBuddyMessage(''), 3000);
   };
 
   const handleNavigate = (screen) => {
+    soundSystem.playClick(); // ナビゲーション音を再生
     setCurrentScreen(screen);
   };
 
   const handleXpEarned = (xp) => {
+    const oldLevel = Math.floor(user.xp / 1000) + 1;
+    const newXp = user.xp + xp;
+    const newLevel = Math.floor(newXp / 1000) + 1;
+    
     setUser(prev => ({
       ...prev,
-      xp: prev.xp + xp
+      xp: newXp
     }));
+
+    // レベルアップチェック
+    if (newLevel > oldLevel) {
+      soundSystem.playLevelUp();
+      setBuddyMood('celebrate');
+      setBuddyMessage(`🎉 レベルアップ！レベル${newLevel}になりました！`);
+      setTimeout(() => {
+        setBuddyMood('happy');
+        setBuddyMessage('');
+      }, 3000);
+    }
+  };
+
+  const toggleSound = () => {
+    const enabled = soundSystem.toggle();
+    setSoundEnabled(enabled);
+    if (enabled) {
+      soundSystem.playClick();
+    }
   };
 
   return (
@@ -1182,6 +1431,22 @@ const App = () => {
       {/* 相棒キャラクター */}
       {user && (
         <BuddyCharacter mood={buddyMood} message={buddyMessage} />
+      )}
+
+      {/* 音声トグルボタン */}
+      {user && (
+        <motion.button
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={toggleSound}
+          className="fixed bottom-4 left-4 z-50 bg-white rounded-full p-4 card-shadow cursor-pointer"
+        >
+          <div className="text-3xl">
+            {soundEnabled ? '🔊' : '🔇'}
+          </div>
+        </motion.button>
       )}
     </AppContext.Provider>
   );
