@@ -224,6 +224,63 @@ app.get('/api/user/:userId', async (c) => {
   }
 })
 
+// 総資産計算（現金 + 株式評価額）
+app.get('/api/user/:userId/total-assets', async (c) => {
+  try {
+    const userId = c.req.param('userId')
+    const db = c.env.DB
+
+    // 現金残高取得
+    const asset = await db.prepare('SELECT cash_balance FROM assets WHERE user_id = ?')
+      .bind(userId)
+      .first() as { cash_balance: number } | null
+
+    if (!asset) {
+      return c.json({ error: 'User not found' }, 404)
+    }
+
+    // 保有株式の評価額計算
+    const holdings = await db.prepare(`
+      SELECT h.stock_symbol, h.quantity, h.average_price, m.current_price
+      FROM holdings h
+      JOIN market_data m ON h.stock_symbol = m.symbol
+      WHERE h.user_id = ?
+    `).bind(userId).all()
+
+    let stockValue = 0
+    const stockDetails = []
+
+    for (const holding of holdings.results as any[]) {
+      const value = holding.current_price * holding.quantity
+      stockValue += value
+      stockDetails.push({
+        symbol: holding.stock_symbol,
+        quantity: holding.quantity,
+        average_price: holding.average_price,
+        current_price: holding.current_price,
+        current_value: value,
+        profit: (holding.current_price - holding.average_price) * holding.quantity
+      })
+    }
+
+    const totalAssets = asset.cash_balance + stockValue
+
+    // 総資産を更新
+    await db.prepare('UPDATE assets SET total_portfolio_value = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?')
+      .bind(totalAssets, userId)
+      .run()
+
+    return c.json({
+      totalAssets: totalAssets,
+      cash: asset.cash_balance,
+      stockValue: stockValue
+    })
+  } catch (error) {
+    console.error('Calculate total assets error:', error)
+    return c.json({ error: 'Internal server error' }, 500)
+  }
+})
+
 // XP追加（クイズ報酬など）
 app.post('/api/user/:userId/xp', async (c) => {
   try {
@@ -256,6 +313,54 @@ app.post('/api/user/:userId/xp', async (c) => {
     })
   } catch (error) {
     console.error('Add XP error:', error)
+    return c.json({ error: 'Internal server error' }, 500)
+  }
+})
+
+// ===== ユーザー設定API =====
+
+// ユーザー設定取得
+app.get('/api/user/:userId/settings', async (c) => {
+  try {
+    const userId = c.req.param('userId')
+    const db = c.env.DB
+
+    let settings = await db.prepare('SELECT * FROM user_settings WHERE user_id = ?')
+      .bind(userId)
+      .first()
+
+    // 設定が存在しない場合はデフォルト値を作成
+    if (!settings) {
+      await db.prepare(
+        'INSERT INTO user_settings (user_id, market_update_interval, auto_update_enabled) VALUES (?, 30, 1)'
+      ).bind(userId).run()
+
+      settings = await db.prepare('SELECT * FROM user_settings WHERE user_id = ?')
+        .bind(userId)
+        .first()
+    }
+
+    return c.json(settings)
+  } catch (error) {
+    console.error('Get user settings error:', error)
+    return c.json({ error: 'Internal server error' }, 500)
+  }
+})
+
+// ユーザー設定更新
+app.put('/api/user/:userId/settings', async (c) => {
+  try {
+    const userId = c.req.param('userId')
+    const { market_update_interval, auto_update_enabled } = await c.req.json()
+    const db = c.env.DB
+
+    await db.prepare(
+      'UPDATE user_settings SET market_update_interval = ?, auto_update_enabled = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?'
+    ).bind(market_update_interval, auto_update_enabled ? 1 : 0, userId).run()
+
+    return c.json({ success: true })
+  } catch (error) {
+    console.error('Update user settings error:', error)
     return c.json({ error: 'Internal server error' }, 500)
   }
 })

@@ -474,13 +474,30 @@ const HomeScreen = ({ user, asset, onNavigate }) => {
   const xpPerLevel = 1000;
   const currentLevelXp = user.xp % xpPerLevel;
   const xpProgress = (currentLevelXp / xpPerLevel) * 100;
+  const [totalAssets, setTotalAssets] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // ストリーク音を再生（画面表示時に1回だけ）
     if (user.streak_count > 0) {
       soundSystem.playStreak();
     }
+    
+    // 総資産を取得
+    fetchTotalAssets();
   }, []);
+
+  const fetchTotalAssets = async () => {
+    try {
+      const response = await fetch(`/api/user/${user.id}/total-assets`);
+      const data = await response.json();
+      setTotalAssets(data);
+    } catch (err) {
+      console.error('Failed to fetch total assets:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen p-6">
@@ -538,12 +555,36 @@ const HomeScreen = ({ user, asset, onNavigate }) => {
           transition={{ delay: 0.2 }}
           className="bg-gradient-to-r from-green-400 to-green-600 rounded-3xl p-8 card-shadow mb-6 text-white"
         >
-          <div className="text-center">
-            <div className="text-xl font-bold mb-2">💰 現金残高</div>
-            <div className="text-5xl font-bold">
-              <CountUp value={asset?.cash_balance || 0} duration={1.5} />
+          {loading ? (
+            <div className="text-center">
+              <div className="spinner mx-auto mb-2"></div>
+              <div className="text-xl">資産を計算中...</div>
             </div>
-          </div>
+          ) : (
+            <div>
+              <div className="text-center mb-6">
+                <div className="text-xl font-bold mb-2">💰 総資産</div>
+                <div className="text-5xl font-bold">
+                  <CountUp value={totalAssets?.totalAssets || 0} duration={1.5} />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-green-300">
+                <div className="text-center">
+                  <div className="text-sm opacity-90 mb-1">現金</div>
+                  <div className="text-2xl font-bold">
+                    <CountUp value={totalAssets?.cash || 0} duration={1.2} />
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-sm opacity-90 mb-1">株式評価額</div>
+                  <div className="text-2xl font-bold">
+                    <CountUp value={totalAssets?.stockValue || 0} duration={1.2} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </motion.div>
 
         {/* アクションボタン */}
@@ -610,6 +651,24 @@ const HomeScreen = ({ user, asset, onNavigate }) => {
             </button>
           </motion.div>
         </div>
+
+        {/* 設定ボタン */}
+        <motion.div
+          initial={{ y: 50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="mt-4"
+        >
+          <button
+            onClick={() => onNavigate('settings')}
+            className="w-full bg-white rounded-2xl p-6 card-shadow hover:shadow-2xl transition-shadow"
+          >
+            <div className="text-4xl mb-2">⚙️</div>
+            <div className="text-xl font-bold text-gray-800">設定</div>
+            <div className="text-sm text-gray-600">更新間隔などを調整</div>
+          </button>
+        </motion.div>
+      </div>
       </div>
     </div>
   );
@@ -620,16 +679,31 @@ const MarketScreen = ({ user, onNavigate }) => {
   const [markets, setMarkets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedStock, setSelectedStock] = useState(null);
+  const [updateInterval, setUpdateInterval] = useState(30000); // デフォルト30秒
 
   useEffect(() => {
     fetchMarketData();
-    // 30秒ごとに株価を自動更新
+    fetchUserSettings();
+  }, []);
+
+  useEffect(() => {
+    // 更新間隔が変更されたら、インターバルを再設定
     const interval = setInterval(() => {
       updateMarketPrices();
-    }, 30000);
+    }, updateInterval);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [updateInterval]);
+
+  const fetchUserSettings = async () => {
+    try {
+      const response = await fetch(`/api/user/${user.id}/settings`);
+      const data = await response.json();
+      setUpdateInterval((data.market_update_interval || 30) * 1000); // 秒をミリ秒に変換
+    } catch (err) {
+      console.error('Failed to fetch user settings:', err);
+    }
+  };
 
   const fetchMarketData = async () => {
     try {
@@ -1277,6 +1351,194 @@ const PortfolioScreen = ({ user, onNavigate }) => {
   );
 };
 
+// ===== 設定画面 =====
+const SettingsScreen = ({ user, onNavigate }) => {
+  const [settings, setSettings] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [updateInterval, setUpdateInterval] = useState(30);
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const response = await fetch(`/api/user/${user.id}/settings`);
+      const data = await response.json();
+      setSettings(data);
+      setUpdateInterval(data.market_update_interval || 30);
+    } catch (err) {
+      console.error('Failed to fetch settings:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    soundSystem.playClick();
+    try {
+      const response = await fetch(`/api/user/${user.id}/settings`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          market_update_interval: updateInterval
+        })
+      });
+      
+      if (response.ok) {
+        soundSystem.playSuccess();
+        createConfetti();
+        alert('✅ 設定を保存しました！');
+      } else {
+        soundSystem.playError();
+        alert('❌ 設定の保存に失敗しました');
+      }
+    } catch (err) {
+      console.error('Failed to save settings:', err);
+      soundSystem.playError();
+      alert('❌ エラーが発生しました');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="spinner"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen p-6">
+      <div className="max-w-4xl mx-auto">
+        <motion.div
+          initial={{ y: -50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="flex justify-between items-center mb-6"
+        >
+          <h1 className="text-4xl font-bold text-gray-800">
+            ⚙️ 設定
+          </h1>
+          <button
+            onClick={() => {
+              soundSystem.playClick();
+              onNavigate('home');
+            }}
+            className="px-6 py-3 bg-gray-500 text-white rounded-xl font-bold hover:bg-gray-600 transition-colors"
+          >
+            ← 戻る
+          </button>
+        </motion.div>
+
+        {/* マーケット更新設定 */}
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="bg-white rounded-3xl p-8 card-shadow mb-6"
+        >
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">
+            📈 マーケット更新設定
+          </h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-gray-700 font-bold mb-2">
+                株価の自動更新間隔（秒）
+              </label>
+              <div className="flex items-center gap-4">
+                <input
+                  type="range"
+                  min="10"
+                  max="120"
+                  step="10"
+                  value={updateInterval}
+                  onChange={(e) => setUpdateInterval(parseInt(e.target.value))}
+                  className="flex-1 h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                  style={{
+                    background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((updateInterval - 10) / 110) * 100}%, #e5e7eb ${((updateInterval - 10) / 110) * 100}%, #e5e7eb 100%)`
+                  }}
+                />
+                <div className="w-20 text-center">
+                  <span className="text-3xl font-bold text-blue-600">{updateInterval}</span>
+                  <span className="text-gray-600 ml-1">秒</span>
+                </div>
+              </div>
+              <div className="mt-2 text-sm text-gray-600">
+                {updateInterval <= 20 && '⚡ 超高速更新 - リアルタイムに近い体験'}
+                {updateInterval > 20 && updateInterval <= 40 && '🚀 高速更新 - アクティブな取引に最適'}
+                {updateInterval > 40 && updateInterval <= 80 && '⏱️ 標準更新 - バランスの取れた設定'}
+                {updateInterval > 80 && '🐢 低速更新 - じっくり考えたい方向け'}
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* 資産更新設定 */}
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="bg-white rounded-3xl p-8 card-shadow mb-6"
+        >
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">
+            💰 資産評価設定
+          </h2>
+          <div className="space-y-4">
+            <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl p-6">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-3xl">📊</span>
+                <div>
+                  <div className="font-bold text-gray-800">総資産の計算</div>
+                  <div className="text-sm text-gray-600">リアルタイムで自動計算されます</div>
+                </div>
+              </div>
+              <div className="text-gray-700 text-sm leading-relaxed">
+                総資産 = 現金残高 + 株式評価額<br/>
+                株式評価額 = 各銘柄の（保有数量 × 現在価格）の合計<br/>
+                <span className="text-blue-600 font-bold">※ 株価の変動に応じて自動的に更新されます</span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* 保存ボタン */}
+        <motion.div
+          initial={{ y: 50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-4 rounded-2xl font-bold text-xl hover:shadow-2xl transition-shadow disabled:opacity-50"
+          >
+            {saving ? '保存中...' : '💾 設定を保存'}
+          </button>
+        </motion.div>
+
+        {/* 設定情報 */}
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="mt-6 bg-purple-50 rounded-2xl p-6"
+        >
+          <h3 className="font-bold text-gray-800 mb-2">💡 ヒント</h3>
+          <ul className="text-sm text-gray-700 space-y-1">
+            <li>• 更新間隔を短くすると、より活発な市場体験ができます</li>
+            <li>• 総資産は株価の変動に応じて自動的に再計算されます</li>
+            <li>• 設定はいつでも変更可能です</li>
+          </ul>
+        </motion.div>
+      </div>
+    </div>
+  );
+};
+
 // ===== 取引履歴画面 =====
 const HistoryScreen = ({ user, onNavigate }) => {
   const [transactions, setTransactions] = useState([]);
@@ -1504,6 +1766,17 @@ const App = () => {
             exit={{ opacity: 0, x: -100 }}
           >
             <PortfolioScreen user={user} onNavigate={handleNavigate} />
+          </motion.div>
+        )}
+
+        {currentScreen === 'settings' && user && (
+          <motion.div
+            key="settings"
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -100 }}
+          >
+            <SettingsScreen user={user} onNavigate={handleNavigate} />
           </motion.div>
         )}
 
