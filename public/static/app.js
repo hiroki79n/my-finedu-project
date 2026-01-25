@@ -623,6 +623,12 @@ const MarketScreen = ({ user, onNavigate }) => {
 
   useEffect(() => {
     fetchMarketData();
+    // 30秒ごとに株価を自動更新
+    const interval = setInterval(() => {
+      updateMarketPrices();
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const fetchMarketData = async () => {
@@ -635,6 +641,34 @@ const MarketScreen = ({ user, onNavigate }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const updateMarketPrices = async () => {
+    try {
+      await fetch('/api/market/tick', { method: 'POST' });
+      await fetchMarketData();
+    } catch (err) {
+      console.error('Failed to update market prices:', err);
+    }
+  };
+
+  // 企業アイコンマッピング（Lucide Reactの絵文字で代用）
+  const getCompanyIcon = (symbol, sector) => {
+    const iconMap = {
+      '7974': '🎮', // 任天堂 - ゲーム
+      '7203': '🚗', // トヨタ - 自動車
+      '9983': '👕', // ファーストリテイリング - アパレル
+      '4704': '🛡️', // トレンドマイクロ - セキュリティ
+      '4689': '💬', // LINEヤフー - 通信
+      '4755': '🛒', // 楽天 - EC
+      '6758': '🎵', // ソニー - エンタメ
+      '9984': '📱', // ソフトバンク - 通信
+      '4502': '💊', // 武田薬品 - 医薬品
+      '2914': '🍃', // JT - 食品
+      '4568': '⚕️', // 第一三共 - 医薬品
+      '6098': '💼', // リクルート - 人材
+    };
+    return iconMap[symbol] || '🏢';
   };
 
   if (loading) {
@@ -676,18 +710,29 @@ const MarketScreen = ({ user, onNavigate }) => {
               className="bg-white rounded-2xl p-6 card-shadow cursor-pointer hover:shadow-2xl transition-shadow"
             >
               <div className="flex justify-between items-center">
-                <div>
-                  <div className="text-2xl font-bold text-gray-800">{market.symbol}</div>
-                  <div className="text-sm text-gray-600">{market.company_name}</div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full">
-                      {market.sector}
-                    </span>
+                <div className="flex items-center gap-4">
+                  {/* 企業アイコン */}
+                  <div className="text-5xl">
+                    {getCompanyIcon(market.symbol, market.sector)}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <div className="text-2xl font-bold text-gray-800">{market.company_name}</div>
+                      <div className="text-sm text-gray-500">({market.symbol})</div>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full">
+                        {market.sector}
+                      </span>
+                    </div>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-3xl font-bold text-green-600">
+                  <div className="text-3xl font-bold text-gray-800">
                     {formatCurrency(market.current_price)}
+                  </div>
+                  <div className="text-sm text-gray-500 mt-1">
+                    リアルタイム株価
                   </div>
                 </div>
               </div>
@@ -722,6 +767,16 @@ const TradeModal = ({ stock, userId, onClose, onSuccess }) => {
   const longPressTimer = useRef(null);
 
   const totalCost = stock.current_price * quantity;
+
+  // 企業アイコンマッピング
+  const getCompanyIcon = (symbol) => {
+    const iconMap = {
+      '7974': '🎮', '7203': '🚗', '9983': '👕', '4704': '🛡️',
+      '4689': '💬', '4755': '🛒', '6758': '🎵', '9984': '📱',
+      '4502': '💊', '2914': '🍃', '4568': '⚕️', '6098': '💼',
+    };
+    return iconMap[symbol] || '🏢';
+  };
 
   const handleMouseDown = () => {
     longPressTimer.current = setTimeout(() => {
@@ -783,9 +838,17 @@ const TradeModal = ({ stock, userId, onClose, onSuccess }) => {
         className="bg-white rounded-3xl p-8 max-w-md w-full card-shadow"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-3xl font-bold text-gray-800 mb-4">
-          {stock.company_name}
-        </h2>
+        <div className="flex items-center gap-4 mb-6">
+          <div className="text-6xl">
+            {getCompanyIcon(stock.symbol)}
+          </div>
+          <div>
+            <h2 className="text-3xl font-bold text-gray-800">
+              {stock.company_name}
+            </h2>
+            <div className="text-sm text-gray-500">証券コード: {stock.symbol}</div>
+          </div>
+        </div>
 
         <div className="bg-purple-100 rounded-xl p-4 mb-6">
           <div className="text-sm text-purple-700 mb-1">現在価格</div>
@@ -1089,6 +1152,16 @@ const PortfolioScreen = ({ user, onNavigate }) => {
     }
   };
 
+  // 企業アイコンマッピング
+  const getCompanyIcon = (symbol) => {
+    const iconMap = {
+      '7974': '🎮', '7203': '🚗', '9983': '👕', '4704': '🛡️',
+      '4689': '💬', '4755': '🛒', '6758': '🎵', '9984': '📱',
+      '4502': '💊', '2914': '🍃', '4568': '⚕️', '6098': '💼',
+    };
+    return iconMap[symbol] || '🏢';
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -1145,17 +1218,22 @@ const PortfolioScreen = ({ user, onNavigate }) => {
                   className="bg-white rounded-2xl p-6 card-shadow"
                 >
                   <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <div className="text-2xl font-bold text-gray-800">
-                        {holding.stock_symbol}
+                    <div className="flex items-center gap-4">
+                      <div className="text-5xl">
+                        {getCompanyIcon(holding.stock_symbol)}
                       </div>
-                      <div className="text-sm text-gray-600">
-                        {holding.company_name}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full">
-                          {holding.sector}
-                        </span>
+                      <div>
+                        <div className="text-2xl font-bold text-gray-800">
+                          {holding.company_name}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          証券コード: {holding.stock_symbol}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full">
+                            {holding.sector}
+                          </span>
+                        </div>
                       </div>
                     </div>
                     <div className="text-right">
@@ -1220,6 +1298,16 @@ const HistoryScreen = ({ user, onNavigate }) => {
     }
   };
 
+  // 企業アイコンマッピング
+  const getCompanyIcon = (symbol) => {
+    const iconMap = {
+      '7974': '🎮', '7203': '🚗', '9983': '👕', '4704': '🛡️',
+      '4689': '💬', '4755': '🛒', '6758': '🎵', '9984': '📱',
+      '4502': '💊', '2914': '🍃', '4568': '⚕️', '6098': '💼',
+    };
+    return iconMap[symbol] || '🏢';
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -1268,15 +1356,18 @@ const HistoryScreen = ({ user, onNavigate }) => {
               >
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-4">
-                    <div className={`text-4xl ${transaction.transaction_type === 'buy' ? 'text-green-500' : 'text-rose-500'}`}>
+                    <div className="text-4xl">
+                      {getCompanyIcon(transaction.stock_symbol)}
+                    </div>
+                    <div className={`text-3xl ${transaction.transaction_type === 'buy' ? 'text-green-500' : 'text-rose-500'}`}>
                       {transaction.transaction_type === 'buy' ? '📈' : '📉'}
                     </div>
                     <div>
                       <div className="text-xl font-bold text-gray-800">
-                        {transaction.stock_symbol}
-                      </div>
-                      <div className="text-sm text-gray-600">
                         {transaction.company_name}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        証券コード: {transaction.stock_symbol}
                       </div>
                       <div className="text-xs text-gray-500 mt-1">
                         {new Date(transaction.created_at).toLocaleString('ja-JP')}
