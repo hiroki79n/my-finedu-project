@@ -20,7 +20,7 @@ class SoundSystem {
     }
   }
 
-  // ボタンクリック音（短いポップ音）
+  // ボタンクリック音（剣を振る音）
   playClick() {
     if (!this.enabled) return;
     this.init();
@@ -30,39 +30,48 @@ class SoundSystem {
     oscillator.connect(gainNode);
     gainNode.connect(this.audioContext.destination);
     
-    oscillator.frequency.value = 800;
-    oscillator.type = 'sine';
+    oscillator.frequency.value = 600;
+    oscillator.type = 'square';
+    oscillator.frequency.exponentialRampToValueAtTime(200, this.audioContext.currentTime + 0.05);
     
-    gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.1);
+    gainNode.gain.setValueAtTime(0.15, this.audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.08);
     
     oscillator.start(this.audioContext.currentTime);
-    oscillator.stop(this.audioContext.currentTime + 0.1);
+    oscillator.stop(this.audioContext.currentTime + 0.08);
   }
 
-  // 成功音（上昇音階）
+  // 成功音（勝利のファンファーレ）
   playSuccess() {
     if (!this.enabled) return;
     this.init();
-    const oscillator = this.audioContext.createOscillator();
-    const gainNode = this.audioContext.createGain();
+    const notes = [
+      { freq: 523, time: 0, duration: 0.15 },      // C5
+      { freq: 659, time: 0.15, duration: 0.15 },   // E5
+      { freq: 784, time: 0.3, duration: 0.15 },    // G5
+      { freq: 1047, time: 0.45, duration: 0.3 }    // C6
+    ];
     
-    oscillator.connect(gainNode);
-    gainNode.connect(this.audioContext.destination);
-    
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(523, this.audioContext.currentTime); // C5
-    oscillator.frequency.setValueAtTime(659, this.audioContext.currentTime + 0.1); // E5
-    oscillator.frequency.setValueAtTime(784, this.audioContext.currentTime + 0.2); // G5
-    
-    gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.4);
-    
-    oscillator.start(this.audioContext.currentTime);
-    oscillator.stop(this.audioContext.currentTime + 0.4);
+    notes.forEach(note => {
+      const oscillator = this.audioContext.createOscillator();
+      const gainNode = this.audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(this.audioContext.destination);
+      
+      oscillator.type = 'triangle';
+      oscillator.frequency.value = note.freq;
+      
+      const startTime = this.audioContext.currentTime + note.time;
+      gainNode.gain.setValueAtTime(0.25, startTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + note.duration);
+      
+      oscillator.start(startTime);
+      oscillator.stop(startTime + note.duration);
+    });
   }
 
-  // エラー音（下降音）
+  // エラー音（ダメージ音）
   playError() {
     if (!this.enabled) return;
     this.init();
@@ -73,33 +82,41 @@ class SoundSystem {
     gainNode.connect(this.audioContext.destination);
     
     oscillator.type = 'sawtooth';
-    oscillator.frequency.setValueAtTime(400, this.audioContext.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(200, this.audioContext.currentTime + 0.3);
+    oscillator.frequency.setValueAtTime(220, this.audioContext.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(110, this.audioContext.currentTime + 0.2);
     
-    gainNode.gain.setValueAtTime(0.2, this.audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
+    gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.25);
     
     oscillator.start(this.audioContext.currentTime);
-    oscillator.stop(this.audioContext.currentTime + 0.3);
+    oscillator.stop(this.audioContext.currentTime + 0.25);
   }
 
-  // レベルアップ音（祝福の音階）
+  // レベルアップ音（壮大なファンファーレ）
   playLevelUp() {
     if (!this.enabled) return;
     this.init();
-    const notes = [523, 659, 784, 1047]; // C5-E5-G5-C6
-    notes.forEach((freq, index) => {
+    const melody = [
+      { freq: 392, time: 0 },      // G4
+      { freq: 523, time: 0.1 },    // C5
+      { freq: 659, time: 0.2 },    // E5
+      { freq: 784, time: 0.3 },    // G5
+      { freq: 1047, time: 0.4 },   // C6
+      { freq: 1319, time: 0.5 }    // E6
+    ];
+    
+    melody.forEach((note, index) => {
       const oscillator = this.audioContext.createOscillator();
       const gainNode = this.audioContext.createGain();
       
       oscillator.connect(gainNode);
       gainNode.connect(this.audioContext.destination);
       
-      oscillator.frequency.value = freq;
-      oscillator.type = 'sine';
+      oscillator.frequency.value = note.freq;
+      oscillator.type = 'triangle';
       
-      const startTime = this.audioContext.currentTime + index * 0.15;
-      gainNode.gain.setValueAtTime(0.3, startTime);
+      const startTime = this.audioContext.currentTime + note.time;
+      gainNode.gain.setValueAtTime(0.2, startTime);
       gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3);
       
       oscillator.start(startTime);
@@ -107,28 +124,32 @@ class SoundSystem {
     });
   }
 
-  // コイン獲得音（キラキラ音）
+  // コイン獲得音（宝箱を開ける音）
   playCoin() {
     if (!this.enabled) return;
     this.init();
-    const oscillator = this.audioContext.createOscillator();
-    const gainNode = this.audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(this.audioContext.destination);
-    
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(1000, this.audioContext.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(2000, this.audioContext.currentTime + 0.1);
-    
-    gainNode.gain.setValueAtTime(0.2, this.audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.2);
-    
-    oscillator.start(this.audioContext.currentTime);
-    oscillator.stop(this.audioContext.currentTime + 0.2);
+    // キラキラ音のシーケンス
+    const notes = [1000, 1200, 1500, 2000];
+    notes.forEach((freq, index) => {
+      const oscillator = this.audioContext.createOscillator();
+      const gainNode = this.audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(this.audioContext.destination);
+      
+      oscillator.type = 'sine';
+      oscillator.frequency.value = freq;
+      
+      const startTime = this.audioContext.currentTime + index * 0.05;
+      gainNode.gain.setValueAtTime(0.15, startTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.15);
+      
+      oscillator.start(startTime);
+      oscillator.stop(startTime + 0.15);
+    });
   }
 
-  // 通知音（ポロン）
+  // 通知音（クエスト発見音）
   playNotification() {
     if (!this.enabled) return;
     this.init();
@@ -138,41 +159,47 @@ class SoundSystem {
     oscillator.connect(gainNode);
     gainNode.connect(this.audioContext.destination);
     
-    oscillator.frequency.value = 880;
-    oscillator.type = 'sine';
+    oscillator.frequency.value = 800;
+    oscillator.type = 'triangle';
+    oscillator.frequency.exponentialRampToValueAtTime(1200, this.audioContext.currentTime + 0.1);
     
     gainNode.gain.setValueAtTime(0.2, this.audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.25);
     
     oscillator.start(this.audioContext.currentTime);
-    oscillator.stop(this.audioContext.currentTime + 0.3);
+    oscillator.stop(this.audioContext.currentTime + 0.25);
   }
 
-  // 購入音（レジの音）
+  // 購入音（アイテムゲット音）
   playPurchase() {
     if (!this.enabled) return;
     this.init();
-    // チーン！という音
-    const oscillator = this.audioContext.createOscillator();
-    const gainNode = this.audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(this.audioContext.destination);
-    
-    oscillator.type = 'sine';
-    oscillator.frequency.value = 1200;
-    
-    gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.5);
-    
-    oscillator.start(this.audioContext.currentTime);
-    oscillator.stop(this.audioContext.currentTime + 0.5);
+    // "タララン♪"というRPG風の音
+    const notes = [659, 784, 1047]; // E5-G5-C6
+    notes.forEach((freq, index) => {
+      const oscillator = this.audioContext.createOscillator();
+      const gainNode = this.audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(this.audioContext.destination);
+      
+      oscillator.type = 'square';
+      oscillator.frequency.value = freq;
+      
+      const startTime = this.audioContext.currentTime + index * 0.12;
+      gainNode.gain.setValueAtTime(0.2, startTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.25);
+      
+      oscillator.start(startTime);
+      oscillator.stop(startTime + 0.25);
+    });
   }
 
-  // ストリーク音（炎の音）
+  // ストリーク音（炎の魔法音）
   playStreak() {
     if (!this.enabled) return;
     this.init();
+    // 低音から高音へのスウィープ
     const oscillator = this.audioContext.createOscillator();
     const gainNode = this.audioContext.createGain();
     
@@ -180,14 +207,14 @@ class SoundSystem {
     gainNode.connect(this.audioContext.destination);
     
     oscillator.type = 'sawtooth';
-    oscillator.frequency.setValueAtTime(300, this.audioContext.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(600, this.audioContext.currentTime + 0.2);
+    oscillator.frequency.setValueAtTime(200, this.audioContext.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(800, this.audioContext.currentTime + 0.3);
     
-    gainNode.gain.setValueAtTime(0.2, this.audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.3);
+    gainNode.gain.setValueAtTime(0.25, this.audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.35);
     
     oscillator.start(this.audioContext.currentTime);
-    oscillator.stop(this.audioContext.currentTime + 0.3);
+    oscillator.stop(this.audioContext.currentTime + 0.35);
   }
 
   toggle() {
@@ -421,7 +448,7 @@ const AuthScreen = ({ onLogin }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen max-w-md mx-auto flex items-center justify-center p-4">
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
@@ -554,7 +581,7 @@ const HomeScreen = ({ user, asset, onNavigate }) => {
   };
 
   return (
-    <div className="min-h-screen p-4 pb-32">
+    <div className="min-h-screen max-w-md mx-auto p-4 pb-32">
       <div className="max-w-4xl mx-auto">
         {/* コンパクトヘッダー */}
         <motion.div
@@ -868,14 +895,14 @@ const MarketScreen = ({ user, onNavigate }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen max-w-md mx-auto flex items-center justify-center">
         <div className="spinner"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen p-6">
+    <div className="min-h-screen max-w-md mx-auto p-6">
       <div className="max-w-6xl mx-auto">
         {/* ヘッダー */}
         <motion.div
@@ -884,7 +911,7 @@ const MarketScreen = ({ user, onNavigate }) => {
           className="flex justify-between items-center mb-6"
         >
           <h1 className="text-4xl font-bold text-white">📈 マーケット</h1>
-          <Button variant="outline" onClick={() => onNavigate('home')}>
+          <Button variant="outline" onClick={() => onNavigate('map')}>
             ← ホームに戻る
           </Button>
         </motion.div>
@@ -945,7 +972,7 @@ const MarketScreen = ({ user, onNavigate }) => {
             onClose={() => setSelectedStock(null)}
             onSuccess={() => {
               setSelectedStock(null);
-              onNavigate('home');
+              onNavigate('map');
             }}
           />
         )}
@@ -1176,7 +1203,7 @@ const QuizScreen = ({ user, onNavigate, onXpEarned }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen max-w-md mx-auto flex items-center justify-center">
         <div className="spinner"></div>
       </div>
     );
@@ -1184,7 +1211,7 @@ const QuizScreen = ({ user, onNavigate, onXpEarned }) => {
 
   if (currentQuiz) {
     return (
-      <div className="min-h-screen p-6">
+      <div className="min-h-screen max-w-md mx-auto p-6">
         <div className="max-w-2xl mx-auto">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
@@ -1272,7 +1299,7 @@ const QuizScreen = ({ user, onNavigate, onXpEarned }) => {
           </motion.div>
 
           <div className="mt-6 text-center">
-            <Button variant="outline" onClick={() => onNavigate('home')}>
+            <Button variant="outline" onClick={() => onNavigate('map')}>
               ホームに戻る
             </Button>
           </div>
@@ -1282,7 +1309,7 @@ const QuizScreen = ({ user, onNavigate, onXpEarned }) => {
   }
 
   return (
-    <div className="min-h-screen p-6">
+    <div className="min-h-screen max-w-md mx-auto p-6">
       <div className="max-w-4xl mx-auto">
         <motion.div
           initial={{ y: -50, opacity: 0 }}
@@ -1290,7 +1317,7 @@ const QuizScreen = ({ user, onNavigate, onXpEarned }) => {
           className="flex justify-between items-center mb-6"
         >
           <h1 className="text-4xl font-bold text-white">🧠 クイズチャレンジ</h1>
-          <Button variant="outline" onClick={() => onNavigate('home')}>
+          <Button variant="outline" onClick={() => onNavigate('map')}>
             ← ホームに戻る
           </Button>
         </motion.div>
@@ -1459,9 +1486,9 @@ const MapScreen = ({ user, onNavigate, onXpEarned }) => {
         </div>
 
         {/* 学習パス（縦スクロール） */}
-        <div className="relative px-8 py-4">
+        <div className="relative px-4 py-4 max-w-md mx-auto">
           {/* 中央の経路線 */}
-          <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-gray-700 -translate-x-1/2"></div>
+          <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-gray-700 -translate-x-1/2 z-0"></div>
 
           {learningNodes.map((node, index) => {
             const isEven = index % 2 === 0;
@@ -1473,40 +1500,46 @@ const MapScreen = ({ user, onNavigate, onXpEarned }) => {
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className={`relative mb-12 ${isEven ? 'pr-4 text-right' : 'pl-4 text-left'}`}
-                style={{ marginLeft: isEven ? 0 : 'auto', marginRight: isEven ? 'auto' : 0, maxWidth: '45%' }}
+                className="relative mb-16 flex items-center"
+                style={{ 
+                  justifyContent: isEven ? 'flex-start' : 'flex-end',
+                  paddingLeft: isEven ? '0' : '50%',
+                  paddingRight: isEven ? '50%' : '0'
+                }}
               >
-                {/* ノードアイコン */}
-                <div 
-                  onClick={() => !isLocked && handleNodeClick(node)}
-                  className={`
-                    ${getNodeSize(node)} 
-                    ${getNodeColor(node)} 
-                    ${isLocked ? 'opacity-50 cursor-not-allowed grayscale' : 'cursor-pointer hover:scale-110'}
-                    rounded-full flex items-center justify-center
-                    transition-all shadow-lg mx-auto mb-2
-                  `}
-                >
-                  {isLocked ? '🔒' : node.icon}
-                </div>
+                <div className="flex flex-col items-center gap-2 relative z-10">
+                  {/* ノードアイコン */}
+                  <div 
+                    onClick={() => !isLocked && handleNodeClick(node)}
+                    className={`
+                      ${getNodeSize(node)} 
+                      ${getNodeColor(node)} 
+                      ${isLocked ? 'opacity-50 cursor-not-allowed grayscale' : 'cursor-pointer hover:scale-110 active:scale-95'}
+                      rounded-full flex items-center justify-center
+                      transition-all shadow-lg relative
+                    `}
+                  >
+                    {isLocked ? '🔒' : node.icon}
+                    
+                    {/* 完了チェック */}
+                    {node.completed && (
+                      <div className="absolute -top-1 -right-1 bg-green-500 rounded-full w-6 h-6 flex items-center justify-center text-white text-xs border-2 border-gray-900">
+                        ✓
+                      </div>
+                    )}
+                  </div>
 
-                {/* ノード情報 */}
-                {!isLocked && (
-                  <div className="bg-gray-800 rounded-lg p-3 shadow-xl">
-                    <p className="text-sm font-bold text-gray-200 mb-1">{node.title}</p>
-                    <div className="flex items-center gap-2 text-xs">
-                      <span className="text-yellow-400">+{node.xp} XP</span>
-                      <span className="text-green-400">¥{node.reward}</span>
+                  {/* ノード情報 */}
+                  {!isLocked && (
+                    <div className="bg-gray-800 rounded-lg p-2 shadow-xl border border-gray-700 min-w-[120px]">
+                      <p className="text-xs font-bold text-gray-200 mb-1 text-center">{node.title}</p>
+                      <div className="flex items-center justify-center gap-2 text-xs">
+                        <span className="text-yellow-400">+{node.xp} XP</span>
+                        <span className="text-green-400">¥{node.reward}</span>
+                      </div>
                     </div>
-                  </div>
-                )}
-
-                {/* 完了チェック */}
-                {node.completed && (
-                  <div className="absolute -top-2 -right-2 bg-green-500 rounded-full w-6 h-6 flex items-center justify-center text-white text-xs">
-                    ✓
-                  </div>
-                )}
+                  )}
+                </div>
               </motion.div>
             );
           })}
@@ -1565,7 +1598,7 @@ const MapScreen = ({ user, onNavigate, onXpEarned }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 flex flex-col">
+    <div className="min-h-screen max-w-md mx-auto bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 flex flex-col max-w-md mx-auto">
       {/* メインコンテンツ */}
       {renderContent()}
 
@@ -1660,14 +1693,14 @@ const PortfolioScreen = ({ user, onNavigate }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen max-w-md mx-auto flex items-center justify-center">
         <div className="spinner"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen p-6">
+    <div className="min-h-screen max-w-md mx-auto p-6">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ y: -50, opacity: 0 }}
@@ -1675,7 +1708,7 @@ const PortfolioScreen = ({ user, onNavigate }) => {
           className="flex justify-between items-center mb-6"
         >
           <h1 className="text-4xl font-bold text-white">💼 ポートフォリオ</h1>
-          <Button variant="outline" onClick={() => onNavigate('home')}>
+          <Button variant="outline" onClick={() => onNavigate('map')}>
             ← ホームに戻る
           </Button>
         </motion.div>
@@ -1828,14 +1861,14 @@ const SettingsScreen = ({ user, onNavigate }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen max-w-md mx-auto flex items-center justify-center">
         <div className="spinner"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen p-6">
+    <div className="min-h-screen max-w-md mx-auto p-6">
       <div className="max-w-4xl mx-auto">
         <motion.div
           initial={{ y: -50, opacity: 0 }}
@@ -1848,7 +1881,7 @@ const SettingsScreen = ({ user, onNavigate }) => {
           <button
             onClick={() => {
               soundSystem.playClick();
-              onNavigate('home');
+              onNavigate('map');
             }}
             className="px-6 py-3 bg-gray-500 text-white rounded-xl font-bold hover:bg-gray-600 transition-colors"
           >
@@ -1994,14 +2027,14 @@ const HistoryScreen = ({ user, onNavigate }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen max-w-md mx-auto flex items-center justify-center">
         <div className="spinner"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen p-6">
+    <div className="min-h-screen max-w-md mx-auto p-6">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ y: -50, opacity: 0 }}
@@ -2009,7 +2042,7 @@ const HistoryScreen = ({ user, onNavigate }) => {
           className="flex justify-between items-center mb-6"
         >
           <h1 className="text-4xl font-bold text-white">📊 取引履歴</h1>
-          <Button variant="outline" onClick={() => onNavigate('home')}>
+          <Button variant="outline" onClick={() => onNavigate('map')}>
             ← ホームに戻る
           </Button>
         </motion.div>
