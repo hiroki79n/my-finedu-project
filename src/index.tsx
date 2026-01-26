@@ -804,15 +804,30 @@ app.get('/', (c) => {
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>EcoMate - 子供向け株式投資学習アプリ</title>
+    <title>XESTA - Invest in the Unknown</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'xesta-green': '#10B981',
+              'xesta-red': '#F43F5E',
+              'xesta-blue': '#3B82F6',
+              'xesta-slate': '#0F172A',
+              'xesta-dark': '#1E293B',
+            }
+          }
+        }
+      }
+    </script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         
         body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1e 100%);
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0F172A 0%, #020617 100%);
             min-height: 100vh;
         }
 

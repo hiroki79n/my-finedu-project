@@ -452,22 +452,24 @@ const AuthScreen = ({ onLogin }) => {
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="bg-white rounded-3xl p-8 card-shadow max-w-md w-full"
+        className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-3xl p-8 card-shadow max-w-md w-full border border-slate-700"
       >
         <motion.div
-          animate={{ rotate: [0, 10, -10, 0] }}
-          transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 1 }}
+          animate={{ scale: [1, 1.05, 1] }}
+          transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
           className="text-center mb-6"
         >
-          <div className="text-6xl mb-2">🌱</div>
-          <h1 className="text-4xl font-bold text-purple-600">EcoMate</h1>
-          <p className="text-gray-600 mt-2">楽しく学ぶ株式投資</p>
+          <div className="text-6xl mb-4 font-black text-transparent bg-clip-text bg-gradient-to-r from-xesta-green via-xesta-blue to-xesta-green">
+            ✕
+          </div>
+          <h1 className="text-5xl font-black text-white tracking-tight">XESTA</h1>
+          <p className="text-xesta-green mt-2 font-semibold tracking-wide">Invest in the Unknown</p>
         </motion.div>
 
         {loading ? (
           <div className="text-center py-8">
             <div className="spinner mx-auto mb-4"></div>
-            <p className="text-gray-600 font-bold">
+            <p className="text-gray-300 font-bold">
               デモアカウントで自動ログイン中...
             </p>
             <p className="text-sm text-gray-500 mt-2">
@@ -476,8 +478,8 @@ const AuthScreen = ({ onLogin }) => {
           </div>
         ) : error ? (
           <div className="space-y-4">
-            <div className="bg-red-50 border-2 border-red-500 rounded-xl p-4 text-center">
-              <p className="text-red-600 font-bold">{error}</p>
+            <div className="bg-xesta-red/10 border-2 border-xesta-red rounded-xl p-4 text-center">
+              <p className="text-xesta-red font-bold">{error}</p>
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
