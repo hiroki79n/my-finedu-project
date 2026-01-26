@@ -669,7 +669,6 @@ const HomeScreen = ({ user, asset, onNavigate }) => {
           </button>
         </motion.div>
       </div>
-      </div>
     </div>
   );
 };
