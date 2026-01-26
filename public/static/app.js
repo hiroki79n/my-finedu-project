@@ -342,10 +342,50 @@ const Button = ({ children, onClick, variant = 'primary', disabled = false, clas
 // ===== 認証画面 =====
 const AuthScreen = ({ onLogin }) => {
   const [isLogin, setIsLogin] = useState(true);
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('demo'); // 自動入力
+  const [password, setPassword] = useState('demo123'); // 自動入力
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [autoLoginAttempted, setAutoLoginAttempted] = useState(false);
+
+  // 自動ログイン
+  useEffect(() => {
+    if (!autoLoginAttempted) {
+      setAutoLoginAttempted(true);
+      // 0.5秒後に自動ログイン実行
+      setTimeout(() => {
+        handleAutoLogin();
+      }, 500);
+    }
+  }, []);
+
+  const handleAutoLogin = async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: 'demo', password: 'demo123' })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        soundSystem.playSuccess();
+        onLogin(data.user, data.asset);
+      } else {
+        soundSystem.playError();
+        setError('自動ログインに失敗しました。手動でログインしてください。');
+      }
+    } catch (err) {
+      soundSystem.playError();
+      setError('ネットワークエラーが発生しました');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -389,7 +429,7 @@ const AuthScreen = ({ onLogin }) => {
       >
         <motion.div
           animate={{ rotate: [0, 10, -10, 0] }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 1 }}
           className="text-center mb-6"
         >
           <div className="text-6xl mb-2">🌱</div>
@@ -397,79 +437,61 @@ const AuthScreen = ({ onLogin }) => {
           <p className="text-gray-600 mt-2">楽しく学ぶ株式投資</p>
         </motion.div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">
-              ユーザー名
-            </label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-purple-500 focus:outline-none"
-              required
-            />
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="spinner mx-auto mb-4"></div>
+            <p className="text-gray-600 font-bold">
+              デモアカウントで自動ログイン中...
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              ユーザー名: demo
+            </p>
           </div>
+        ) : error ? (
+          <div className="space-y-4">
+            <div className="bg-red-50 border-2 border-red-500 rounded-xl p-4 text-center">
+              <p className="text-red-600 font-bold">{error}</p>
+            </div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">
+                  ユーザー名
+                </label>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-purple-500 focus:outline-none"
+                  required
+                />
+              </div>
 
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">
-              パスワード
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-purple-500 focus:outline-none"
-              required
-            />
+              <div>
+                <label className="block text-sm font-bold text-gray-700 mb-2">
+                  パスワード
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-300 focus:border-purple-500 focus:outline-none"
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-gradient-to-r from-purple-500 to-blue-600 text-white py-4 rounded-xl font-bold hover:shadow-2xl transition-shadow"
+              >
+                手動ログイン
+              </button>
+            </form>
           </div>
-
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-rose-100 border-2 border-rose-500 text-rose-700 px-4 py-2 rounded-xl"
-            >
-              {error}
-            </motion.div>
-          )}
-
-          <Button
-            type="submit"
-            variant="primary"
-            disabled={loading}
-            className="w-full"
-          >
-            {loading ? (
-              <div className="spinner mx-auto"></div>
-            ) : (
-              isLogin ? 'ログイン' : 'アカウント作成'
-            )}
-          </Button>
-        </form>
-
-        <div className="mt-4 text-center">
-          <button
-            onClick={() => setIsLogin(!isLogin)}
-            className="text-purple-600 font-bold hover:underline"
-          >
-            {isLogin ? 'アカウントを作成' : 'ログインに戻る'}
-          </button>
-        </div>
-
-        <div className="mt-6 p-4 bg-purple-100 rounded-xl">
-          <p className="text-sm text-purple-800">
-            <strong>デモアカウント:</strong><br/>
-            ユーザー名: demo<br/>
-            パスワード: demo123
-          </p>
-        </div>
+        ) : null}
       </motion.div>
     </div>
   );
 };
-
-// ===== ホーム画面 =====
 // ===== スマートボタンフック =====
 const useSmartButton = (cash) => {
   const threshold = 1000;
@@ -1308,6 +1330,22 @@ const QuizScreen = ({ user, onNavigate, onXpEarned }) => {
 const MapScreen = ({ user, onNavigate, onXpEarned }) => {
   const [selectedQuest, setSelectedQuest] = useState(null);
   const [completedQuests, setCompletedQuests] = useState([]);
+  const [totalAssets, setTotalAssets] = useState(null);
+  const [showMenu, setShowMenu] = useState(false);
+
+  useEffect(() => {
+    fetchTotalAssets();
+  }, []);
+
+  const fetchTotalAssets = async () => {
+    try {
+      const response = await fetch(`/api/user/${user.id}/total-assets`);
+      const data = await response.json();
+      setTotalAssets(data);
+    } catch (err) {
+      console.error('Failed to fetch total assets:', err);
+    }
+  };
 
   // 冒険クエストリスト
   const quests = [
@@ -1370,43 +1408,155 @@ const MapScreen = ({ user, onNavigate, onXpEarned }) => {
   };
 
   return (
-    <div className="min-h-screen p-6">
+    <div className="min-h-screen p-4">
       <div className="max-w-4xl mx-auto">
-        {/* ヘッダー */}
+        {/* ヘッダーメニュー */}
         <motion.div
-          initial={{ y: -50, opacity: 0 }}
+          initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="flex justify-between items-center mb-6"
+          className="bg-white rounded-2xl p-4 card-shadow mb-6"
         >
-          <h1 className="text-4xl font-bold text-white flex items-center gap-2">
-            <span>🗺️</span>
-            <span>冒険マップ</span>
-          </h1>
-          <button
-            onClick={() => {
-              soundSystem.playClick();
-              onNavigate('home');
-            }}
-            className="px-6 py-3 bg-white text-gray-800 rounded-xl font-bold hover:bg-gray-100 transition-colors"
-          >
-            ← ホーム
-          </button>
+          <div className="flex justify-between items-center">
+            {/* 左側: ユーザー情報 */}
+            <div className="flex items-center gap-3">
+              <div className="text-3xl">🌱</div>
+              <div>
+                <div className="font-bold text-gray-800">{user.username}</div>
+                <div className="text-xs text-gray-600">Lv.{user.level} | {user.streak_count}日連続</div>
+              </div>
+            </div>
+
+            {/* 右側: メニューボタン */}
+            <div className="flex items-center gap-2">
+              {/* 資産状況 */}
+              <button
+                onClick={() => {
+                  soundSystem.playClick();
+                  onNavigate('portfolio');
+                }}
+                className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-xl font-bold hover:bg-green-100 transition-colors"
+              >
+                <span>💰</span>
+                <div className="text-left">
+                  <div className="text-xs opacity-75">資産</div>
+                  <div className="text-sm">
+                    {totalAssets ? formatCurrency(totalAssets.totalAssets) : '---'}
+                  </div>
+                </div>
+              </button>
+
+              {/* メニュートグル */}
+              <button
+                onClick={() => {
+                  soundSystem.playClick();
+                  setShowMenu(!showMenu);
+                }}
+                className="px-4 py-2 bg-gray-100 text-gray-800 rounded-xl font-bold hover:bg-gray-200 transition-colors"
+              >
+                <span className="text-xl">☰</span>
+              </button>
+            </div>
+          </div>
+
+          {/* ドロップダウンメニュー */}
+          {showMenu && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="mt-4 pt-4 border-t border-gray-200 space-y-2"
+            >
+              <button
+                onClick={() => {
+                  soundSystem.playClick();
+                  onNavigate('market');
+                  setShowMenu(false);
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 bg-orange-50 text-orange-700 rounded-xl font-bold hover:bg-orange-100 transition-colors text-left"
+              >
+                <span className="text-2xl">📈</span>
+                <div>
+                  <div className="font-bold">マーケット</div>
+                  <div className="text-xs opacity-75">株式を売買する</div>
+                </div>
+              </button>
+
+              <button
+                onClick={() => {
+                  soundSystem.playClick();
+                  onNavigate('portfolio');
+                  setShowMenu(false);
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 bg-blue-50 text-blue-700 rounded-xl font-bold hover:bg-blue-100 transition-colors text-left"
+              >
+                <span className="text-2xl">💼</span>
+                <div>
+                  <div className="font-bold">ポートフォリオ</div>
+                  <div className="text-xs opacity-75">保有株を確認</div>
+                </div>
+              </button>
+
+              <button
+                onClick={() => {
+                  soundSystem.playClick();
+                  onNavigate('history');
+                  setShowMenu(false);
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 bg-purple-50 text-purple-700 rounded-xl font-bold hover:bg-purple-100 transition-colors text-left"
+              >
+                <span className="text-2xl">📊</span>
+                <div>
+                  <div className="font-bold">取引履歴</div>
+                  <div className="text-xs opacity-75">過去の取引を確認</div>
+                </div>
+              </button>
+
+              <button
+                onClick={() => {
+                  soundSystem.playClick();
+                  onNavigate('settings');
+                  setShowMenu(false);
+                }}
+                className="w-full flex items-center gap-3 px-4 py-3 bg-gray-50 text-gray-700 rounded-xl font-bold hover:bg-gray-100 transition-colors text-left"
+              >
+                <span className="text-2xl">⚙️</span>
+                <div>
+                  <div className="font-bold">設定</div>
+                  <div className="text-xs opacity-75">アプリ設定を調整</div>
+                </div>
+              </button>
+            </motion.div>
+          )}
         </motion.div>
 
-        {/* 説明カード */}
+        {/* ニュースカード */}
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className="bg-gradient-to-r from-blue-400 to-indigo-500 rounded-3xl p-6 card-shadow mb-6 text-white"
+          className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-4 border-l-4 border-blue-500 mb-6"
         >
-          <div className="flex items-center gap-3 mb-3">
-            <span className="text-3xl">⚔️</span>
-            <div>
-              <h2 className="text-2xl font-bold">冒険に出かけよう！</h2>
-              <p className="text-sm opacity-90">クエストをクリアして報酬をゲット</p>
-            </div>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xl">📰</span>
+            <span className="text-sm font-bold text-blue-700">今日のニュース</span>
           </div>
+          <p className="text-sm text-gray-700">
+            円安で自動車メーカーが注目されています 🚗
+          </p>
+        </motion.div>
+
+        {/* 冒険タイトル */}
+        <motion.div
+          initial={{ x: -20, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="mb-6"
+        >
+          <h1 className="text-3xl font-bold text-white flex items-center gap-2 mb-2">
+            <span>🗺️</span>
+            <span>冒険マップ</span>
+          </h1>
+          <p className="text-white opacity-75">クエストをクリアして報酬をゲットしよう！</p>
         </motion.div>
 
         {/* クエストリスト */}
@@ -1977,7 +2127,7 @@ const App = () => {
   const handleLogin = (userData, assetData) => {
     setUser(userData);
     setAsset(assetData);
-    setCurrentScreen('home');
+    setCurrentScreen('map'); // トップページを冒険マップに変更
     setBuddyMood('excited');
     setBuddyMessage(`ようこそ、${userData.username}さん！`);
     soundSystem.playNotification(); // 通知音を再生
