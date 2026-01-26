@@ -549,16 +549,14 @@ const HomeScreen = ({ user, asset, onNavigate }) => {
     }
   };
 
-  // Context-Aware FAB の状態
-  const needsToEarn = cash < 50000; // 5万円未満なら「稼ぐ」を推奨
-  const fabColor = needsToEarn ? 'bg-blue-500' : 'bg-gradient-to-r from-orange-500 to-red-500';
-  const fabIcon = needsToEarn ? '⚔️' : '📈';
-  const fabText = needsToEarn ? 'クエストで稼ぐ' : 'XESTA市場へ';
-  const fabAction = needsToEarn ? 'map' : 'market';
+  // FAB: 今日のニュース（常に表示）
+  const fabColor = 'bg-gradient-to-r from-blue-600 to-cyan-600';
+  const fabIcon = '📰';
+  const fabText = '今日のニュース';
 
   const handleFabClick = () => {
     soundSystem.playClick();
-    onNavigate(fabAction);
+    onNavigate('news');
   };
 
   return (
@@ -757,7 +755,7 @@ const HomeScreen = ({ user, asset, onNavigate }) => {
         )}
       </div>
 
-      {/* Context-Aware FAB */}
+      {/* 今日のニュース FAB */}
       <motion.div
         initial={{ y: 100, scale: 0.8, opacity: 0 }}
         animate={{ y: 0, scale: 1, opacity: 1 }}
@@ -767,9 +765,7 @@ const HomeScreen = ({ user, asset, onNavigate }) => {
         <motion.button
           onClick={handleFabClick}
           animate={{ 
-            boxShadow: needsToEarn 
-              ? ['0 0 0 0 rgba(59,130,246,0.7)', '0 0 0 15px rgba(59,130,246,0)', '0 0 0 0 rgba(59,130,246,0)']
-              : ['0 0 0 0 rgba(249,115,22,0.7)', '0 0 0 15px rgba(249,115,22,0)', '0 0 0 0 rgba(249,115,22,0)']
+            boxShadow: ['0 0 0 0 rgba(37,99,235,0.7)', '0 0 0 15px rgba(37,99,235,0)', '0 0 0 0 rgba(37,99,235,0)']
           }}
           transition={{ duration: 2, repeat: Infinity }}
           whileHover={{ scale: 1.05 }}
@@ -779,6 +775,174 @@ const HomeScreen = ({ user, asset, onNavigate }) => {
           <span className="text-3xl">{fabIcon}</span>
           <span>{fabText}</span>
         </motion.button>
+      </motion.div>
+    </div>
+  );
+};
+
+// ===== ニュース画面 =====
+const NewsScreen = ({ user, onNavigate }) => {
+  // 今日のニュース（サンプルデータ）
+  const newsItems = [
+    {
+      id: 1,
+      category: '為替',
+      icon: '💱',
+      title: '円安進行で輸出関連株に注目',
+      description: '1ドル=150円台に突入。自動車メーカーや電機メーカーの業績改善が期待されています。',
+      impact: 'positive',
+      stocks: ['トヨタ自動車', '任天堂', 'ソニーグループ'],
+      color: 'from-green-500 to-emerald-600',
+      borderColor: 'border-green-400'
+    },
+    {
+      id: 2,
+      category: 'コモディティ',
+      icon: '⚡',
+      title: '金価格が過去最高値を更新',
+      description: '世界的な不安定要因により、安全資産としての金への需要が高まっています。',
+      impact: 'neutral',
+      stocks: ['金', '銀'],
+      color: 'from-yellow-500 to-amber-600',
+      borderColor: 'border-yellow-400'
+    },
+    {
+      id: 3,
+      category: 'テクノロジー',
+      icon: '🤖',
+      title: 'AI関連企業の株価が急騰',
+      description: '生成AIの普及により、関連企業への投資が加速。今後の成長が期待されています。',
+      impact: 'positive',
+      stocks: ['ソフトバンクグループ', 'LINEヤフー'],
+      color: 'from-blue-500 to-cyan-600',
+      borderColor: 'border-blue-400'
+    },
+    {
+      id: 4,
+      category: '製薬',
+      icon: '💊',
+      title: '新薬開発で製薬株に期待',
+      description: '武田薬品や第一三共の新薬治験が順調に進行。承認されれば大きな収益が見込まれます。',
+      impact: 'positive',
+      stocks: ['武田薬品', '第一三共'],
+      color: 'from-purple-500 to-pink-600',
+      borderColor: 'border-purple-400'
+    },
+    {
+      id: 5,
+      category: '小売',
+      icon: '🛒',
+      title: 'インフレ懸念で消費関連株が軟調',
+      description: '物価上昇により消費者の購買力が低下。小売・アパレル業界に逆風が吹いています。',
+      impact: 'negative',
+      stocks: ['ファーストリテイリング', '楽天グループ'],
+      color: 'from-red-500 to-rose-600',
+      borderColor: 'border-red-400'
+    }
+  ];
+
+  const getImpactBadge = (impact) => {
+    if (impact === 'positive') return { text: '📈 上昇期待', color: 'bg-green-500' };
+    if (impact === 'negative') return { text: '📉 下落懸念', color: 'bg-red-500' };
+    return { text: '➡️ 中立', color: 'bg-gray-500' };
+  };
+
+  return (
+    <div className="min-h-screen max-w-md mx-auto bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 pb-24">
+      {/* ヘッダー */}
+      <motion.div
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="sticky top-0 bg-gradient-to-r from-gray-900 to-gray-800 px-6 py-4 z-20 border-b border-gray-700"
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-black text-white flex items-center gap-2">
+              📰 今日のニュース
+            </h1>
+            <p className="text-xs text-gray-400 italic">市場を動かすトピックス</p>
+          </div>
+          <button
+            onClick={() => {
+              soundSystem.playClick();
+              onNavigate('home');
+            }}
+            className="text-white hover:text-gray-300"
+          >
+            <span className="text-2xl">✕</span>
+          </button>
+        </div>
+      </motion.div>
+
+      {/* ニュース一覧 */}
+      <div className="p-4 space-y-4">
+        {newsItems.map((news, index) => {
+          const badge = getImpactBadge(news.impact);
+          
+          return (
+            <motion.div
+              key={news.id}
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: index * 0.1 }}
+              className={`bg-gradient-to-br ${news.color} rounded-2xl p-5 border-2 ${news.borderColor}`}
+            >
+              {/* カテゴリと影響度 */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">{news.icon}</span>
+                  <span className="text-xs font-bold text-white/80">{news.category}</span>
+                </div>
+                <div className={`${badge.color} text-white text-xs px-3 py-1 rounded-full font-bold`}>
+                  {badge.text}
+                </div>
+              </div>
+
+              {/* タイトル */}
+              <h2 className="text-lg font-bold text-white mb-2">
+                {news.title}
+              </h2>
+
+              {/* 説明 */}
+              <p className="text-sm text-white/80 mb-3 leading-relaxed">
+                {news.description}
+              </p>
+
+              {/* 関連銘柄 */}
+              <div className="bg-black/20 rounded-xl p-3">
+                <p className="text-xs text-white/70 mb-2">🔍 関連銘柄</p>
+                <div className="flex flex-wrap gap-2">
+                  {news.stocks.map((stock, i) => (
+                    <span
+                      key={i}
+                      className="text-xs bg-white/20 backdrop-blur-sm text-white px-2 py-1 rounded-lg"
+                    >
+                      {stock}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* マーケットへのCTA */}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        className="fixed bottom-20 left-0 right-0 px-4 max-w-md mx-auto"
+      >
+        <button
+          onClick={() => {
+            soundSystem.playClick();
+            onNavigate('market');
+          }}
+          className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-4 rounded-full font-bold text-base shadow-2xl hover:shadow-orange-500/50 transition-shadow"
+        >
+          🏛️ XESTA市場で取引する
+        </button>
       </motion.div>
     </div>
   );
@@ -1581,10 +1745,9 @@ const MapScreen = ({ user, onNavigate, onXpEarned }) => {
         </div>
       </motion.div>
 
-      {/* Chapters（下から上へスクロール：逆順で表示） */}
+      {/* Chapters（上から下へスクロール：通常順序で表示） */}
       <div className="p-4 space-y-8">
-        {chapters.slice().reverse().map((chapter, reverseIndex) => {
-          const actualIndex = chapters.length - 1 - reverseIndex;
+        {chapters.map((chapter, index) => {
           const progress = getChapterProgress(chapter);
           const isCompleted = isChapterCompleted(chapter);
           const allQuests = [...chapter.quests, chapter.boss];
@@ -1594,7 +1757,7 @@ const MapScreen = ({ user, onNavigate, onXpEarned }) => {
               key={chapter.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: reverseIndex * 0.1 }}
+              transition={{ delay: index * 0.1 }}
               className="space-y-4"
             >
               {/* Chapter ヘッダー */}
@@ -1642,7 +1805,7 @@ const MapScreen = ({ user, onNavigate, onXpEarned }) => {
                       key={quest.id}
                       initial={{ x: -20, opacity: 0 }}
                       animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: reverseIndex * 0.1 + questIndex * 0.05 }}
+                      transition={{ delay: index * 0.1 + questIndex * 0.05 }}
                       whileHover={!isLocked ? { scale: 1.02 } : {}}
                       whileTap={!isLocked ? { scale: 0.98 } : {}}
                       onClick={() => !isLocked && handleQuestClick(quest, chapter)}
@@ -2324,6 +2487,17 @@ const App = () => {
             exit={{ opacity: 0, x: -100 }}
           >
             <MarketScreen user={user} onNavigate={handleNavigate} />
+          </motion.div>
+        )}
+
+        {currentScreen === 'news' && user && (
+          <motion.div
+            key="news"
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -100 }}
+          >
+            <NewsScreen user={user} onNavigate={handleNavigate} />
           </motion.div>
         )}
 
