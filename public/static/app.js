@@ -1821,6 +1821,7 @@ const MapScreen = ({ user, onNavigate, onXpEarned }) => {
       color: 'from-green-500 to-emerald-600',
       borderColor: 'border-green-400',
       difficulty: 1,
+      type: 'main', // メインクエスト
       quests: [
         { id: 101, title: '物々交換の限界', type: 'simulation', icon: '🐟', reward: 300, xp: 30, description: '魚と肉を交換せよ' },
         { id: 102, title: '貝殻からコインへ', type: 'lesson', icon: '🐚', reward: 400, xp: 40, description: 'なぜ腐らないものがお金に？' },
@@ -1837,6 +1838,7 @@ const MapScreen = ({ user, onNavigate, onXpEarned }) => {
       color: 'from-blue-500 to-cyan-600',
       borderColor: 'border-blue-400',
       difficulty: 2,
+      type: 'main',
       quests: [
         { id: 201, title: '仕事選び', type: 'lesson', icon: '💼', reward: 600, xp: 60, description: '会社員、公務員、起業家…' },
         { id: 202, title: '生活費サバイバル', type: 'simulation', icon: '🏠', reward: 700, xp: 70, description: '可処分所得を計算せよ' },
@@ -1853,6 +1855,7 @@ const MapScreen = ({ user, onNavigate, onXpEarned }) => {
       color: 'from-purple-500 to-pink-600',
       borderColor: 'border-purple-400',
       difficulty: 3,
+      type: 'main',
       quests: [
         { id: 301, title: 'ピザ屋を創業せよ', type: 'simulation', icon: '🍕', reward: 900, xp: 90, description: '株券を発行して仲間を集める' },
         { id: 302, title: '株価の変動', type: 'lesson', icon: '📈', reward: 1000, xp: 100, description: '需要と業績で値段が変わる' },
@@ -1869,6 +1872,7 @@ const MapScreen = ({ user, onNavigate, onXpEarned }) => {
       color: 'from-orange-500 to-red-600',
       borderColor: 'border-orange-400',
       difficulty: 4,
+      type: 'main',
       quests: [
         { id: 401, title: 'ハンバーガーの値段', type: 'lesson', icon: '🍔', reward: 1200, xp: 120, description: '海外に行くと値段が違う？' },
         { id: 402, title: '円安の波', type: 'simulation', icon: '💱', reward: 1300, xp: 130, description: 'iPhoneが高くなる理由' },
@@ -1885,12 +1889,53 @@ const MapScreen = ({ user, onNavigate, onXpEarned }) => {
       color: 'from-yellow-500 to-amber-600',
       borderColor: 'border-yellow-400',
       difficulty: 5,
+      type: 'main',
       quests: [
         { id: 501, title: 'タマゴを分けるカゴ', type: 'lesson', icon: '🥚', reward: 1500, xp: 150, description: '分散投資の魔法' },
         { id: 502, title: '複利のタイムマシン', type: 'simulation', icon: '⏰', reward: 1600, xp: 160, description: '雪だるま式に増やす' },
         { id: 503, title: '未来のお金', type: 'quiz', icon: '🤖', reward: 1700, xp: 170, description: 'AI時代にどう稼ぐ？' }
       ],
       boss: { id: 599, name: '未知数X', icon: '❌', reward: 5000, xp: 500, description: '正解のない未来で生き残れ！' }
+    }
+  ];
+
+  // サブクエスト（並列エリア・いつでもアクセス可能）
+  const subQuests = [
+    {
+      id: 'crypto',
+      title: '仮想通貨の洞窟',
+      icon: '₿',
+      color: 'from-amber-500 to-yellow-600',
+      borderColor: 'border-amber-400',
+      description: 'ビットコインとブロックチェーンの世界',
+      quests: [
+        { id: 601, title: 'ビットコイン入門', type: 'lesson', icon: '₿', reward: 800, xp: 80, description: 'デジタル通貨とは？' },
+        { id: 602, title: 'マイニングの仕組み', type: 'simulation', icon: '⛏️', reward: 900, xp: 90, description: '採掘で報酬を得る' }
+      ]
+    },
+    {
+      id: 'history',
+      title: '歴史の図書館',
+      icon: '📚',
+      color: 'from-indigo-500 to-purple-600',
+      borderColor: 'border-indigo-400',
+      description: '金融の歴史を学ぶ',
+      quests: [
+        { id: 701, title: 'バブル経済', type: 'lesson', icon: '🫧', reward: 700, xp: 70, description: '1980年代の日本経済' },
+        { id: 702, title: 'リーマンショック', type: 'quiz', icon: '📉', reward: 800, xp: 80, description: '2008年の金融危機' }
+      ]
+    },
+    {
+      id: 'tax',
+      title: '税金の役所',
+      icon: '🏢',
+      color: 'from-gray-500 to-slate-600',
+      borderColor: 'border-gray-400',
+      description: '税金と社会保障を理解',
+      quests: [
+        { id: 801, title: '所得税の仕組み', type: 'lesson', icon: '💴', reward: 600, xp: 60, description: '累進課税とは？' },
+        { id: 802, title: '確定申告', type: 'simulation', icon: '📝', reward: 700, xp: 70, description: '税金を申告してみよう' }
+      ]
     }
   ];
 
@@ -2109,6 +2154,76 @@ const MapScreen = ({ user, onNavigate, onXpEarned }) => {
           );
         })}
       </div>
+
+      {/* サブクエスト（並列エリア） */}
+      <motion.div
+        initial={{ x: -50, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ delay: 0.8 }}
+        className="p-4 mt-8"
+      >
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-black text-white mb-2">📖 The Library</h2>
+          <p className="text-sm text-gray-400">いつでも学べる特別エリア</p>
+        </div>
+
+        <div className="space-y-4">
+          {subQuests.map((area) => (
+            <motion.div
+              key={area.id}
+              initial={{ scale: 0.95 }}
+              whileHover={{ scale: 1.02 }}
+              className={`bg-gradient-to-br ${area.color} rounded-2xl p-4 border-2 ${area.borderColor}`}
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="text-4xl">{area.icon}</div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">{area.title}</h3>
+                  <p className="text-xs text-white/80">{area.description}</p>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                {area.quests.map((quest) => {
+                  const isCompleted = completedQuests.includes(quest.id);
+                  
+                  return (
+                    <motion.div
+                      key={quest.id}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => handleQuestClick(quest, { ...area, type: 'sub' })}
+                      className="bg-white/10 backdrop-blur-sm rounded-xl p-3 cursor-pointer hover:bg-white/20 transition-colors"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">{quest.icon}</span>
+                          <div>
+                            <div className="text-sm font-bold text-white">{quest.title}</div>
+                            <div className="text-xs text-white/70">{quest.description}</div>
+                          </div>
+                        </div>
+                        {isCompleted && (
+                          <div className="bg-green-500 rounded-full w-6 h-6 flex items-center justify-center text-white text-xs">
+                            ✓
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-3 mt-2 text-xs">
+                        <span className="flex items-center gap-1">
+                          <span className="text-green-300">💰 ¥{quest.reward}</span>
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span className="text-yellow-300">⭐ +{quest.xp}</span>
+                        </span>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </motion.div>
 
       {/* クエスト詳細モーダル */}
       <AnimatePresence>
