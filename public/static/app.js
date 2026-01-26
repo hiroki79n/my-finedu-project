@@ -1329,274 +1329,187 @@ const QuizScreen = ({ user, onNavigate, onXpEarned }) => {
 // ===== 冒険マップ画面 (MapScreen) =====
 const MapScreen = ({ user, onNavigate, onXpEarned }) => {
   const [selectedQuest, setSelectedQuest] = useState(null);
-  const [completedQuests, setCompletedQuests] = useState([]);
-  const [totalAssets, setTotalAssets] = useState(null);
-  const [showMenu, setShowMenu] = useState(false);
+  const [completedQuests, setCompletedQuests] = useState([1]); // デモで1番目を完了扱い
+  const [currentTab, setCurrentTab] = useState('map'); // map, news, settings
 
-  useEffect(() => {
-    fetchTotalAssets();
-  }, []);
-
-  const fetchTotalAssets = async () => {
-    try {
-      const response = await fetch(`/api/user/${user.id}/total-assets`);
-      const data = await response.json();
-      setTotalAssets(data);
-    } catch (err) {
-      console.error('Failed to fetch total assets:', err);
-    }
-  };
-
-  // 冒険クエストリスト
-  const quests = [
-    {
-      id: 1,
-      title: '株式投資の基礎',
-      icon: '📚',
-      difficulty: 'easy',
-      reward: 500,
-      xpReward: 50,
-      description: 'クイズに挑戦して株式投資の基礎を学ぼう！'
-    },
-    {
-      id: 2,
-      title: 'マーケット探検',
-      icon: '🗺️',
-      difficulty: 'medium',
-      reward: 1000,
-      xpReward: 100,
-      description: '市場を探検してトレンドを見つけよう！'
-    },
-    {
-      id: 3,
-      title: 'ボスチャレンジ',
-      icon: '👹',
-      difficulty: 'hard',
-      reward: 2000,
-      xpReward: 200,
-      description: '最強のクイズに挑戦！大きな報酬が待っている！'
-    }
+  // 学習ノード（Duolingoスタイル）
+  const learningNodes = [
+    { id: 1, level: 1, title: '株式って何？', type: 'lesson', icon: '📚', reward: 300, xp: 30, completed: true },
+    { id: 2, level: 2, title: '株価の見方', type: 'lesson', icon: '📊', reward: 400, xp: 40, completed: false },
+    { id: 3, level: 3, title: 'ミニクイズ', type: 'quiz', icon: '❓', reward: 500, xp: 50, completed: false },
+    { id: 4, level: 4, title: '売買の基礎', type: 'lesson', icon: '💱', reward: 600, xp: 60, completed: false },
+    { id: 5, level: 5, title: '企業分析入門', type: 'lesson', icon: '🔍', reward: 700, xp: 70, completed: false },
+    { id: 6, level: 6, title: 'チャレンジ1', type: 'challenge', icon: '⚔️', reward: 1000, xp: 100, completed: false },
+    { id: 7, level: 7, title: '配当金とは', type: 'lesson', icon: '💰', reward: 800, xp: 80, completed: false },
+    { id: 8, level: 8, title: 'リスク管理', type: 'lesson', icon: '🛡️', reward: 900, xp: 90, completed: false },
+    { id: 9, level: 9, title: 'ポートフォリオ', type: 'lesson', icon: '💼', reward: 1000, xp: 100, completed: false },
+    { id: 10, level: 10, title: 'ボス戦', type: 'boss', icon: '👹', reward: 3000, xp: 300, completed: false }
   ];
 
-  const handleQuestClick = (quest) => {
+  const handleNodeClick = (node) => {
+    if (node.completed) return; // 完了済みは無視
+    // 前のノードが完了していないとクリックできない
+    const prevNode = learningNodes.find(n => n.id === node.id - 1);
+    if (prevNode && !prevNode.completed && node.id > 1) {
+      soundSystem.playError();
+      return;
+    }
+    
     soundSystem.playNotification();
-    setSelectedQuest(quest);
+    setSelectedQuest(node);
   };
 
   const handleStartQuest = () => {
     soundSystem.playClick();
-    // クイズ画面へ遷移
+    setSelectedQuest(null);
     onNavigate('quiz');
   };
 
-  const getDifficultyColor = (difficulty) => {
-    switch (difficulty) {
-      case 'easy': return 'bg-green-500';
-      case 'medium': return 'bg-yellow-500';
-      case 'hard': return 'bg-red-500';
-      default: return 'bg-gray-500';
-    }
+  const getNodeColor = (node) => {
+    if (node.completed) return 'bg-green-600';
+    if (node.type === 'boss') return 'bg-red-600';
+    if (node.type === 'challenge') return 'bg-orange-600';
+    return 'bg-blue-600';
   };
 
-  const getDifficultyText = (difficulty) => {
-    switch (difficulty) {
-      case 'easy': return '初級';
-      case 'medium': return '中級';
-      case 'hard': return '上級';
-      default: return '？？？';
-    }
+  const getNodeSize = (node) => {
+    if (node.type === 'boss') return 'w-24 h-24 text-5xl';
+    if (node.type === 'challenge') return 'w-20 h-20 text-4xl';
+    return 'w-16 h-16 text-3xl';
   };
 
-  return (
-    <div className="min-h-screen p-4">
-      <div className="max-w-4xl mx-auto">
-        {/* ヘッダーメニュー */}
-        <motion.div
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="bg-white rounded-2xl p-4 card-shadow mb-6"
-        >
-          <div className="flex justify-between items-center">
-            {/* 左側: ユーザー情報 */}
-            <div className="flex items-center gap-3">
-              <div className="text-3xl">🌱</div>
+  // タブコンテンツをレンダリング
+  const renderContent = () => {
+    if (currentTab === 'news') {
+      return (
+        <div className="p-6 space-y-4">
+          <h2 className="text-2xl font-bold text-gray-200 mb-4">📰 今日のニュース</h2>
+          <div className="bg-gray-800 rounded-xl p-4 border-l-4 border-blue-500">
+            <p className="text-sm text-gray-300 mb-2">🚗 円安で自動車メーカーが注目</p>
+            <p className="text-xs text-gray-400">トヨタやホンダの株価が上昇中です。</p>
+          </div>
+          <div className="bg-gray-800 rounded-xl p-4 border-l-4 border-green-500">
+            <p className="text-sm text-gray-300 mb-2">📱 テクノロジー株が人気</p>
+            <p className="text-xs text-gray-400">ソフトバンクグループに注目が集まっています。</p>
+          </div>
+          <div className="bg-gray-800 rounded-xl p-4 border-l-4 border-orange-500">
+            <p className="text-sm text-gray-300 mb-2">💊 製薬業界の新展開</p>
+            <p className="text-xs text-gray-400">武田薬品の新薬開発が進んでいます。</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (currentTab === 'settings') {
+      return (
+        <div className="p-6 space-y-4">
+          <h2 className="text-2xl font-bold text-gray-200 mb-4">⚙️ 設定</h2>
+          <button
+            onClick={() => {
+              soundSystem.playClick();
+              onNavigate('settings');
+            }}
+            className="w-full bg-gray-800 text-gray-200 rounded-xl p-4 hover:bg-gray-700 transition-colors text-left"
+          >
+            <div className="flex items-center justify-between">
               <div>
-                <div className="font-bold text-gray-800">{user.username}</div>
-                <div className="text-xs text-gray-600">Lv.{user.level} | {user.streak_count}日連続</div>
+                <p className="font-bold">マーケット更新設定</p>
+                <p className="text-xs text-gray-400">更新間隔を調整する</p>
               </div>
+              <span className="text-xl">→</span>
             </div>
+          </button>
+          <button
+            onClick={() => {
+              soundSystem.playClick();
+              onNavigate('portfolio');
+            }}
+            className="w-full bg-gray-800 text-gray-200 rounded-xl p-4 hover:bg-gray-700 transition-colors text-left"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-bold">ポートフォリオ</p>
+                <p className="text-xs text-gray-400">資産状況を確認</p>
+              </div>
+              <span className="text-xl">→</span>
+            </div>
+          </button>
+        </div>
+      );
+    }
 
-            {/* 右側: メニューボタン */}
+    // デフォルトは冒険マップ
+    return (
+      <div className="flex-1 overflow-y-auto pb-24">
+        {/* トップヘッダー */}
+        <div className="sticky top-0 bg-gradient-to-b from-gray-900 to-transparent z-10 p-4">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              {/* 資産状況 */}
-              <button
-                onClick={() => {
-                  soundSystem.playClick();
-                  onNavigate('portfolio');
-                }}
-                className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-xl font-bold hover:bg-green-100 transition-colors"
-              >
-                <span>💰</span>
-                <div className="text-left">
-                  <div className="text-xs opacity-75">資産</div>
-                  <div className="text-sm">
-                    {totalAssets ? formatCurrency(totalAssets.totalAssets) : '---'}
-                  </div>
-                </div>
-              </button>
-
-              {/* メニュートグル */}
-              <button
-                onClick={() => {
-                  soundSystem.playClick();
-                  setShowMenu(!showMenu);
-                }}
-                className="px-4 py-2 bg-gray-100 text-gray-800 rounded-xl font-bold hover:bg-gray-200 transition-colors"
-              >
-                <span className="text-xl">☰</span>
-              </button>
+              <span className="text-2xl">🌱</span>
+              <div>
+                <p className="text-sm font-bold text-gray-200">{user.username}</p>
+                <p className="text-xs text-gray-400">Lv.{user.level} | 🔥 {user.streak_count}日</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-gray-400">総XP</p>
+              <p className="text-lg font-bold text-yellow-400">{user.xp}</p>
             </div>
           </div>
+        </div>
 
-          {/* ドロップダウンメニュー */}
-          {showMenu && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="mt-4 pt-4 border-t border-gray-200 space-y-2"
-            >
-              <button
-                onClick={() => {
-                  soundSystem.playClick();
-                  onNavigate('market');
-                  setShowMenu(false);
-                }}
-                className="w-full flex items-center gap-3 px-4 py-3 bg-orange-50 text-orange-700 rounded-xl font-bold hover:bg-orange-100 transition-colors text-left"
+        {/* 学習パス（縦スクロール） */}
+        <div className="relative px-8 py-4">
+          {/* 中央の経路線 */}
+          <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-gray-700 -translate-x-1/2"></div>
+
+          {learningNodes.map((node, index) => {
+            const isEven = index % 2 === 0;
+            const isLocked = !node.completed && index > 0 && !learningNodes[index - 1].completed;
+            
+            return (
+              <motion.div
+                key={node.id}
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className={`relative mb-12 ${isEven ? 'pr-4 text-right' : 'pl-4 text-left'}`}
+                style={{ marginLeft: isEven ? 0 : 'auto', marginRight: isEven ? 'auto' : 0, maxWidth: '45%' }}
               >
-                <span className="text-2xl">📈</span>
-                <div>
-                  <div className="font-bold">マーケット</div>
-                  <div className="text-xs opacity-75">株式を売買する</div>
+                {/* ノードアイコン */}
+                <div 
+                  onClick={() => !isLocked && handleNodeClick(node)}
+                  className={`
+                    ${getNodeSize(node)} 
+                    ${getNodeColor(node)} 
+                    ${isLocked ? 'opacity-50 cursor-not-allowed grayscale' : 'cursor-pointer hover:scale-110'}
+                    rounded-full flex items-center justify-center
+                    transition-all shadow-lg mx-auto mb-2
+                  `}
+                >
+                  {isLocked ? '🔒' : node.icon}
                 </div>
-              </button>
 
-              <button
-                onClick={() => {
-                  soundSystem.playClick();
-                  onNavigate('portfolio');
-                  setShowMenu(false);
-                }}
-                className="w-full flex items-center gap-3 px-4 py-3 bg-blue-50 text-blue-700 rounded-xl font-bold hover:bg-blue-100 transition-colors text-left"
-              >
-                <span className="text-2xl">💼</span>
-                <div>
-                  <div className="font-bold">ポートフォリオ</div>
-                  <div className="text-xs opacity-75">保有株を確認</div>
-                </div>
-              </button>
-
-              <button
-                onClick={() => {
-                  soundSystem.playClick();
-                  onNavigate('history');
-                  setShowMenu(false);
-                }}
-                className="w-full flex items-center gap-3 px-4 py-3 bg-purple-50 text-purple-700 rounded-xl font-bold hover:bg-purple-100 transition-colors text-left"
-              >
-                <span className="text-2xl">📊</span>
-                <div>
-                  <div className="font-bold">取引履歴</div>
-                  <div className="text-xs opacity-75">過去の取引を確認</div>
-                </div>
-              </button>
-
-              <button
-                onClick={() => {
-                  soundSystem.playClick();
-                  onNavigate('settings');
-                  setShowMenu(false);
-                }}
-                className="w-full flex items-center gap-3 px-4 py-3 bg-gray-50 text-gray-700 rounded-xl font-bold hover:bg-gray-100 transition-colors text-left"
-              >
-                <span className="text-2xl">⚙️</span>
-                <div>
-                  <div className="font-bold">設定</div>
-                  <div className="text-xs opacity-75">アプリ設定を調整</div>
-                </div>
-              </button>
-            </motion.div>
-          )}
-        </motion.div>
-
-        {/* ニュースカード */}
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.1 }}
-          className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-4 border-l-4 border-blue-500 mb-6"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xl">📰</span>
-            <span className="text-sm font-bold text-blue-700">今日のニュース</span>
-          </div>
-          <p className="text-sm text-gray-700">
-            円安で自動車メーカーが注目されています 🚗
-          </p>
-        </motion.div>
-
-        {/* 冒険タイトル */}
-        <motion.div
-          initial={{ x: -20, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="mb-6"
-        >
-          <h1 className="text-3xl font-bold text-white flex items-center gap-2 mb-2">
-            <span>🗺️</span>
-            <span>冒険マップ</span>
-          </h1>
-          <p className="text-white opacity-75">クエストをクリアして報酬をゲットしよう！</p>
-        </motion.div>
-
-        {/* クエストリスト */}
-        <div className="space-y-4">
-          {quests.map((quest, index) => (
-            <motion.div
-              key={quest.id}
-              initial={{ x: -50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.2 + index * 0.1 }}
-              onClick={() => handleQuestClick(quest)}
-              className="bg-white rounded-2xl p-6 card-shadow hover:shadow-2xl transition-all cursor-pointer transform hover:scale-105"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="text-5xl">{quest.icon}</div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="text-xl font-bold text-gray-800">{quest.title}</h3>
-                      <span className={`${getDifficultyColor(quest.difficulty)} text-white text-xs px-2 py-1 rounded-full font-bold`}>
-                        {getDifficultyText(quest.difficulty)}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-2">{quest.description}</p>
-                    <div className="flex items-center gap-4 text-sm">
-                      <div className="flex items-center gap-1">
-                        <span>💰</span>
-                        <span className="font-bold text-green-600">{formatCurrency(quest.reward)}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <span>⭐</span>
-                        <span className="font-bold text-blue-600">+{quest.xpReward} XP</span>
-                      </div>
+                {/* ノード情報 */}
+                {!isLocked && (
+                  <div className="bg-gray-800 rounded-lg p-3 shadow-xl">
+                    <p className="text-sm font-bold text-gray-200 mb-1">{node.title}</p>
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-yellow-400">+{node.xp} XP</span>
+                      <span className="text-green-400">¥{node.reward}</span>
                     </div>
                   </div>
-                </div>
-                <div className="text-2xl text-gray-400">→</div>
-              </div>
-            </motion.div>
-          ))}
+                )}
+
+                {/* 完了チェック */}
+                {node.completed && (
+                  <div className="absolute -top-2 -right-2 bg-green-500 rounded-full w-6 h-6 flex items-center justify-center text-white text-xs">
+                    ✓
+                  </div>
+                )}
+              </motion.div>
+            );
+          })}
         </div>
 
         {/* クエスト詳細モーダル */}
@@ -1605,59 +1518,110 @@ const MapScreen = ({ user, onNavigate, onXpEarned }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             onClick={() => setSelectedQuest(null)}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+            className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50"
           >
             <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
+              initial={{ scale: 0.8, y: 50 }}
+              animate={{ scale: 1, y: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-3xl p-8 max-w-md w-full card-shadow"
+              className="bg-gray-800 rounded-3xl p-6 max-w-sm w-full"
             >
-              <div className="text-center mb-6">
-                <div className="text-7xl mb-4">{selectedQuest.icon}</div>
-                <h2 className="text-3xl font-bold text-gray-800 mb-2">
-                  {selectedQuest.title}
-                </h2>
-                <span className={`${getDifficultyColor(selectedQuest.difficulty)} text-white text-sm px-3 py-1 rounded-full font-bold`}>
-                  {getDifficultyText(selectedQuest.difficulty)}
-                </span>
+              <div className="text-center mb-4">
+                <div className="text-6xl mb-3">{selectedQuest.icon}</div>
+                <h2 className="text-2xl font-bold text-gray-100 mb-2">{selectedQuest.title}</h2>
+                <p className="text-sm text-gray-400">レベル {selectedQuest.level}</p>
               </div>
 
-              <div className="bg-gray-50 rounded-2xl p-4 mb-6">
-                <p className="text-gray-700 mb-4">{selectedQuest.description}</p>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">報酬（現金）</span>
-                    <span className="font-bold text-green-600 text-xl">
-                      {formatCurrency(selectedQuest.reward)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">経験値</span>
-                    <span className="font-bold text-blue-600 text-xl">
-                      +{selectedQuest.xpReward} XP
-                    </span>
-                  </div>
+              <div className="bg-gray-900 rounded-xl p-4 mb-4 space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">報酬</span>
+                  <span className="text-green-400 font-bold">¥{selectedQuest.reward}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">経験値</span>
+                  <span className="text-yellow-400 font-bold">+{selectedQuest.xp} XP</span>
                 </div>
               </div>
 
               <div className="flex gap-3">
                 <button
                   onClick={() => setSelectedQuest(null)}
-                  className="flex-1 px-6 py-4 bg-gray-200 text-gray-800 rounded-xl font-bold hover:bg-gray-300 transition-colors"
+                  className="flex-1 py-3 bg-gray-700 text-gray-200 rounded-xl font-bold hover:bg-gray-600"
                 >
-                  キャンセル
+                  閉じる
                 </button>
                 <button
                   onClick={handleStartQuest}
-                  className="flex-1 px-6 py-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-bold hover:shadow-2xl transition-shadow"
+                  className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-bold hover:shadow-lg"
                 >
-                  挑戦する！
+                  開始！
                 </button>
               </div>
             </motion.div>
           </motion.div>
         )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 flex flex-col">
+      {/* メインコンテンツ */}
+      {renderContent()}
+
+      {/* ボトムナビゲーション */}
+      <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-700 safe-area-bottom">
+        <div className="flex items-center justify-around py-2 px-4 max-w-md mx-auto">
+          <button
+            onClick={() => {
+              soundSystem.playClick();
+              setCurrentTab('news');
+            }}
+            className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
+              currentTab === 'news' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-200'
+            }`}
+          >
+            <span className="text-2xl">📰</span>
+            <span className="text-xs font-medium">ニュース</span>
+          </button>
+
+          <button
+            onClick={() => {
+              soundSystem.playClick();
+              setCurrentTab('map');
+            }}
+            className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
+              currentTab === 'map' ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-gray-200'
+            }`}
+          >
+            <span className="text-2xl">🗺️</span>
+            <span className="text-xs font-medium">マップ</span>
+          </button>
+
+          <button
+            onClick={() => {
+              soundSystem.playClick();
+              onNavigate('market');
+            }}
+            className="flex flex-col items-center gap-1 p-2 rounded-lg text-gray-400 hover:text-gray-200 transition-colors"
+          >
+            <span className="text-2xl">🏪</span>
+            <span className="text-xs font-medium">マーケット</span>
+          </button>
+
+          <button
+            onClick={() => {
+              soundSystem.playClick();
+              setCurrentTab('settings');
+            }}
+            className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
+              currentTab === 'settings' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:text-gray-200'
+            }`}
+          >
+            <span className="text-2xl">⚙️</span>
+            <span className="text-xs font-medium">設定</span>
+          </button>
+        </div>
       </div>
     </div>
   );
