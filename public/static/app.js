@@ -1400,34 +1400,110 @@ const QuizScreen = ({ user, onNavigate, onXpEarned }) => {
 // ===== 冒険マップ画面 (MapScreen) =====
 const MapScreen = ({ user, onNavigate, onXpEarned }) => {
   const [selectedQuest, setSelectedQuest] = useState(null);
-  const [completedQuests, setCompletedQuests] = useState([1]); // デモで1番目を完了扱い
-  const [currentTab, setCurrentTab] = useState('map'); // map, news, settings
+  const [completedQuests, setCompletedQuests] = useState([101]); // デモで最初のクエストを完了扱い
 
-  // 学習ノード（Duolingoスタイル）
-  const learningNodes = [
-    { id: 1, level: 1, title: '株式って何？', type: 'lesson', icon: '📚', reward: 300, xp: 30, completed: true },
-    { id: 2, level: 2, title: '株価の見方', type: 'lesson', icon: '📊', reward: 400, xp: 40, completed: false },
-    { id: 3, level: 3, title: 'ミニクイズ', type: 'quiz', icon: '❓', reward: 500, xp: 50, completed: false },
-    { id: 4, level: 4, title: '売買の基礎', type: 'lesson', icon: '💱', reward: 600, xp: 60, completed: false },
-    { id: 5, level: 5, title: '企業分析入門', type: 'lesson', icon: '🔍', reward: 700, xp: 70, completed: false },
-    { id: 6, level: 6, title: 'チャレンジ1', type: 'challenge', icon: '⚔️', reward: 1000, xp: 100, completed: false },
-    { id: 7, level: 7, title: '配当金とは', type: 'lesson', icon: '💰', reward: 800, xp: 80, completed: false },
-    { id: 8, level: 8, title: 'リスク管理', type: 'lesson', icon: '🛡️', reward: 900, xp: 90, completed: false },
-    { id: 9, level: 9, title: 'ポートフォリオ', type: 'lesson', icon: '💼', reward: 1000, xp: 100, completed: false },
-    { id: 10, level: 10, title: 'ボス戦', type: 'boss', icon: '👹', reward: 3000, xp: 300, completed: false }
+  // Chapter構造データ（後から変更可能）
+  const chapters = [
+    {
+      id: 1,
+      title: '価値の誕生と交換',
+      subtitle: 'Origin',
+      stage: 'はじまりの孤島',
+      icon: '🏝️',
+      color: 'from-green-500 to-emerald-600',
+      borderColor: 'border-green-400',
+      difficulty: 1,
+      quests: [
+        { id: 101, title: '物々交換の限界', type: 'simulation', icon: '🐟', reward: 300, xp: 30, description: '魚と肉を交換せよ' },
+        { id: 102, title: '貝殻からコインへ', type: 'lesson', icon: '🐚', reward: 400, xp: 40, description: 'なぜ腐らないものがお金に？' },
+        { id: 103, title: '信用の魔法', type: 'quiz', icon: '📜', reward: 500, xp: 50, description: '紙幣が便利な理由' }
+      ],
+      boss: { id: 199, name: 'インフレ・スライム', icon: '🫧', reward: 1000, xp: 100, description: 'お金が増えすぎると価値が下がる！' }
+    },
+    {
+      id: 2,
+      title: '労働と社会の歯車',
+      subtitle: 'Society',
+      stage: 'ギルドの街',
+      icon: '🏛️',
+      color: 'from-blue-500 to-cyan-600',
+      borderColor: 'border-blue-400',
+      difficulty: 2,
+      quests: [
+        { id: 201, title: '仕事選び', type: 'lesson', icon: '💼', reward: 600, xp: 60, description: '会社員、公務員、起業家…' },
+        { id: 202, title: '生活費サバイバル', type: 'simulation', icon: '🏠', reward: 700, xp: 70, description: '可処分所得を計算せよ' },
+        { id: 203, title: '銀行の金庫', type: 'lesson', icon: '🏦', reward: 800, xp: 80, description: '金利でお金が増える仕組み' }
+      ],
+      boss: { id: 299, name: '浪費モンスター', icon: '💳', reward: 1500, xp: 150, description: 'クレジットカードの罠！' }
+    },
+    {
+      id: 3,
+      title: '企業の森と株式会社',
+      subtitle: 'Enterprise',
+      stage: 'カンパニー・フォレスト',
+      icon: '🌲',
+      color: 'from-purple-500 to-pink-600',
+      borderColor: 'border-purple-400',
+      difficulty: 3,
+      quests: [
+        { id: 301, title: 'ピザ屋を創業せよ', type: 'simulation', icon: '🍕', reward: 900, xp: 90, description: '株券を発行して仲間を集める' },
+        { id: 302, title: '株価の変動', type: 'lesson', icon: '📈', reward: 1000, xp: 100, description: '需要と業績で値段が変わる' },
+        { id: 303, title: '配当の果実', type: 'quiz', icon: '💰', reward: 1100, xp: 110, description: 'インカムゲインの喜び' }
+      ],
+      boss: { id: 399, name: '赤字ドラゴン', icon: '🐉', reward: 2000, xp: 200, description: '倒産すると株が紙切れに！' }
+    },
+    {
+      id: 4,
+      title: '世界市場とリスク',
+      subtitle: 'Global Market',
+      stage: '為替の海',
+      icon: '🌊',
+      color: 'from-orange-500 to-red-600',
+      borderColor: 'border-orange-400',
+      difficulty: 4,
+      quests: [
+        { id: 401, title: 'ハンバーガーの値段', type: 'lesson', icon: '🍔', reward: 1200, xp: 120, description: '海外に行くと値段が違う？' },
+        { id: 402, title: '円安の波', type: 'simulation', icon: '💱', reward: 1300, xp: 130, description: 'iPhoneが高くなる理由' },
+        { id: 403, title: '貿易の船', type: 'quiz', icon: '🚢', reward: 1400, xp: 140, description: '日本の輸出と輸入' }
+      ],
+      boss: { id: 499, name: 'カントリー・リスク', icon: '⚡', reward: 2500, xp: 250, description: '戦争や政治で市場が大荒れ！' }
+    },
+    {
+      id: 5,
+      title: '未来への投資',
+      subtitle: 'Future X',
+      stage: '天空都市ゼスタ',
+      icon: '🏙️',
+      color: 'from-yellow-500 to-amber-600',
+      borderColor: 'border-yellow-400',
+      difficulty: 5,
+      quests: [
+        { id: 501, title: 'タマゴを分けるカゴ', type: 'lesson', icon: '🥚', reward: 1500, xp: 150, description: '分散投資の魔法' },
+        { id: 502, title: '複利のタイムマシン', type: 'simulation', icon: '⏰', reward: 1600, xp: 160, description: '雪だるま式に増やす' },
+        { id: 503, title: '未来のお金', type: 'quiz', icon: '🤖', reward: 1700, xp: 170, description: 'AI時代にどう稼ぐ？' }
+      ],
+      boss: { id: 599, name: '未知数X', icon: '❌', reward: 5000, xp: 500, description: '正解のない未来で生き残れ！' }
+    }
   ];
 
-  const handleNodeClick = (node) => {
-    if (node.completed) return; // 完了済みは無視
-    // 前のノードが完了していないとクリックできない
-    const prevNode = learningNodes.find(n => n.id === node.id - 1);
-    if (prevNode && !prevNode.completed && node.id > 1) {
-      soundSystem.playError();
-      return;
+  // クエストクリック処理
+  const handleQuestClick = (quest, chapter) => {
+    if (completedQuests.includes(quest.id)) return; // 完了済みは無視
+    
+    // 前のクエストが完了しているかチェック
+    const allQuests = chapters.flatMap(ch => [...ch.quests, ch.boss]);
+    const questIndex = allQuests.findIndex(q => q.id === quest.id);
+    
+    if (questIndex > 0) {
+      const prevQuest = allQuests[questIndex - 1];
+      if (!completedQuests.includes(prevQuest.id)) {
+        soundSystem.playError();
+        return;
+      }
     }
     
     soundSystem.playNotification();
-    setSelectedQuest(node);
+    setSelectedQuest({ ...quest, chapter });
   };
 
   const handleStartQuest = () => {
@@ -1436,351 +1512,280 @@ const MapScreen = ({ user, onNavigate, onXpEarned }) => {
     onNavigate('quiz');
   };
 
-  const getNodeColor = (node) => {
-    if (node.completed) return 'bg-green-600';
-    if (node.type === 'boss') return 'bg-red-600';
-    if (node.type === 'challenge') return 'bg-orange-600';
+  // Chapterが完了しているかチェック
+  const isChapterCompleted = (chapter) => {
+    const chapterQuests = [...chapter.quests, chapter.boss];
+    return chapterQuests.every(q => completedQuests.includes(q.id));
+  };
+
+  // Chapterの進捗を計算
+  const getChapterProgress = (chapter) => {
+    const chapterQuests = [...chapter.quests, chapter.boss];
+    const completed = chapterQuests.filter(q => completedQuests.includes(q.id)).length;
+    return { completed, total: chapterQuests.length };
+  };
+
+  // クエストがロックされているか
+  const isQuestLocked = (quest) => {
+    const allQuests = chapters.flatMap(ch => [...ch.quests, ch.boss]);
+    const questIndex = allQuests.findIndex(q => q.id === quest.id);
+    
+    if (questIndex === 0) return false; // 最初のクエストは常にアンロック
+    
+    const prevQuest = allQuests[questIndex - 1];
+    return !completedQuests.includes(prevQuest.id);
+  };
+
+  // クエストの色を取得
+  const getQuestColor = (quest) => {
+    if (completedQuests.includes(quest.id)) return 'bg-green-600';
+    if (quest.id.toString().endsWith('99')) return 'bg-red-600'; // ボス
     return 'bg-blue-600';
   };
 
-  const getNodeSize = (node) => {
-    if (node.type === 'boss') return 'w-24 h-24 text-5xl';
-    if (node.type === 'challenge') return 'w-20 h-20 text-4xl';
-    return 'w-16 h-16 text-3xl';
-  };
-
-  // タブコンテンツをレンダリング
-  const renderContent = () => {
-    if (currentTab === 'news') {
-      return (
-        <div className="p-6 space-y-4">
-          <h2 className="text-2xl font-bold text-gray-200 mb-4">📰 今日のニュース</h2>
-          <div className="bg-gray-800 rounded-xl p-4 border-l-4 border-blue-500">
-            <p className="text-sm text-gray-300 mb-2">🚗 円安で自動車メーカーが注目</p>
-            <p className="text-xs text-gray-400">トヨタやホンダの株価が上昇中です。</p>
+  return (
+    <div className="min-h-screen max-w-md mx-auto bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 pb-24">
+      {/* XESTAヘッダー */}
+      <motion.div
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="sticky top-0 bg-gradient-to-r from-gray-900 to-gray-800 px-6 py-4 z-20 border-b border-gray-700"
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-black text-white flex items-center gap-2">
+              ⚔️ Quest Forest
+            </h1>
+            <p className="text-xs text-gray-400 italic">冒険の森で学び、稼ぐ</p>
           </div>
-          <div className="bg-gray-800 rounded-xl p-4 border-l-4 border-green-500">
-            <p className="text-sm text-gray-300 mb-2">📱 テクノロジー株が人気</p>
-            <p className="text-xs text-gray-400">ソフトバンクグループに注目が集まっています。</p>
-          </div>
-          <div className="bg-gray-800 rounded-xl p-4 border-l-4 border-orange-500">
-            <p className="text-sm text-gray-300 mb-2">💊 製薬業界の新展開</p>
-            <p className="text-xs text-gray-400">武田薬品の新薬開発が進んでいます。</p>
-          </div>
-        </div>
-      );
-    }
-
-    if (currentTab === 'settings') {
-      return (
-        <div className="p-6 space-y-4">
-          <h2 className="text-2xl font-bold text-gray-200 mb-4">⚙️ 設定</h2>
           <button
             onClick={() => {
               soundSystem.playClick();
-              onNavigate('settings');
+              onNavigate('home');
             }}
-            className="w-full bg-gray-800 text-gray-200 rounded-xl p-4 hover:bg-gray-700 transition-colors text-left"
+            className="text-white hover:text-gray-300"
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-bold">マーケット更新設定</p>
-                <p className="text-xs text-gray-400">更新間隔を調整する</p>
-              </div>
-              <span className="text-xl">→</span>
-            </div>
-          </button>
-          <button
-            onClick={() => {
-              soundSystem.playClick();
-              onNavigate('portfolio');
-            }}
-            className="w-full bg-gray-800 text-gray-200 rounded-xl p-4 hover:bg-gray-700 transition-colors text-left"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-bold">ポートフォリオ</p>
-                <p className="text-xs text-gray-400">資産状況を確認</p>
-              </div>
-              <span className="text-xl">→</span>
-            </div>
+            <span className="text-2xl">✕</span>
           </button>
         </div>
-      );
-    }
-
-    // デフォルトは冒険マップ
-    return (
-      <div className="flex-1 overflow-y-auto pb-24">
-        {/* トップヘッダー */}
-        <div className="sticky top-0 bg-gradient-to-b from-gray-900 to-transparent z-10 p-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">🌱</span>
-              <div>
-                <p className="text-sm font-bold text-gray-200">{user.username}</p>
-                <p className="text-xs text-gray-400">Lv.{user.level} | 🔥 {user.streak_count}日</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-xs text-gray-400">総XP</p>
-              <p className="text-lg font-bold text-yellow-400">{user.xp}</p>
-            </div>
+        <div className="mt-3 flex items-center justify-between text-sm">
+          <div className="flex items-center gap-2">
+            <span className="text-yellow-400">🔥</span>
+            <span className="text-gray-300">{user.streak_count}日連続</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-gray-400">Lv.{user.level}</span>
+            <span className="text-gray-500">|</span>
+            <span className="text-yellow-400 font-bold">{user.xp} XP</span>
           </div>
         </div>
+      </motion.div>
 
-        {/* 学習パス（蛇行する道） */}
-        <div className="relative px-6 py-8 max-w-md mx-auto min-h-[1200px]">
-          {/* SVGで曲線の道を描画 */}
-          <svg className="absolute inset-0 w-full h-full" style={{ zIndex: 0 }} viewBox="0 0 400 1200">
-            <defs>
-              <linearGradient id="pathGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" style={{ stopColor: '#4B5563', stopOpacity: 1 }} />
-                <stop offset="100%" style={{ stopColor: '#374151', stopOpacity: 1 }} />
-              </linearGradient>
-            </defs>
-            {learningNodes.map((node, index) => {
-              if (index === learningNodes.length - 1) return null;
-              
-              const nextNode = learningNodes[index + 1];
-              
-              // 現在のノードと次のノードの位置を計算（絶対座標）
-              const currentX = index % 3 === 0 ? 200 : (index % 3 === 1 ? 100 : 300);
-              const nextX = (index + 1) % 3 === 0 ? 200 : ((index + 1) % 3 === 1 ? 100 : 300);
-              
-              const currentY = 80 + index * 110;
-              const nextY = 80 + (index + 1) * 110;
-              
-              // ベジェ曲線で道を描画
-              const midY = (currentY + nextY) / 2;
-              const controlX = (currentX + nextX) / 2;
-              
-              return (
-                <path
-                  key={`path-${node.id}`}
-                  d={`M ${currentX} ${currentY} Q ${controlX} ${midY}, ${nextX} ${nextY}`}
-                  stroke="url(#pathGradient)"
-                  strokeWidth="6"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeDasharray={node.completed ? "none" : "10,5"}
-                  opacity={node.completed ? "1" : "0.4"}
-                />
-              );
-            })}
-          </svg>
-
-          {/* 学習ノード */}
-          {learningNodes.map((node, index) => {
-            const isLocked = !node.completed && index > 0 && !learningNodes[index - 1].completed;
-            
-            // 蛇行パターン: 中央(50%) → 左(25%) → 右(75%) → 中央(50%) → 左(25%) ...
-            const xPosition = index % 3 === 0 ? 50 : (index % 3 === 1 ? 25 : 75);
-            const yPosition = 80 + index * 110;
-            
-            return (
-              <motion.div
-                key={node.id}
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.1, type: "spring", stiffness: 200 }}
-                className="absolute"
-                style={{ 
-                  left: `${xPosition}%`,
-                  top: `${yPosition}px`,
-                  transform: 'translate(-50%, -50%)',
-                  zIndex: 10
-                }}
-              >
-                <div className="flex flex-col items-center gap-2">
-                  {/* ノードアイコン */}
-                  <div 
-                    onClick={() => !isLocked && handleNodeClick(node)}
-                    className={`
-                      ${getNodeSize(node)} 
-                      ${getNodeColor(node)} 
-                      ${isLocked ? 'opacity-50 cursor-not-allowed grayscale' : 'cursor-pointer hover:scale-125 active:scale-95'}
-                      rounded-full flex items-center justify-center
-                      transition-all shadow-2xl relative border-4 border-gray-900
-                    `}
-                    style={{
-                      boxShadow: isLocked ? 'none' : '0 8px 24px rgba(0, 0, 0, 0.5), 0 0 20px rgba(59, 130, 246, 0.3)'
-                    }}
-                  >
-                    {isLocked ? '🔒' : node.icon}
-                    
-                    {/* 完了チェック */}
-                    {node.completed && (
-                      <motion.div 
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="absolute -top-1 -right-1 bg-green-500 rounded-full w-7 h-7 flex items-center justify-center text-white text-sm border-3 border-gray-900 shadow-lg"
-                      >
-                        ✓
-                      </motion.div>
-                    )}
+      {/* Chapters（下から上へスクロール：逆順で表示） */}
+      <div className="p-4 space-y-8">
+        {chapters.slice().reverse().map((chapter, reverseIndex) => {
+          const actualIndex = chapters.length - 1 - reverseIndex;
+          const progress = getChapterProgress(chapter);
+          const isCompleted = isChapterCompleted(chapter);
+          const allQuests = [...chapter.quests, chapter.boss];
+          
+          return (
+            <motion.div
+              key={chapter.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: reverseIndex * 0.1 }}
+              className="space-y-4"
+            >
+              {/* Chapter ヘッダー */}
+              <div className={`bg-gradient-to-br ${chapter.color} rounded-2xl p-5 border-2 ${chapter.borderColor}`}>
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="text-4xl">{chapter.icon}</div>
+                    <div>
+                      <h2 className="text-lg font-black text-white">
+                        Chapter {chapter.id}: {chapter.title}
+                      </h2>
+                      <p className="text-xs text-white/80">{chapter.subtitle}</p>
+                      <p className="text-xs text-white/60 mt-1">📍 {chapter.stage}</p>
+                    </div>
                   </div>
-
-                  {/* ノード情報カード */}
-                  {!isLocked && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 + 0.2 }}
-                      className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-3 shadow-2xl border border-gray-700 min-w-[140px] backdrop-blur-sm"
-                    >
-                      <p className="text-xs font-bold text-gray-100 mb-1.5 text-center">{node.title}</p>
-                      <div className="flex items-center justify-center gap-3 text-xs">
-                        <span className="flex items-center gap-1">
-                          <span className="text-yellow-400">⭐</span>
-                          <span className="text-yellow-300 font-semibold">+{node.xp}</span>
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <span className="text-green-400">💰</span>
-                          <span className="text-green-300 font-semibold">¥{node.reward}</span>
-                        </span>
-                      </div>
-                      {node.type === 'boss' && (
-                        <div className="mt-1 text-center">
-                          <span className="text-xs text-red-400 font-bold">👹 BOSS</span>
-                        </div>
-                      )}
-                      {node.type === 'challenge' && (
-                        <div className="mt-1 text-center">
-                          <span className="text-xs text-orange-400 font-bold">⚔️ 挑戦</span>
-                        </div>
-                      )}
-                    </motion.div>
-                  )}
-                  
-                  {/* ロック中の情報 */}
-                  {isLocked && (
-                    <div className="bg-gray-900 rounded-lg p-2 shadow-xl border border-gray-800 min-w-[100px]">
-                      <p className="text-xs text-gray-500 text-center">ロック中</p>
+                  {isCompleted && (
+                    <div className="bg-white/20 backdrop-blur-sm rounded-full px-3 py-1">
+                      <span className="text-xs font-bold text-white">✓ 完了</span>
                     </div>
                   )}
                 </div>
-              </motion.div>
-            );
-          })}
-        </div>
+                
+                {/* 進捗バー */}
+                <div className="bg-black/20 rounded-full h-2 overflow-hidden mb-2">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(progress.completed / progress.total) * 100}%` }}
+                    className="h-full bg-white/40"
+                  />
+                </div>
+                <p className="text-xs text-white/70 text-right">
+                  {progress.completed}/{progress.total} クエスト完了
+                </p>
+              </div>
 
-        {/* クエスト詳細モーダル */}
+              {/* Chapter内のクエスト */}
+              <div className="space-y-3 pl-4">
+                {allQuests.map((quest, questIndex) => {
+                  const isLocked = isQuestLocked(quest);
+                  const isQuestCompleted = completedQuests.includes(quest.id);
+                  const isBoss = quest.id.toString().endsWith('99');
+                  
+                  return (
+                    <motion.div
+                      key={quest.id}
+                      initial={{ x: -20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ delay: reverseIndex * 0.1 + questIndex * 0.05 }}
+                      whileHover={!isLocked ? { scale: 1.02 } : {}}
+                      whileTap={!isLocked ? { scale: 0.98 } : {}}
+                      onClick={() => !isLocked && handleQuestClick(quest, chapter)}
+                      className={`
+                        ${isLocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                        ${isBoss ? 'bg-gradient-to-br from-red-900 to-red-800 border-red-500' : 'bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700'}
+                        rounded-xl p-4 border-2 relative
+                      `}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className={`
+                            ${isBoss ? 'text-5xl' : 'text-4xl'}
+                            ${isLocked ? 'grayscale' : ''}
+                          `}>
+                            {isLocked ? '🔒' : quest.icon}
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-white text-sm">
+                              {quest.title || quest.name}
+                            </h3>
+                            {quest.description && (
+                              <p className="text-xs text-gray-400 mt-1">{quest.description}</p>
+                            )}
+                            <div className="flex items-center gap-3 mt-2 text-xs">
+                              <span className="flex items-center gap-1">
+                                <span className="text-green-400">💰</span>
+                                <span className="text-green-300">¥{quest.reward}</span>
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <span className="text-yellow-400">⭐</span>
+                                <span className="text-yellow-300">+{quest.xp}</span>
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* 完了チェック */}
+                        {isQuestCompleted && (
+                          <div className="bg-green-500 rounded-full w-8 h-8 flex items-center justify-center text-white text-sm">
+                            ✓
+                          </div>
+                        )}
+                        
+                        {/* ボスバッジ */}
+                        {isBoss && !isLocked && (
+                          <div className="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded-full font-bold">
+                            BOSS
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* クエスト詳細モーダル */}
+      <AnimatePresence>
         {selectedQuest && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             onClick={() => setSelectedQuest(null)}
-            className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50"
+            className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50"
           >
             <motion.div
               initial={{ scale: 0.8, y: 50 }}
               animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.8, y: 50 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-gray-800 rounded-3xl p-6 max-w-sm w-full"
+              className={`
+                ${selectedQuest.id.toString().endsWith('99') 
+                  ? 'bg-gradient-to-br from-red-900 to-red-800' 
+                  : 'bg-gradient-to-br from-gray-800 to-gray-900'}
+                rounded-3xl p-6 max-w-sm w-full border-2
+                ${selectedQuest.chapter?.borderColor || 'border-gray-700'}
+              `}
             >
+              {/* Chapterバッジ */}
+              <div className="text-center mb-2">
+                <span className="text-xs text-gray-400">
+                  {selectedQuest.chapter?.icon} Chapter {selectedQuest.chapter?.id}: {selectedQuest.chapter?.subtitle}
+                </span>
+              </div>
+              
               <div className="text-center mb-4">
                 <div className="text-6xl mb-3">{selectedQuest.icon}</div>
-                <h2 className="text-2xl font-bold text-gray-100 mb-2">{selectedQuest.title}</h2>
-                <p className="text-sm text-gray-400">レベル {selectedQuest.level}</p>
+                <h2 className="text-2xl font-bold text-white mb-2">
+                  {selectedQuest.title || selectedQuest.name}
+                </h2>
+                {selectedQuest.description && (
+                  <p className="text-sm text-gray-300">{selectedQuest.description}</p>
+                )}
               </div>
 
-              <div className="bg-gray-900 rounded-xl p-4 mb-4 space-y-2">
+              <div className="bg-black/30 rounded-xl p-4 mb-4 space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-gray-400">報酬</span>
+                  <span className="text-gray-300">報酬</span>
                   <span className="text-green-400 font-bold">¥{selectedQuest.reward}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400">経験値</span>
+                  <span className="text-gray-300">経験値</span>
                   <span className="text-yellow-400 font-bold">+{selectedQuest.xp} XP</span>
                 </div>
+                {selectedQuest.id.toString().endsWith('99') && (
+                  <div className="pt-2 border-t border-white/10 text-center">
+                    <span className="text-red-400 font-bold text-sm">👹 BOSS BATTLE</span>
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-3">
                 <button
                   onClick={() => setSelectedQuest(null)}
-                  className="flex-1 py-3 bg-gray-700 text-gray-200 rounded-xl font-bold hover:bg-gray-600"
+                  className="flex-1 py-3 bg-gray-700 text-white rounded-xl font-bold hover:bg-gray-600"
                 >
                   閉じる
                 </button>
                 <button
                   onClick={handleStartQuest}
-                  className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-bold hover:shadow-lg"
+                  className={`
+                    flex-1 py-3 rounded-xl font-bold text-white
+                    ${selectedQuest.id.toString().endsWith('99')
+                      ? 'bg-gradient-to-r from-red-600 to-red-700 hover:shadow-red-500/50'
+                      : 'bg-gradient-to-r from-blue-600 to-purple-600'}
+                    hover:shadow-lg
+                  `}
                 >
-                  開始！
+                  {selectedQuest.id.toString().endsWith('99') ? '挑戦！' : '開始！'}
                 </button>
               </div>
             </motion.div>
           </motion.div>
         )}
-      </div>
-    );
-  };
-
-  return (
-    <div className="min-h-screen max-w-md mx-auto bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 flex flex-col max-w-md mx-auto">
-      {/* メインコンテンツ */}
-      {renderContent()}
-
-      {/* ボトムナビゲーション */}
-      <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-700 safe-area-bottom">
-        <div className="flex items-center justify-around py-2 px-4 max-w-md mx-auto">
-          <button
-            onClick={() => {
-              soundSystem.playClick();
-              setCurrentTab('news');
-            }}
-            className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
-              currentTab === 'news' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-200'
-            }`}
-          >
-            <span className="text-2xl">📰</span>
-            <span className="text-xs font-medium">ニュース</span>
-          </button>
-
-          <button
-            onClick={() => {
-              soundSystem.playClick();
-              setCurrentTab('map');
-            }}
-            className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
-              currentTab === 'map' ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-gray-200'
-            }`}
-          >
-            <span className="text-2xl">🗺️</span>
-            <span className="text-xs font-medium">マップ</span>
-          </button>
-
-          <button
-            onClick={() => {
-              soundSystem.playClick();
-              onNavigate('market');
-            }}
-            className="flex flex-col items-center gap-1 p-2 rounded-lg text-gray-400 hover:text-gray-200 transition-colors"
-          >
-            <span className="text-2xl">🏪</span>
-            <span className="text-xs font-medium">マーケット</span>
-          </button>
-
-          <button
-            onClick={() => {
-              soundSystem.playClick();
-              setCurrentTab('settings');
-            }}
-            className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
-              currentTab === 'settings' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:text-gray-200'
-            }`}
-          >
-            <span className="text-2xl">⚙️</span>
-            <span className="text-xs font-medium">設定</span>
-          </button>
-        </div>
-      </div>
+      </AnimatePresence>
     </div>
   );
 };
-
-// ===== ポートフォリオ画面 =====
 const PortfolioScreen = ({ user, onNavigate }) => {
   const [holdings, setHoldings] = useState([]);
   const [loading, setLoading] = useState(true);
