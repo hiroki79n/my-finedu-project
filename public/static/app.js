@@ -522,40 +522,18 @@ const AuthScreen = ({ onLogin }) => {
   );
 };
 // ===== スマートボタンフック =====
-const useSmartButton = (cash) => {
-  const threshold = 1000;
-  const needsToEarn = cash < threshold;
-  
-  return {
-    needsToEarn,
-    color: needsToEarn ? 'bg-blue-500' : 'bg-orange-500',
-    hoverColor: needsToEarn ? 'hover:bg-blue-600' : 'hover:bg-orange-600',
-    icon: needsToEarn ? '⚔️' : '📈',
-    text: needsToEarn ? '冒険に出かけて稼ぐ！' : 'マーケットで投資する！',
-    action: needsToEarn ? 'map' : 'market',
-    animation: needsToEarn ? 'pulse' : 'sparkle'
-  };
-};
-
 const HomeScreen = ({ user, asset, onNavigate }) => {
-  const xpPerLevel = 1000;
-  const currentLevelXp = user.xp % xpPerLevel;
-  const xpProgress = (currentLevelXp / xpPerLevel) * 100;
   const [totalAssets, setTotalAssets] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showCoinAnimation, setShowCoinAnimation] = useState(false);
+  const [cash, setCash] = useState(0);
 
   useEffect(() => {
-    // ストリーク音を再生（画面表示時に1回だけ）
+    fetchTotalAssets();
+    
+    // 画面表示時のサウンド
     if (user.streak_count > 0) {
       soundSystem.playStreak();
     }
-    
-    // 総資産を取得
-    fetchTotalAssets();
-    
-    // ログイン時のコインアニメーション
-    setTimeout(() => setShowCoinAnimation(true), 500);
   }, []);
 
   const fetchTotalAssets = async () => {
@@ -563,6 +541,7 @@ const HomeScreen = ({ user, asset, onNavigate }) => {
       const response = await fetch(`/api/user/${user.id}/total-assets`);
       const data = await response.json();
       setTotalAssets(data);
+      setCash(data.cash || 0);
     } catch (err) {
       console.error('Failed to fetch total assets:', err);
     } finally {
@@ -570,254 +549,235 @@ const HomeScreen = ({ user, asset, onNavigate }) => {
     }
   };
 
-  // スマートボタンの状態
-  const smartButton = useSmartButton(totalAssets?.cash || 0);
+  // Context-Aware FAB の状態
+  const needsToEarn = cash < 50000; // 5万円未満なら「稼ぐ」を推奨
+  const fabColor = needsToEarn ? 'bg-blue-500' : 'bg-gradient-to-r from-orange-500 to-red-500';
+  const fabIcon = needsToEarn ? '⚔️' : '📈';
+  const fabText = needsToEarn ? 'クエストで稼ぐ' : 'XESTA市場へ';
+  const fabAction = needsToEarn ? 'map' : 'market';
 
-  const handleSmartAction = () => {
+  const handleFabClick = () => {
     soundSystem.playClick();
-    if (smartButton.action === 'map') {
-      onNavigate('map');
-    } else {
-      onNavigate('market');
-    }
+    onNavigate(fabAction);
   };
 
   return (
-    <div className="min-h-screen max-w-md mx-auto p-4 pb-32">
-      <div className="max-w-4xl mx-auto">
-        {/* コンパクトヘッダー */}
-        <motion.div
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="flex justify-between items-center mb-6"
-        >
-          <div>
-            <h2 className="text-2xl font-bold text-white">
-              {user.username}さん
-            </h2>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="text-xl">🔥</span>
-              <span className="text-sm font-bold text-yellow-300">
-                {user.streak_count}日連続
-              </span>
-            </div>
+    <div className="min-h-screen max-w-md mx-auto pb-32">
+      {/* XESTA ヘッダー */}
+      <motion.div
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="bg-gradient-to-r from-gray-900 to-gray-800 px-6 py-4 flex justify-between items-center"
+      >
+        <div>
+          <div className="text-3xl font-black text-white">
+            ✕ XESTA
           </div>
-          <div className="text-right">
-            <div className="text-xs text-gray-300">レベル</div>
-            <div className="text-4xl font-bold text-white">{user.level}</div>
+          <div className="text-xs text-gray-400 italic">Invest in the Unknown</div>
+        </div>
+        <div className="text-right">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-yellow-400">🔥</span>
+            <span className="text-sm font-bold text-yellow-300">{user.streak_count}日</span>
           </div>
-        </motion.div>
+          <div className="text-sm text-gray-300">
+            Lv.<span className="text-white font-bold">{user.level}</span>
+          </div>
+        </div>
+      </motion.div>
 
-        {/* ダイナミック・ヒーローセクション: Cycle Visualizer */}
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.1 }}
-          className="bg-white rounded-3xl p-6 card-shadow mb-6"
-        >
-          <h3 className="text-center text-lg font-bold text-gray-800 mb-4">
-            💼 キャッシュフローの循環
-          </h3>
-          
-          {loading ? (
-            <div className="text-center py-8">
-              <div className="spinner mx-auto"></div>
-            </div>
-          ) : (
-            <div className="relative">
-              {/* 循環フロー */}
-              <div className="flex items-center justify-between mb-6">
-                {/* 左: 冒険（稼ぐ） */}
-                <motion.div
-                  initial={{ x: -20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.2 }}
-                  className="flex-1 text-center"
-                >
-                  <motion.div
-                    animate={{ 
-                      rotate: smartButton.needsToEarn ? [0, -10, 10, 0] : 0,
-                      scale: smartButton.needsToEarn ? [1, 1.1, 1] : 1
-                    }}
-                    transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 1 }}
-                    className="text-6xl mb-2"
-                  >
-                    ⚔️
-                  </motion.div>
-                  <div className="text-sm font-bold text-blue-600">冒険で稼ぐ</div>
-                </motion.div>
-
-                {/* コイン飛翔アニメーション */}
-                {showCoinAnimation && (
-                  <motion.div
-                    initial={{ x: -50, y: 0, opacity: 1, scale: 0.5 }}
-                    animate={{ x: 0, y: -10, opacity: 0, scale: 1.5 }}
-                    transition={{ duration: 1, repeat: Infinity, repeatDelay: 2 }}
-                    className="absolute left-1/4 top-1/2 text-3xl"
-                  >
-                    💰
-                  </motion.div>
-                )}
-
-                {/* 中央: お財布（現金） */}
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.3, type: "spring" }}
-                  className="flex-1 text-center relative z-10"
-                >
-                  <div className="bg-gradient-to-br from-green-400 to-green-600 rounded-2xl p-4 text-white">
-                    <div className="text-4xl mb-1">💰</div>
-                    <div className="text-xs opacity-90">現金</div>
-                    <div className="text-2xl font-bold">
-                      <CountUp value={totalAssets?.cash || 0} duration={1} />
-                    </div>
+      {/* The Dual Engine: 3パネルレイアウト */}
+      <div className="p-4 space-y-4">
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="spinner mx-auto"></div>
+          </div>
+        ) : (
+          <>
+            {/* 資産タンク (Wallet) - 最上部 */}
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.1 }}
+              className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-3xl p-6 border-2 border-emerald-500"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-3xl">💰</span>
+                  <div>
+                    <div className="text-xs text-gray-400">資産タンク</div>
+                    <div className="text-sm font-bold text-white">Total Wallet</div>
                   </div>
-                </motion.div>
-
-                {/* コイン飛翔アニメーション（右向き） */}
-                {showCoinAnimation && !smartButton.needsToEarn && (
-                  <motion.div
-                    initial={{ x: 0, y: 0, opacity: 1, scale: 0.5 }}
-                    animate={{ x: 50, y: -10, opacity: 0, scale: 1.5 }}
-                    transition={{ duration: 1, repeat: Infinity, repeatDelay: 2 }}
-                    className="absolute right-1/4 top-1/2 text-3xl"
-                  >
-                    💰
-                  </motion.div>
-                )}
-
-                {/* 右: 市場（投資） */}
-                <motion.div
-                  initial={{ x: 20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.4 }}
-                  className="flex-1 text-center"
+                </div>
+                <button
+                  onClick={fetchTotalAssets}
+                  className="text-gray-400 hover:text-white transition-colors"
                 >
-                  <motion.div
-                    animate={{ 
-                      y: !smartButton.needsToEarn ? [0, -5, 0] : 0,
-                      scale: !smartButton.needsToEarn ? [1, 1.1, 1] : 1
-                    }}
-                    transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 1 }}
-                    className="text-6xl mb-2"
-                  >
-                    🏛️
-                  </motion.div>
-                  <div className="text-sm font-bold text-orange-600">市場で投資</div>
-                </motion.div>
+                  <span className="text-xl">🔄</span>
+                </button>
               </div>
-
-              {/* 矢印表示 */}
-              <div className="flex items-center justify-center gap-2 mb-4">
-                <div className="text-2xl text-blue-500">→</div>
-                <div className="text-sm text-gray-600">お金の流れ</div>
-                <div className="text-2xl text-orange-500">→</div>
-              </div>
-
-              {/* 総資産表示 */}
-              <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-2xl p-4 text-center">
-                <div className="text-sm text-gray-600 mb-1">総資産</div>
-                <div className="text-3xl font-bold text-purple-600">
+              
+              {/* 総資産 */}
+              <div className="bg-gray-700/50 rounded-2xl p-4 mb-3">
+                <div className="text-xs text-gray-400 mb-1">総資産 Total Assets</div>
+                <div className="text-3xl font-black text-emerald-400">
                   <CountUp value={totalAssets?.totalAssets || 0} duration={1.5} />
                 </div>
-                <div className="text-xs text-gray-500 mt-1">
-                  株式評価額: <CountUp value={totalAssets?.stockValue || 0} duration={1} />
+              </div>
+
+              {/* 現金 / 株式 */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-gray-700/30 rounded-xl p-3">
+                  <div className="text-xs text-gray-400 mb-1">現金</div>
+                  <div className="text-xl font-bold text-white">
+                    <CountUp value={cash} duration={1} />
+                  </div>
+                </div>
+                <div className="bg-gray-700/30 rounded-xl p-3">
+                  <div className="text-xs text-gray-400 mb-1">株式評価額</div>
+                  <div className="text-xl font-bold text-blue-400">
+                    <CountUp value={totalAssets?.stockValue || 0} duration={1} />
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-        </motion.div>
+            </motion.div>
 
-        {/* クエスト＆ニュース・カード */}
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="grid grid-cols-1 gap-3 mb-6"
-        >
-          {/* 今日のニュース */}
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-4 border-l-4 border-blue-500">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xl">📰</span>
-              <span className="text-sm font-bold text-blue-700">今日のニュース</span>
-            </div>
-            <p className="text-sm text-gray-700">
-              円安で自動車メーカーが注目されています 🚗
-            </p>
-          </div>
+            {/* クエスト森 (Work) & 市場の城 (Invest) */}
+            <div className="grid grid-cols-2 gap-3">
+              {/* クエスト森 (Work) */}
+              <motion.button
+                onClick={() => {
+                  soundSystem.playClick();
+                  onNavigate('map');
+                }}
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ 
+                  x: 0, 
+                  opacity: 1,
+                  scale: needsToEarn ? [1, 1.05, 1] : 1
+                }}
+                transition={{ 
+                  x: { delay: 0.2 },
+                  scale: { duration: 1, repeat: Infinity, repeatDelay: 0.5 }
+                }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={`${needsToEarn ? 'bg-gradient-to-br from-blue-600 to-blue-700 border-blue-400' : 'bg-gradient-to-br from-blue-500/30 to-blue-600/30 border-blue-500/50'} rounded-2xl p-6 border-2 relative overflow-hidden`}
+              >
+                <div className="text-5xl mb-3">⚔️</div>
+                <div className="text-sm font-bold text-white mb-1">クエストの森</div>
+                <div className="text-xs text-blue-200">Quest Forest</div>
+                <div className="text-xs text-white/80 mt-2">労働で稼ぐ</div>
+                {needsToEarn && (
+                  <motion.div
+                    animate={{ opacity: [0.5, 1, 0.5] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                    className="absolute top-2 right-2 bg-yellow-400 text-xs px-2 py-1 rounded-full font-bold text-gray-900"
+                  >
+                    おすすめ
+                  </motion.div>
+                )}
+              </motion.button>
 
-          {/* デイリーミッション */}
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-4 border-l-4 border-green-500">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xl">🎯</span>
-              <span className="text-sm font-bold text-green-700">デイリーミッション</span>
+              {/* 市場の城 (Invest) */}
+              <motion.button
+                onClick={() => {
+                  soundSystem.playClick();
+                  onNavigate('market');
+                }}
+                initial={{ x: 20, opacity: 0 }}
+                animate={{ 
+                  x: 0, 
+                  opacity: 1,
+                  scale: !needsToEarn ? [1, 1.05, 1] : 1
+                }}
+                transition={{ 
+                  x: { delay: 0.3 },
+                  scale: { duration: 1, repeat: Infinity, repeatDelay: 0.5 }
+                }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={`${!needsToEarn ? 'bg-gradient-to-br from-orange-600 to-red-600 border-red-400' : 'bg-gradient-to-br from-orange-500/30 to-red-600/30 border-red-500/50'} rounded-2xl p-6 border-2 relative overflow-hidden`}
+              >
+                <div className="text-5xl mb-3">🏛️</div>
+                <div className="text-sm font-bold text-white mb-1">市場の城</div>
+                <div className="text-xs text-orange-200">XESTA Market</div>
+                <div className="text-xs text-white/80 mt-2">投資で増やす</div>
+                {!needsToEarn && (
+                  <motion.div
+                    animate={{ opacity: [0.5, 1, 0.5] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                    className="absolute top-2 right-2 bg-yellow-400 text-xs px-2 py-1 rounded-full font-bold text-gray-900"
+                  >
+                    おすすめ
+                  </motion.div>
+                )}
+              </motion.button>
             </div>
-            <p className="text-sm text-gray-700">
-              あと1回クイズをクリアでボーナス！ ✨
-            </p>
-          </div>
-        </motion.div>
 
-        {/* サブアクション（小さめ） */}
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="grid grid-cols-3 gap-2 mb-6"
-        >
-          <button
-            onClick={() => {
-              soundSystem.playClick();
-              onNavigate('portfolio');
-            }}
-            className="bg-white rounded-xl p-3 card-shadow hover:shadow-lg transition-shadow"
-          >
-            <div className="text-2xl mb-1">💼</div>
-            <div className="text-xs font-bold text-gray-800">資産</div>
-          </button>
-          <button
-            onClick={() => {
-              soundSystem.playClick();
-              onNavigate('history');
-            }}
-            className="bg-white rounded-xl p-3 card-shadow hover:shadow-lg transition-shadow"
-          >
-            <div className="text-2xl mb-1">📊</div>
-            <div className="text-xs font-bold text-gray-800">履歴</div>
-          </button>
-          <button
-            onClick={() => {
-              soundSystem.playClick();
-              onNavigate('settings');
-            }}
-            className="bg-white rounded-xl p-3 card-shadow hover:shadow-lg transition-shadow"
-          >
-            <div className="text-2xl mb-1">⚙️</div>
-            <div className="text-xs font-bold text-gray-800">設定</div>
-          </button>
-        </motion.div>
+            {/* クイックアクション */}
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="grid grid-cols-3 gap-2"
+            >
+              <button
+                onClick={() => {
+                  soundSystem.playClick();
+                  onNavigate('portfolio');
+                }}
+                className="bg-gray-800/50 border border-gray-700 rounded-xl p-3 hover:bg-gray-700/50 transition-colors"
+              >
+                <div className="text-2xl mb-1">💼</div>
+                <div className="text-xs font-bold text-white">資産</div>
+              </button>
+              <button
+                onClick={() => {
+                  soundSystem.playClick();
+                  onNavigate('history');
+                }}
+                className="bg-gray-800/50 border border-gray-700 rounded-xl p-3 hover:bg-gray-700/50 transition-colors"
+              >
+                <div className="text-2xl mb-1">📊</div>
+                <div className="text-xs font-bold text-white">履歴</div>
+              </button>
+              <button
+                onClick={() => {
+                  soundSystem.playClick();
+                  onNavigate('settings');
+                }}
+                className="bg-gray-800/50 border border-gray-700 rounded-xl p-3 hover:bg-gray-700/50 transition-colors"
+              >
+                <div className="text-2xl mb-1">⚙️</div>
+                <div className="text-xs font-bold text-white">設定</div>
+              </button>
+            </motion.div>
+          </>
+        )}
       </div>
 
-      {/* スマート・アクションボタン (Context-Aware FAB) */}
+      {/* Context-Aware FAB */}
       <motion.div
-        initial={{ y: 100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.7, type: "spring" }}
-        className="fixed bottom-6 left-0 right-0 flex justify-center z-40"
+        initial={{ y: 100, scale: 0.8, opacity: 0 }}
+        animate={{ y: 0, scale: 1, opacity: 1 }}
+        transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
+        className="fixed bottom-20 left-0 right-0 flex justify-center z-40"
       >
         <motion.button
-          onClick={handleSmartAction}
-          animate={
-            smartButton.animation === 'pulse'
-              ? { scale: [1, 1.05, 1] }
-              : { boxShadow: ['0 0 0 0 rgba(255,165,0,0.7)', '0 0 0 10px rgba(255,165,0,0)', '0 0 0 0 rgba(255,165,0,0)'] }
-          }
-          transition={{ duration: 1.5, repeat: Infinity }}
-          className={`${smartButton.color} ${smartButton.hoverColor} text-white px-8 py-5 rounded-full font-bold text-lg shadow-2xl flex items-center gap-3 transform hover:scale-105 transition-transform`}
+          onClick={handleFabClick}
+          animate={{ 
+            boxShadow: needsToEarn 
+              ? ['0 0 0 0 rgba(59,130,246,0.7)', '0 0 0 15px rgba(59,130,246,0)', '0 0 0 0 rgba(59,130,246,0)']
+              : ['0 0 0 0 rgba(249,115,22,0.7)', '0 0 0 15px rgba(249,115,22,0)', '0 0 0 0 rgba(249,115,22,0)']
+          }}
+          transition={{ duration: 2, repeat: Infinity }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className={`${fabColor} text-white px-8 py-4 rounded-full font-bold text-base shadow-2xl flex items-center gap-3`}
         >
-          <span className="text-3xl">{smartButton.icon}</span>
-          <span>{smartButton.text}</span>
+          <span className="text-3xl">{fabIcon}</span>
+          <span>{fabText}</span>
         </motion.button>
       </motion.div>
     </div>
@@ -826,40 +786,20 @@ const HomeScreen = ({ user, asset, onNavigate }) => {
 
 // ===== マーケット画面 =====
 const MarketScreen = ({ user, onNavigate }) => {
-  const [markets, setMarkets] = useState([]);
+  const [stocks, setStocks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedStock, setSelectedStock] = useState(null);
-  const [updateInterval, setUpdateInterval] = useState(30000); // デフォルト30秒
+  const [selectedAsset, setSelectedAsset] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState('all'); // 'all', 'stocks', 'commodities', 'xpacks'
 
   useEffect(() => {
     fetchMarketData();
-    fetchUserSettings();
   }, []);
-
-  useEffect(() => {
-    // 更新間隔が変更されたら、インターバルを再設定
-    const interval = setInterval(() => {
-      updateMarketPrices();
-    }, updateInterval);
-
-    return () => clearInterval(interval);
-  }, [updateInterval]);
-
-  const fetchUserSettings = async () => {
-    try {
-      const response = await fetch(`/api/user/${user.id}/settings`);
-      const data = await response.json();
-      setUpdateInterval((data.market_update_interval || 30) * 1000); // 秒をミリ秒に変換
-    } catch (err) {
-      console.error('Failed to fetch user settings:', err);
-    }
-  };
 
   const fetchMarketData = async () => {
     try {
       const response = await fetch('/api/market');
       const data = await response.json();
-      setMarkets(data.markets);
+      setStocks(data.markets);
     } catch (err) {
       console.error('Failed to fetch market data:', err);
     } finally {
@@ -867,30 +807,36 @@ const MarketScreen = ({ user, onNavigate }) => {
     }
   };
 
-  const updateMarketPrices = async () => {
-    try {
-      await fetch('/api/market/tick', { method: 'POST' });
-      await fetchMarketData();
-    } catch (err) {
-      console.error('Failed to update market prices:', err);
+  // XESTAのカテゴリ分類
+  const categories = {
+    stocks: {
+      name: 'Stocks',
+      subtitle: '株式',
+      icon: '📈',
+      color: 'from-blue-600 to-blue-700',
+      items: stocks.filter(s => !s.type || s.type.toUpperCase() === 'STOCK')
+    },
+    commodities: {
+      name: 'Commodities',
+      subtitle: '商品',
+      icon: '⚡',
+      color: 'from-yellow-600 to-orange-600',
+      items: stocks.filter(s => s.type && s.type.toUpperCase() === 'COMMODITY')
+    },
+    xpacks: {
+      name: 'X-Packs',
+      subtitle: 'ETF',
+      icon: '📦',
+      color: 'from-purple-600 to-pink-600',
+      items: stocks.filter(s => s.type && s.type.toUpperCase() === 'ETF')
     }
   };
 
-  // 企業アイコンマッピング（Lucide Reactの絵文字で代用）
-  const getCompanyIcon = (symbol, sector) => {
+  const getIcon = (symbol, sector) => {
     const iconMap = {
-      '7974': '🎮', // 任天堂 - ゲーム
-      '7203': '🚗', // トヨタ - 自動車
-      '9983': '👕', // ファーストリテイリング - アパレル
-      '4704': '🛡️', // トレンドマイクロ - セキュリティ
-      '4689': '💬', // LINEヤフー - 通信
-      '4755': '🛒', // 楽天 - EC
-      '6758': '🎵', // ソニー - エンタメ
-      '9984': '📱', // ソフトバンク - 通信
-      '4502': '💊', // 武田薬品 - 医薬品
-      '2914': '🍃', // JT - 食品
-      '4568': '⚕️', // 第一三共 - 医薬品
-      '6098': '💼', // リクルート - 人材
+      '7974': '🎮', '7203': '🚗', '9983': '👕', '4704': '🛡️',
+      '4689': '💬', '4755': '🛒', '6758': '🎵', '9984': '📱',
+      '4502': '💊', '2914': '🍃', '4568': '⚕️', '6098': '💼',
     };
     return iconMap[symbol] || '🏢';
   };
@@ -904,77 +850,173 @@ const MarketScreen = ({ user, onNavigate }) => {
   }
 
   return (
-    <div className="min-h-screen max-w-md mx-auto p-6">
-      <div className="max-w-6xl mx-auto">
-        {/* ヘッダー */}
-        <motion.div
-          initial={{ y: -50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="flex justify-between items-center mb-6"
+    <div className="min-h-screen max-w-md mx-auto pb-24">
+      {/* XESTAヘッダー */}
+      <motion.div
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="bg-gradient-to-r from-gray-900 to-gray-800 px-6 py-4 flex justify-between items-center"
+      >
+        <div>
+          <h1 className="text-2xl font-black text-white flex items-center gap-2">
+            🏛️ XESTA Market
+          </h1>
+          <p className="text-xs text-gray-400 italic">未知なる投資の世界へ</p>
+        </div>
+        <button
+          onClick={() => {
+            soundSystem.playClick();
+            onNavigate('home');
+          }}
+          className="text-white hover:text-gray-300"
         >
-          <h1 className="text-4xl font-bold text-white">📈 マーケット</h1>
-          <Button variant="outline" onClick={() => onNavigate('map')}>
-            ← ホームに戻る
-          </Button>
-        </motion.div>
+          <span className="text-2xl">✕</span>
+        </button>
+      </motion.div>
 
-        {/* 銘柄リスト */}
-        <div className="grid gap-4">
-          {markets.map((market, index) => (
+      <div className="p-4">
+        {/* Bento Grid: 3つのカテゴリカード */}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="space-y-3 mb-6"
+        >
+          {/* Stocks カード (大きめ) */}
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => {
+              soundSystem.playClick();
+              setSelectedCategory('stocks');
+            }}
+            className={`bg-gradient-to-br ${categories.stocks.color} rounded-3xl p-6 cursor-pointer border-2 border-blue-400`}
+          >
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <div className="text-5xl mb-2">{categories.stocks.icon}</div>
+                <h2 className="text-2xl font-black text-white">{categories.stocks.name}</h2>
+                <p className="text-sm text-blue-100">{categories.stocks.subtitle}</p>
+              </div>
+              <div className="bg-white/20 backdrop-blur-sm rounded-xl px-3 py-1">
+                <span className="text-white font-bold">{categories.stocks.items.length}銘柄</span>
+              </div>
+            </div>
+            <p className="text-xs text-white/80">個別企業の成長に投資</p>
+          </motion.div>
+
+          {/* Commodities と X-Packs を横並び */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Commodities カード */}
             <motion.div
-              key={market.symbol}
-              initial={{ x: -50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: index * 0.05 }}
               whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => {
-                soundSystem.playNotification();
-                setSelectedStock(market);
+                soundSystem.playClick();
+                setSelectedCategory('commodities');
               }}
-              className="bg-white rounded-2xl p-6 card-shadow cursor-pointer hover:shadow-2xl transition-shadow"
+              className={`bg-gradient-to-br ${categories.commodities.color} rounded-2xl p-5 cursor-pointer border-2 border-yellow-400`}
             >
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-4">
-                  {/* 企業アイコン */}
-                  <div className="text-5xl">
-                    {getCompanyIcon(market.symbol, market.sector)}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <div className="text-2xl font-bold text-gray-800">{market.company_name}</div>
-                      <div className="text-sm text-gray-500">({market.symbol})</div>
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full">
-                        {market.sector}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-3xl font-bold text-gray-800">
-                    {formatCurrency(market.current_price)}
-                  </div>
-                  <div className="text-sm text-gray-500 mt-1">
-                    リアルタイム株価
-                  </div>
-                </div>
+              <div className="text-4xl mb-2">{categories.commodities.icon}</div>
+              <h3 className="text-lg font-black text-white">{categories.commodities.name}</h3>
+              <p className="text-xs text-yellow-100 mb-2">{categories.commodities.subtitle}</p>
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 inline-block">
+                <span className="text-xs text-white font-bold">{categories.commodities.items.length}銘柄</span>
               </div>
             </motion.div>
-          ))}
-        </div>
+
+            {/* X-Packs カード */}
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                soundSystem.playClick();
+                setSelectedCategory('xpacks');
+              }}
+              className={`bg-gradient-to-br ${categories.xpacks.color} rounded-2xl p-5 cursor-pointer border-2 border-purple-400`}
+            >
+              <div className="text-4xl mb-2">{categories.xpacks.icon}</div>
+              <h3 className="text-lg font-black text-white">{categories.xpacks.name}</h3>
+              <p className="text-xs text-purple-100 mb-2">{categories.xpacks.subtitle}</p>
+              <div className="bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 inline-block">
+                <span className="text-xs text-white font-bold">{categories.xpacks.items.length}銘柄</span>
+              </div>
+            </motion.div>
+          </div>
+        </motion.div>
+
+        {/* カテゴリが選択されたら銘柄リストを表示 */}
+        {selectedCategory !== 'all' && (
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-white">
+                {categories[selectedCategory].name}
+              </h3>
+              <button
+                onClick={() => setSelectedCategory('all')}
+                className="text-sm text-gray-300 hover:text-white"
+              >
+                ✕ 閉じる
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {categories[selectedCategory].items.length === 0 ? (
+                <div className="text-center py-8 text-gray-400">
+                  <p>このカテゴリにはまだ銘柄がありません</p>
+                </div>
+              ) : (
+                categories[selectedCategory].items.map((item, index) => (
+                  <motion.div
+                    key={item.symbol}
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: index * 0.05 }}
+                    whileHover={{ scale: 1.02 }}
+                    onClick={() => {
+                      soundSystem.playNotification();
+                      setSelectedAsset(item);
+                    }}
+                    className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-4 cursor-pointer border border-gray-700 hover:border-gray-500 transition-colors"
+                  >
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        <div className="text-4xl">
+                          {getIcon(item.symbol, item.sector)}
+                        </div>
+                        <div>
+                          <div className="font-bold text-white">{item.company_name}</div>
+                          <div className="text-xs text-gray-400">{item.symbol}</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-bold text-emerald-400">
+                          {formatCurrency(item.current_price)}
+                        </div>
+                        <div className="text-xs text-gray-500">リアルタイム</div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))
+              )}
+            </div>
+          </motion.div>
+        )}
       </div>
 
-      {/* 株式購入モーダル */}
+      {/* トレードモーダル */}
       <AnimatePresence>
-        {selectedStock && (
+        {selectedAsset && (
           <TradeModal
-            stock={selectedStock}
+            stock={selectedAsset}
             userId={user.id}
-            onClose={() => setSelectedStock(null)}
+            onClose={() => setSelectedAsset(null)}
             onSuccess={() => {
-              setSelectedStock(null);
-              onNavigate('map');
+              setSelectedAsset(null);
+              onNavigate('home');
             }}
           />
         )}
@@ -2202,7 +2244,7 @@ const App = () => {
   const handleLogin = (userData, assetData) => {
     setUser(userData);
     setAsset(assetData);
-    setCurrentScreen('map'); // トップページを冒険マップに変更
+    setCurrentScreen('home'); // XESTA The Dual Engine ホーム画面へ
     setBuddyMood('excited');
     setBuddyMessage(`ようこそ、${userData.username}さん！`);
     soundSystem.playNotification(); // 通知音を再生
