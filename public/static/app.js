@@ -622,6 +622,7 @@ const HomeScreen = ({ user, asset, onNavigate }) => {
   const [totalAssets, setTotalAssets] = useState(null);
   const [loading, setLoading] = useState(true);
   const [cash, setCash] = useState(0);
+  const [cityItems, setCityItems] = useState([]);
   const { theme, currentTheme, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -633,6 +634,12 @@ const HomeScreen = ({ user, asset, onNavigate }) => {
     }
   }, []);
 
+  useEffect(() => {
+    if (totalAssets) {
+      fetchCityItems();
+    }
+  }, [totalAssets]);
+
   const fetchTotalAssets = async () => {
     try {
       const response = await fetch(`/api/user/${user.id}/total-assets`);
@@ -643,6 +650,25 @@ const HomeScreen = ({ user, asset, onNavigate }) => {
       console.error('Failed to fetch total assets:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCityItems = async () => {
+    try {
+      // 利益に応じてアンロックされたアイテムを計算
+      const profit = totalAssets ? totalAssets.totalAssets - 1000000 : 0;
+      const unlockedItems = [];
+      
+      // シンプルなアンロック条件（プロトタイプ）
+      if (profit >= 1000) unlockedItems.push({ id: 'cafe_001', icon: '☕', name: 'カフェ' });
+      if (profit >= 5000) unlockedItems.push({ id: 'park_001', icon: '🌳', name: '公園' });
+      if (profit >= 10000) unlockedItems.push({ id: 'tower_001', icon: '🗼', name: 'タワー' });
+      if (profit >= 50000) unlockedItems.push({ id: 'ferris_001', icon: '🎡', name: '観覧車' });
+      if (profit >= 100000) unlockedItems.push({ id: 'castle_001', icon: '🏰', name: '城' });
+      
+      setCityItems(unlockedItems);
+    } catch (err) {
+      console.error('Failed to fetch city items:', err);
     }
   };
 
@@ -865,6 +891,46 @@ const HomeScreen = ({ user, asset, onNavigate }) => {
           </>
         )}
       </div>
+
+      {/* My City (Sanctuary) セクション */}
+      {cityItems.length > 0 && (
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          className="fixed bottom-24 right-4 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl p-4 shadow-2xl max-w-xs z-30"
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-2xl">🏙️</span>
+            <div>
+              <div className="text-xs text-white/80">あなたの街</div>
+              <div className="text-sm font-bold text-white">My City</div>
+            </div>
+          </div>
+          
+          <div className="bg-white/10 rounded-xl p-3 backdrop-blur-sm">
+            <div className="flex flex-wrap gap-2">
+              {cityItems.map((item) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  whileHover={{ scale: 1.1 }}
+                  className="bg-white/20 rounded-lg p-2 text-center"
+                >
+                  <div className="text-3xl mb-1">{item.icon}</div>
+                  <div className="text-xs text-white font-medium">{item.name}</div>
+                </motion.div>
+              ))}
+            </div>
+            {cityItems.length < 5 && (
+              <div className="text-xs text-white/70 mt-2 text-center">
+                💰 利益を出してもっと建物を集めよう！
+              </div>
+            )}
+          </div>
+        </motion.div>
+      )}
 
       {/* 今日のニュース FAB */}
       <motion.div
@@ -1305,6 +1371,7 @@ const TradeModal = ({ stock, userId, onClose, onSuccess }) => {
   const [quantity, setQuantity] = useState(1);
   const [isLongPress, setIsLongPress] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [supportMode, setSupportMode] = useState(false); // 応援モード
   const longPressTimer = useRef(null);
 
   const totalCost = stock.current_price * quantity;
@@ -1349,8 +1416,15 @@ const TradeModal = ({ stock, userId, onClose, onSuccess }) => {
       const data = await response.json();
 
       if (response.ok) {
-        soundSystem.playPurchase(); // 購入音を再生
-        createConfetti();
+        if (supportMode) {
+          // 応援モード: ハートエフェクト
+          createHearts();
+          soundSystem.playSuccess();
+        } else {
+          // 通常モード: コンフェッティと購入音
+          soundSystem.playPurchase();
+          createConfetti();
+        }
         alert(data.message);
         onSuccess();
       } else {
@@ -1361,6 +1435,28 @@ const TradeModal = ({ stock, userId, onClose, onSuccess }) => {
       alert('ネットワークエラーが発生しました');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ハートエフェクト関数
+  const createHearts = () => {
+    for (let i = 0; i < 20; i++) {
+      setTimeout(() => {
+        const heart = document.createElement('div');
+        heart.innerHTML = '💖';
+        heart.style.position = 'fixed';
+        heart.style.left = Math.random() * window.innerWidth + 'px';
+        heart.style.top = '100vh';
+        heart.style.fontSize = (Math.random() * 20 + 20) + 'px';
+        heart.style.animation = 'heart-float 3s ease-out forwards';
+        heart.style.pointerEvents = 'none';
+        heart.style.zIndex = '9999';
+        document.body.appendChild(heart);
+        
+        setTimeout(() => {
+          heart.remove();
+        }, 3000);
+      }, i * 50);
     }
   };
 
@@ -1431,6 +1527,32 @@ const TradeModal = ({ stock, userId, onClose, onSuccess }) => {
           </div>
         </div>
 
+        {/* 応援モード切り替え */}
+        <div className="flex items-center justify-center gap-3 mb-4">
+          <button
+            onClick={() => setSupportMode(false)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${
+              !supportMode 
+                ? 'bg-green-500 text-white shadow-lg' 
+                : 'bg-gray-200 text-gray-600'
+            }`}
+          >
+            <span>💰</span>
+            <span>通常購入</span>
+          </button>
+          <button
+            onClick={() => setSupportMode(true)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${
+              supportMode 
+                ? 'bg-pink-500 text-white shadow-lg' 
+                : 'bg-gray-200 text-gray-600'
+            }`}
+          >
+            <span>💖</span>
+            <span>応援投資</span>
+          </button>
+        </div>
+
         <div className="mb-6">
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -1441,13 +1563,24 @@ const TradeModal = ({ stock, userId, onClose, onSuccess }) => {
             onTouchEnd={handleMouseUp}
             disabled={loading}
             className={`w-full py-4 rounded-xl font-bold text-xl ${
-              isLongPress ? 'bg-green-600' : 'bg-green-500'
-            } text-white shadow-lg disabled:opacity-50`}
+              supportMode
+                ? isLongPress ? 'bg-pink-600' : 'bg-pink-500'
+                : isLongPress ? 'bg-green-600' : 'bg-green-500'
+            } text-white shadow-lg disabled:opacity-50 flex items-center justify-center gap-2`}
           >
-            {loading ? '購入中...' : '長押しして購入'}
+            {loading ? (
+              '処理中...'
+            ) : (
+              <>
+                <span className="text-2xl">{supportMode ? '💖' : '💰'}</span>
+                <span>{supportMode ? '応援購入' : '長押しして購入'}</span>
+              </>
+            )}
           </motion.button>
           <p className="text-xs text-gray-500 text-center mt-2">
-            ボタンを1秒間長押しすると購入されます
+            {supportMode 
+              ? 'ボタンを1秒間長押しして応援！ハートエフェクトで祝福します✨' 
+              : 'ボタンを1秒間長押しすると購入されます'}
           </p>
         </div>
 

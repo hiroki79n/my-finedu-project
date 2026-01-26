@@ -901,6 +901,20 @@ app.get('/', (c) => {
             }
         }
         
+        @keyframes heart-float {
+            0% {
+                transform: translateY(0) scale(0);
+                opacity: 0;
+            }
+            20% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) translateX(50px) scale(1.5);
+                opacity: 0;
+            }
+        }
+        
         /* Pop X Theme Overrides */
         body.theme-pop {
             background: linear-gradient(135deg, #FFF7ED 0%, #FED7AA 100%);
