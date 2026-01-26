@@ -1485,58 +1485,134 @@ const MapScreen = ({ user, onNavigate, onXpEarned }) => {
           </div>
         </div>
 
-        {/* 学習パス（縦スクロール） */}
-        <div className="relative px-4 py-4 max-w-md mx-auto">
-          {/* 中央の経路線 */}
-          <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-gray-700 -translate-x-1/2 z-0"></div>
+        {/* 学習パス（蛇行する道） */}
+        <div className="relative px-6 py-8 max-w-md mx-auto min-h-[1200px]">
+          {/* SVGで曲線の道を描画 */}
+          <svg className="absolute inset-0 w-full h-full" style={{ zIndex: 0 }} viewBox="0 0 400 1200">
+            <defs>
+              <linearGradient id="pathGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style={{ stopColor: '#4B5563', stopOpacity: 1 }} />
+                <stop offset="100%" style={{ stopColor: '#374151', stopOpacity: 1 }} />
+              </linearGradient>
+            </defs>
+            {learningNodes.map((node, index) => {
+              if (index === learningNodes.length - 1) return null;
+              
+              const nextNode = learningNodes[index + 1];
+              
+              // 現在のノードと次のノードの位置を計算（絶対座標）
+              const currentX = index % 3 === 0 ? 200 : (index % 3 === 1 ? 100 : 300);
+              const nextX = (index + 1) % 3 === 0 ? 200 : ((index + 1) % 3 === 1 ? 100 : 300);
+              
+              const currentY = 80 + index * 110;
+              const nextY = 80 + (index + 1) * 110;
+              
+              // ベジェ曲線で道を描画
+              const midY = (currentY + nextY) / 2;
+              const controlX = (currentX + nextX) / 2;
+              
+              return (
+                <path
+                  key={`path-${node.id}`}
+                  d={`M ${currentX} ${currentY} Q ${controlX} ${midY}, ${nextX} ${nextY}`}
+                  stroke="url(#pathGradient)"
+                  strokeWidth="6"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeDasharray={node.completed ? "none" : "10,5"}
+                  opacity={node.completed ? "1" : "0.4"}
+                />
+              );
+            })}
+          </svg>
 
+          {/* 学習ノード */}
           {learningNodes.map((node, index) => {
-            const isEven = index % 2 === 0;
             const isLocked = !node.completed && index > 0 && !learningNodes[index - 1].completed;
+            
+            // 蛇行パターン: 中央(50%) → 左(25%) → 右(75%) → 中央(50%) → 左(25%) ...
+            const xPosition = index % 3 === 0 ? 50 : (index % 3 === 1 ? 25 : 75);
+            const yPosition = 80 + index * 110;
             
             return (
               <motion.div
                 key={node.id}
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="relative mb-16 flex items-center"
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.1, type: "spring", stiffness: 200 }}
+                className="absolute"
                 style={{ 
-                  justifyContent: isEven ? 'flex-start' : 'flex-end',
-                  paddingLeft: isEven ? '0' : '50%',
-                  paddingRight: isEven ? '50%' : '0'
+                  left: `${xPosition}%`,
+                  top: `${yPosition}px`,
+                  transform: 'translate(-50%, -50%)',
+                  zIndex: 10
                 }}
               >
-                <div className="flex flex-col items-center gap-2 relative z-10">
+                <div className="flex flex-col items-center gap-2">
                   {/* ノードアイコン */}
                   <div 
                     onClick={() => !isLocked && handleNodeClick(node)}
                     className={`
                       ${getNodeSize(node)} 
                       ${getNodeColor(node)} 
-                      ${isLocked ? 'opacity-50 cursor-not-allowed grayscale' : 'cursor-pointer hover:scale-110 active:scale-95'}
+                      ${isLocked ? 'opacity-50 cursor-not-allowed grayscale' : 'cursor-pointer hover:scale-125 active:scale-95'}
                       rounded-full flex items-center justify-center
-                      transition-all shadow-lg relative
+                      transition-all shadow-2xl relative border-4 border-gray-900
                     `}
+                    style={{
+                      boxShadow: isLocked ? 'none' : '0 8px 24px rgba(0, 0, 0, 0.5), 0 0 20px rgba(59, 130, 246, 0.3)'
+                    }}
                   >
                     {isLocked ? '🔒' : node.icon}
                     
                     {/* 完了チェック */}
                     {node.completed && (
-                      <div className="absolute -top-1 -right-1 bg-green-500 rounded-full w-6 h-6 flex items-center justify-center text-white text-xs border-2 border-gray-900">
+                      <motion.div 
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="absolute -top-1 -right-1 bg-green-500 rounded-full w-7 h-7 flex items-center justify-center text-white text-sm border-3 border-gray-900 shadow-lg"
+                      >
                         ✓
-                      </div>
+                      </motion.div>
                     )}
                   </div>
 
-                  {/* ノード情報 */}
+                  {/* ノード情報カード */}
                   {!isLocked && (
-                    <div className="bg-gray-800 rounded-lg p-2 shadow-xl border border-gray-700 min-w-[120px]">
-                      <p className="text-xs font-bold text-gray-200 mb-1 text-center">{node.title}</p>
-                      <div className="flex items-center justify-center gap-2 text-xs">
-                        <span className="text-yellow-400">+{node.xp} XP</span>
-                        <span className="text-green-400">¥{node.reward}</span>
+                    <motion.div 
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 + 0.2 }}
+                      className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-3 shadow-2xl border border-gray-700 min-w-[140px] backdrop-blur-sm"
+                    >
+                      <p className="text-xs font-bold text-gray-100 mb-1.5 text-center">{node.title}</p>
+                      <div className="flex items-center justify-center gap-3 text-xs">
+                        <span className="flex items-center gap-1">
+                          <span className="text-yellow-400">⭐</span>
+                          <span className="text-yellow-300 font-semibold">+{node.xp}</span>
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span className="text-green-400">💰</span>
+                          <span className="text-green-300 font-semibold">¥{node.reward}</span>
+                        </span>
                       </div>
+                      {node.type === 'boss' && (
+                        <div className="mt-1 text-center">
+                          <span className="text-xs text-red-400 font-bold">👹 BOSS</span>
+                        </div>
+                      )}
+                      {node.type === 'challenge' && (
+                        <div className="mt-1 text-center">
+                          <span className="text-xs text-orange-400 font-bold">⚔️ 挑戦</span>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                  
+                  {/* ロック中の情報 */}
+                  {isLocked && (
+                    <div className="bg-gray-900 rounded-lg p-2 shadow-xl border border-gray-800 min-w-[100px]">
+                      <p className="text-xs text-gray-500 text-center">ロック中</p>
                     </div>
                   )}
                 </div>
