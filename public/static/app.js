@@ -549,6 +549,9 @@ const HomeScreen = ({ user, asset, onNavigate }) => {
     }
   };
 
+  // needsToEarnの計算（閾値: 1000円）
+  const needsToEarn = cash < 1000;
+
   // FAB: 今日のニュース（常に表示）
   const fabColor = 'bg-gradient-to-r from-blue-600 to-cyan-600';
   const fabIcon = '📰';
