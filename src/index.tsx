@@ -823,12 +823,27 @@ app.get('/', (c) => {
     </script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Quicksand:wght@400;500;600;700&display=swap');
+        
+        :root {
+            --color-primary: #10B981;
+            --color-secondary: #3B82F6;
+            --color-danger: #F43F5E;
+            --color-background: #0F172A;
+            --color-surface: #1E293B;
+            --color-text: #F1F5F9;
+            --color-textSecondary: #94A3B8;
+            --font-primary: 'Inter', sans-serif;
+            --font-heading: 'Inter', sans-serif;
+            --border-radius: 0.5rem;
+        }
         
         body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #0F172A 0%, #020617 100%);
+            font-family: var(--font-primary);
+            background: linear-gradient(135deg, var(--color-background) 0%, #020617 100%);
             min-height: 100vh;
+            color: var(--color-text);
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
         .safe-area-bottom {
@@ -884,6 +899,21 @@ app.get('/', (c) => {
                 transform: translateY(100vh) rotate(720deg);
                 opacity: 0;
             }
+        }
+        
+        /* Pop X Theme Overrides */
+        body.theme-pop {
+            background: linear-gradient(135deg, #FFF7ED 0%, #FED7AA 100%);
+        }
+        
+        body.theme-pop .text-white {
+            color: #1F2937 !important;
+        }
+        
+        body.theme-pop .bg-gray-800,
+        body.theme-pop .bg-gray-900 {
+            background: #FFFFFF !important;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>

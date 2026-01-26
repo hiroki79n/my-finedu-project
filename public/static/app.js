@@ -4,8 +4,10 @@ const { motion, AnimatePresence } = Motion;
 
 // ===== コンテキスト =====
 const AppContext = createContext();
+const ThemeContext = createContext();
 
 const useApp = () => useContext(AppContext);
+const useTheme = () => useContext(ThemeContext);
 
 // ===== サウンドシステム =====
 class SoundSystem {
@@ -225,6 +227,100 @@ class SoundSystem {
 
 // グローバルサウンドインスタンス
 const soundSystem = new SoundSystem();
+
+// ===== テーマシステム =====
+const themes = {
+  cyber: {
+    name: 'Cyber X',
+    colors: {
+      primary: '#10B981',      // Neon Green
+      secondary: '#3B82F6',    // Electric Blue
+      danger: '#F43F5E',       // Neon Red
+      background: '#0F172A',   // Deep Space
+      surface: '#1E293B',      // Dark Slate
+      text: '#F1F5F9',         // Light Gray
+      textSecondary: '#94A3B8' // Muted Gray
+    },
+    fonts: {
+      primary: 'Inter, sans-serif',
+      heading: 'Inter, sans-serif'
+    },
+    borderRadius: '0.5rem',
+    shadows: {
+      sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+      md: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+      lg: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+      glow: '0 0 20px rgba(16, 185, 129, 0.5)'
+    }
+  },
+  pop: {
+    name: 'Pop X',
+    colors: {
+      primary: '#EC4899',      // Pink
+      secondary: '#8B5CF6',    // Purple
+      danger: '#F97316',       // Orange
+      background: '#FFF7ED',   // Cream
+      surface: '#FFFFFF',      // White
+      text: '#1F2937',         // Dark Gray
+      textSecondary: '#6B7280' // Medium Gray
+    },
+    fonts: {
+      primary: 'Quicksand, Inter, sans-serif',
+      heading: 'Quicksand, Inter, sans-serif'
+    },
+    borderRadius: '1.5rem',
+    shadows: {
+      sm: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
+      md: '0 4px 8px -2px rgb(0 0 0 / 0.15)',
+      lg: '0 12px 20px -4px rgb(0 0 0 / 0.2)',
+      glow: '0 0 25px rgba(236, 72, 153, 0.4)'
+    }
+  }
+};
+
+const ThemeProvider = ({ children }) => {
+  const [currentTheme, setCurrentTheme] = useState('cyber');
+  
+  useEffect(() => {
+    // ローカルストレージからテーマを読み込む
+    const savedTheme = localStorage.getItem('xesta_theme');
+    if (savedTheme && themes[savedTheme]) {
+      setCurrentTheme(savedTheme);
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const newTheme = currentTheme === 'cyber' ? 'pop' : 'cyber';
+    setCurrentTheme(newTheme);
+    localStorage.setItem('xesta_theme', newTheme);
+    soundSystem.playClick();
+  };
+
+  const theme = themes[currentTheme];
+
+  // CSS変数を設定
+  useEffect(() => {
+    const root = document.documentElement;
+    const body = document.body;
+    
+    // body classの更新
+    body.className = `theme-${currentTheme}`;
+    
+    // CSS変数の更新
+    Object.entries(theme.colors).forEach(([key, value]) => {
+      root.style.setProperty(`--color-${key}`, value);
+    });
+    root.style.setProperty('--font-primary', theme.fonts.primary);
+    root.style.setProperty('--font-heading', theme.fonts.heading);
+    root.style.setProperty('--border-radius', theme.borderRadius);
+  }, [theme, currentTheme]);
+
+  return React.createElement(
+    ThemeContext.Provider,
+    { value: { theme, currentTheme, toggleTheme, themes } },
+    children
+  );
+};
 
 // ===== ユーティリティ関数 =====
 
@@ -526,6 +622,7 @@ const HomeScreen = ({ user, asset, onNavigate }) => {
   const [totalAssets, setTotalAssets] = useState(null);
   const [loading, setLoading] = useState(true);
   const [cash, setCash] = useState(0);
+  const { theme, currentTheme, toggleTheme } = useTheme();
 
   useEffect(() => {
     fetchTotalAssets();
@@ -576,13 +673,24 @@ const HomeScreen = ({ user, asset, onNavigate }) => {
           </div>
           <div className="text-xs text-gray-400 italic">Invest in the Unknown</div>
         </div>
-        <div className="text-right">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-yellow-400">🔥</span>
-            <span className="text-sm font-bold text-yellow-300">{user.streak_count}日</span>
-          </div>
-          <div className="text-sm text-gray-300">
-            Lv.<span className="text-white font-bold">{user.level}</span>
+        <div className="flex items-center gap-4">
+          {/* テーマ切り替えボタン */}
+          <motion.button
+            onClick={toggleTheme}
+            whileTap={{ scale: 0.95 }}
+            className="text-2xl hover:scale-110 transition-transform"
+            title={`Switch to ${currentTheme === 'cyber' ? 'Pop X' : 'Cyber X'}`}
+          >
+            {currentTheme === 'cyber' ? '🌸' : '⚡'}
+          </motion.button>
+          <div className="text-right">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-yellow-400">🔥</span>
+              <span className="text-sm font-bold text-yellow-300">{user.streak_count}日</span>
+            </div>
+            <div className="text-sm text-gray-300">
+              Lv.<span className="text-white font-bold">{user.level}</span>
+            </div>
           </div>
         </div>
       </motion.div>
@@ -2586,4 +2694,8 @@ const App = () => {
 
 // アプリケーションのマウント
 const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<App />);
+root.render(
+  <ThemeProvider>
+    <App />
+  </ThemeProvider>
+);
