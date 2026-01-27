@@ -1659,7 +1659,7 @@ const TradeModal = ({ stock, userId, onClose, onSuccess }) => {
 };
 
 // ===== クイズ画面 =====
-const QuizScreen = ({ user, onNavigate, onXpEarned }) => {
+const QuizScreen = ({ user, onNavigate, onXpEarned, questId }) => {
   const [quizzes, setQuizzes] = useState([]);
   const [currentQuiz, setCurrentQuiz] = useState(null);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -1674,7 +1674,16 @@ const QuizScreen = ({ user, onNavigate, onXpEarned }) => {
     try {
       const response = await fetch('/api/quiz');
       const data = await response.json();
-      setQuizzes(data.quizzes);
+      // questIdが指定されている場合は、そのクイズだけをフィルタ
+      if (questId) {
+        const filteredQuiz = data.quizzes.find(q => q.id === questId);
+        setQuizzes(filteredQuiz ? [filteredQuiz] : []);
+        if (filteredQuiz) {
+          setCurrentQuiz(filteredQuiz);
+        }
+      } else {
+        setQuizzes(data.quizzes);
+      }
     } catch (err) {
       console.error('Failed to fetch quizzes:', err);
     } finally {
@@ -1738,6 +1747,11 @@ const QuizScreen = ({ user, onNavigate, onXpEarned }) => {
           >
             {!result ? (
               <>
+                <div className="mb-4">
+                  <h3 className="text-sm font-semibold text-purple-600 mb-2">
+                    {currentQuiz.title || `クイズ ${currentQuiz.id}`}
+                  </h3>
+                </div>
                 <h2 className="text-2xl font-bold text-gray-800 mb-6">
                   {currentQuiz.question}
                 </h2>
@@ -1806,11 +1820,11 @@ const QuizScreen = ({ user, onNavigate, onXpEarned }) => {
                 )}
 
                 <Button
-                  onClick={handleNextQuiz}
+                  onClick={() => onNavigate('map')}
                   variant="primary"
                   className="w-full"
                 >
-                  次のクイズへ
+                  マップに戻る
                 </Button>
               </>
             )}
@@ -1872,7 +1886,7 @@ const QuizScreen = ({ user, onNavigate, onXpEarned }) => {
 };
 
 // ===== 冒険マップ画面 (MapScreen) =====
-const MapScreen = ({ user, onNavigate, onXpEarned }) => {
+const MapScreen = ({ user, onNavigate, onXpEarned, setSelectedQuestId }) => {
   const [selectedQuest, setSelectedQuest] = useState(null);
   const [completedQuests, setCompletedQuests] = useState([101]); // デモで最初のクエストを完了扱い
 
@@ -2014,6 +2028,9 @@ const MapScreen = ({ user, onNavigate, onXpEarned }) => {
 
   const handleStartQuest = () => {
     soundSystem.playClick();
+    if (selectedQuest && setSelectedQuestId) {
+      setSelectedQuestId(selectedQuest.id);
+    }
     setSelectedQuest(null);
     onNavigate('quiz');
   };
@@ -2871,6 +2888,7 @@ const App = () => {
   const [buddyMood, setBuddyMood] = useState('happy');
   const [buddyMessage, setBuddyMessage] = useState('');
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [selectedQuestId, setSelectedQuestId] = useState(null);
 
   const handleLogin = (userData, assetData) => {
     setUser(userData);
@@ -2971,7 +2989,7 @@ const App = () => {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -100 }}
           >
-            <MapScreen user={user} onNavigate={handleNavigate} onXpEarned={handleXpEarned} />
+            <MapScreen user={user} onNavigate={handleNavigate} onXpEarned={handleXpEarned} setSelectedQuestId={setSelectedQuestId} />
           </motion.div>
         )}
 
@@ -2982,7 +3000,7 @@ const App = () => {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -100 }}
           >
-            <QuizScreen user={user} onNavigate={handleNavigate} onXpEarned={handleXpEarned} />
+            <QuizScreen user={user} onNavigate={handleNavigate} onXpEarned={handleXpEarned} questId={selectedQuestId} />
           </motion.div>
         )}
 
