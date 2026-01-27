@@ -1173,13 +1173,41 @@ const MarketScreen = ({ user, onNavigate }) => {
     }
   };
 
-  const getIcon = (symbol, sector) => {
-    const iconMap = {
+  const getIcon = (symbol, sector, type) => {
+    // 株式アイコン
+    const stockIconMap = {
       '7974': '🎮', '7203': '🚗', '9983': '👕', '4704': '🛡️',
       '4689': '💬', '4755': '🛒', '6758': '🎵', '9984': '📱',
       '4502': '💊', '2914': '🍃', '4568': '⚕️', '6098': '💼',
     };
-    return iconMap[symbol] || '🏢';
+    
+    // Commoditiesアイコン
+    const commodityIconMap = {
+      'GOLD': '🥇',
+      'SILVER': '🥈',
+      'CRUDE': '🛢️',
+      'PLATINUM': '⚪',
+      'COPPER': '🟤'
+    };
+    
+    // ETF Packsアイコン
+    const etfIconMap = {
+      'AI-PACK': '🤖',
+      'GREEN-PACK': '🌾',
+      'GAME-PACK': '🎮',
+      'HEALTH-PACK': '💊',
+      'AUTO-PACK': '🚗'
+    };
+    
+    if (type === 'COMMODITY') {
+      return commodityIconMap[symbol] || '⚡';
+    }
+    
+    if (type === 'ETF') {
+      return etfIconMap[symbol] || '📦';
+    }
+    
+    return stockIconMap[symbol] || '🏢';
   };
 
   if (loading) {
@@ -1326,7 +1354,7 @@ const MarketScreen = ({ user, onNavigate }) => {
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-3">
                         <div className="text-4xl">
-                          {getIcon(item.symbol, item.sector)}
+                          {getIcon(item.symbol, item.sector, item.type)}
                         </div>
                         <div>
                           <div className="font-bold text-white">{item.company_name}</div>
@@ -1377,13 +1405,41 @@ const TradeModal = ({ stock, userId, onClose, onSuccess }) => {
   const totalCost = stock.current_price * quantity;
 
   // 企業アイコンマッピング
-  const getCompanyIcon = (symbol) => {
-    const iconMap = {
+  const getCompanyIcon = (symbol, type = 'STOCK') => {
+    // 株式アイコン
+    const stockIconMap = {
       '7974': '🎮', '7203': '🚗', '9983': '👕', '4704': '🛡️',
       '4689': '💬', '4755': '🛒', '6758': '🎵', '9984': '📱',
       '4502': '💊', '2914': '🍃', '4568': '⚕️', '6098': '💼',
     };
-    return iconMap[symbol] || '🏢';
+    
+    // Commoditiesアイコン
+    const commodityIconMap = {
+      'GOLD': '🥇',
+      'SILVER': '🥈',
+      'CRUDE': '🛢️',
+      'PLATINUM': '⚪',
+      'COPPER': '🟤'
+    };
+    
+    // ETF Packsアイコン
+    const etfIconMap = {
+      'AI-PACK': '🤖',
+      'GREEN-PACK': '🌾',
+      'GAME-PACK': '🎮',
+      'HEALTH-PACK': '💊',
+      'AUTO-PACK': '🚗'
+    };
+    
+    if (type === 'COMMODITY') {
+      return commodityIconMap[symbol] || '⚡';
+    }
+    
+    if (type === 'ETF') {
+      return etfIconMap[symbol] || '📦';
+    }
+    
+    return stockIconMap[symbol] || '🏢';
   };
 
   const handleMouseDown = () => {
@@ -1477,7 +1533,7 @@ const TradeModal = ({ stock, userId, onClose, onSuccess }) => {
       >
         <div className="flex items-center gap-4 mb-6">
           <div className="text-6xl">
-            {getCompanyIcon(stock.symbol)}
+            {getCompanyIcon(stock.symbol, stock.type)}
           </div>
           <div>
             <h2 className="text-3xl font-bold text-gray-800">
@@ -2329,13 +2385,41 @@ const PortfolioScreen = ({ user, onNavigate }) => {
   };
 
   // 企業アイコンマッピング
-  const getCompanyIcon = (symbol) => {
-    const iconMap = {
+  const getCompanyIcon = (symbol, type = 'STOCK') => {
+    // 株式アイコン
+    const stockIconMap = {
       '7974': '🎮', '7203': '🚗', '9983': '👕', '4704': '🛡️',
       '4689': '💬', '4755': '🛒', '6758': '🎵', '9984': '📱',
       '4502': '💊', '2914': '🍃', '4568': '⚕️', '6098': '💼',
     };
-    return iconMap[symbol] || '🏢';
+    
+    // Commoditiesアイコン
+    const commodityIconMap = {
+      'GOLD': '🥇',
+      'SILVER': '🥈',
+      'CRUDE': '🛢️',
+      'PLATINUM': '⚪',
+      'COPPER': '🟤'
+    };
+    
+    // ETF Packsアイコン
+    const etfIconMap = {
+      'AI-PACK': '🤖',
+      'GREEN-PACK': '🌾',
+      'GAME-PACK': '🎮',
+      'HEALTH-PACK': '💊',
+      'AUTO-PACK': '🚗'
+    };
+    
+    if (type === 'COMMODITY') {
+      return commodityIconMap[symbol] || '⚡';
+    }
+    
+    if (type === 'ETF') {
+      return etfIconMap[symbol] || '📦';
+    }
+    
+    return stockIconMap[symbol] || '🏢';
   };
 
   if (loading) {
@@ -2663,13 +2747,41 @@ const HistoryScreen = ({ user, onNavigate }) => {
   };
 
   // 企業アイコンマッピング
-  const getCompanyIcon = (symbol) => {
-    const iconMap = {
+  const getCompanyIcon = (symbol, type = 'STOCK') => {
+    // 株式アイコン
+    const stockIconMap = {
       '7974': '🎮', '7203': '🚗', '9983': '👕', '4704': '🛡️',
       '4689': '💬', '4755': '🛒', '6758': '🎵', '9984': '📱',
       '4502': '💊', '2914': '🍃', '4568': '⚕️', '6098': '💼',
     };
-    return iconMap[symbol] || '🏢';
+    
+    // Commoditiesアイコン
+    const commodityIconMap = {
+      'GOLD': '🥇',
+      'SILVER': '🥈',
+      'CRUDE': '🛢️',
+      'PLATINUM': '⚪',
+      'COPPER': '🟤'
+    };
+    
+    // ETF Packsアイコン
+    const etfIconMap = {
+      'AI-PACK': '🤖',
+      'GREEN-PACK': '🌾',
+      'GAME-PACK': '🎮',
+      'HEALTH-PACK': '💊',
+      'AUTO-PACK': '🚗'
+    };
+    
+    if (type === 'COMMODITY') {
+      return commodityIconMap[symbol] || '⚡';
+    }
+    
+    if (type === 'ETF') {
+      return etfIconMap[symbol] || '📦';
+    }
+    
+    return stockIconMap[symbol] || '🏢';
   };
 
   if (loading) {

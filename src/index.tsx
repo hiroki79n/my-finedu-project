@@ -372,11 +372,27 @@ app.get('/api/market', async (c) => {
   try {
     const db = c.env.DB
 
-    const markets = await db.prepare('SELECT * FROM market_data')
+    // Stocks (market_data)
+    const stocks = await db.prepare('SELECT *, "STOCK" as type FROM market_data')
       .all()
 
+    // Commodities
+    const commodities = await db.prepare('SELECT symbol, name as company_name, current_price, volatility, "COMMODITY" as type, "商品" as sector FROM commodities')
+      .all()
+
+    // ETF Packs
+    const etfs = await db.prepare('SELECT symbol, name as company_name, current_price, volatility, "ETF" as type, theme as sector, description FROM etf_packs')
+      .all()
+
+    // Combine all markets
+    const allMarkets = [
+      ...(stocks.results || []),
+      ...(commodities.results || []),
+      ...(etfs.results || [])
+    ]
+
     return c.json({
-      markets: markets.results
+      markets: allMarkets
     })
   } catch (error) {
     console.error('Get market error:', error)
@@ -415,10 +431,10 @@ app.post('/api/market/tick', async (c) => {
   try {
     const db = c.env.DB
 
-    // すべての銘柄を取得
-    const markets = await db.prepare('SELECT * FROM market_data').all()
+    // すべての株式銘柄を取得
+    const stocks = await db.prepare('SELECT * FROM market_data').all()
 
-    for (const market of markets.results as MarketData[]) {
+    for (const market of stocks.results as MarketData[]) {
       const volatility = market.volatility || 0.02
       const change = (Math.random() - 0.5) * 2 * volatility
       const newPrice = market.current_price * (1 + change)
@@ -439,6 +455,56 @@ app.post('/api/market/tick', async (c) => {
         'UPDATE market_data SET current_price = ?, price_history = ?, updated_at = CURRENT_TIMESTAMP WHERE symbol = ?'
       )
         .bind(newPrice, JSON.stringify(priceHistory), market.symbol)
+        .run()
+    }
+
+    // Commodities（商品）の価格更新
+    const commodities = await db.prepare('SELECT * FROM commodities').all()
+
+    for (const commodity of commodities.results as any[]) {
+      const volatility = commodity.volatility || 0.015
+      const change = (Math.random() - 0.5) * 2 * volatility
+      const newPrice = commodity.current_price * (1 + change)
+
+      const priceHistory = JSON.parse(commodity.price_history || '[]')
+      priceHistory.push({
+        price: newPrice,
+        timestamp: new Date().toISOString()
+      })
+
+      if (priceHistory.length > 100) {
+        priceHistory.shift()
+      }
+
+      await db.prepare(
+        'UPDATE commodities SET current_price = ?, price_history = ?, updated_at = CURRENT_TIMESTAMP WHERE symbol = ?'
+      )
+        .bind(newPrice, JSON.stringify(priceHistory), commodity.symbol)
+        .run()
+    }
+
+    // ETF Packs（X-Packs）の価格更新
+    const etfs = await db.prepare('SELECT * FROM etf_packs').all()
+
+    for (const etf of etfs.results as any[]) {
+      const volatility = etf.volatility || 0.025
+      const change = (Math.random() - 0.5) * 2 * volatility
+      const newPrice = etf.current_price * (1 + change)
+
+      const priceHistory = JSON.parse(etf.price_history || '[]')
+      priceHistory.push({
+        price: newPrice,
+        timestamp: new Date().toISOString()
+      })
+
+      if (priceHistory.length > 100) {
+        priceHistory.shift()
+      }
+
+      await db.prepare(
+        'UPDATE etf_packs SET current_price = ?, price_history = ?, updated_at = CURRENT_TIMESTAMP WHERE symbol = ?'
+      )
+        .bind(newPrice, JSON.stringify(priceHistory), etf.symbol)
         .run()
     }
 
@@ -481,13 +547,27 @@ app.post('/api/trade/buy', async (c) => {
     const { userId, symbol, quantity } = await c.req.json()
     const db = c.env.DB
 
-    // 市場データ取得
-    const market = await db.prepare('SELECT current_price FROM market_data WHERE symbol = ?')
+    // 市場データ取得（株式、商品、ETFの順にチェック）
+    let market = await db.prepare('SELECT current_price FROM market_data WHERE symbol = ?')
       .bind(symbol)
       .first() as { current_price: number } | null
 
     if (!market) {
-      return c.json({ error: 'Stock not found' }, 404)
+      // Commoditiesをチェック
+      market = await db.prepare('SELECT current_price FROM commodities WHERE symbol = ?')
+        .bind(symbol)
+        .first() as { current_price: number } | null
+    }
+
+    if (!market) {
+      // ETF Packsをチェック
+      market = await db.prepare('SELECT current_price FROM etf_packs WHERE symbol = ?')
+        .bind(symbol)
+        .first() as { current_price: number } | null
+    }
+
+    if (!market) {
+      return c.json({ error: 'Asset not found' }, 404)
     }
 
     const totalCost = market.current_price * quantity
