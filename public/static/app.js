@@ -1766,7 +1766,7 @@ const QuizScreen = ({ user, onNavigate, onXpEarned, questId }) => {
                       className={`w-full p-4 rounded-xl text-left font-medium border-2 transition-colors ${
                         selectedAnswer === index
                           ? 'border-purple-500 bg-purple-100 text-purple-900'
-                          : 'border-gray-300 hover:border-purple-300'
+                          : 'border-gray-300 hover:border-purple-300 text-gray-800 bg-white'
                       }`}
                     >
                       {option}
