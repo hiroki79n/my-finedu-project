@@ -1550,6 +1550,16 @@ const TradeModal = ({ stock, userId, onClose, onSuccess }) => {
           </div>
         </div>
 
+        {/* ETFパックの説明（descriptionがある場合） */}
+        {stock.description && (
+          <div className="bg-blue-50 rounded-xl p-4 mb-6 border-2 border-blue-200">
+            <div className="text-sm font-bold text-blue-800 mb-2">📦 パック内容</div>
+            <div className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">
+              {stock.description.replace(/【/g, '\n【').trim()}
+            </div>
+          </div>
+        )}
+
         <div className="mb-6">
           <label className="block text-sm font-bold text-gray-700 mb-2">
             購入数量

@@ -776,34 +776,52 @@ const quizzes = [
 
 // クイズリスト取得
 app.get('/api/quiz', async (c) => {
-  return c.json({
-    quizzes: quizzes.map(q => ({
-      id: q.id,
-      question: q.question,
-      options: q.options
-    }))
-  })
+  try {
+    const db = c.env.DB
+    const result = await db.prepare('SELECT * FROM quizzes ORDER BY id').all()
+    
+    return c.json({
+      quizzes: result.results.map((q: any) => ({
+        id: q.id,
+        chapter_id: q.chapter_id,
+        title: q.title,
+        question: q.question,
+        options: JSON.parse(q.options),
+        correct_answer: q.correct_answer,
+        explanation: q.explanation,
+        xp: q.xp,
+        reward: q.reward
+      }))
+    })
+  } catch (error) {
+    console.error('Get quiz error:', error)
+    return c.json({ error: 'Internal server error' }, 500)
+  }
 })
 
 // クイズ回答送信
 app.post('/api/quiz/:quizId/answer', async (c) => {
   try {
-    const quizId = c.req.param('quizId')
+    const quizId = parseInt(c.req.param('quizId'))
     const { userId, answerIndex } = await c.req.json()
     const db = c.env.DB
 
-    const quiz = quizzes.find(q => q.id === quizId)
+    // データベースからクイズを取得
+    const quiz = await db.prepare('SELECT * FROM quizzes WHERE id = ?')
+      .bind(quizId)
+      .first() as any
+      
     if (!quiz) {
       return c.json({ error: 'Quiz not found' }, 404)
     }
 
-    const isCorrect = answerIndex === quiz.correctIndex
+    const isCorrect = answerIndex === quiz.correct_answer
 
     // クイズ結果記録
     await db.prepare(
       'INSERT INTO quiz_results (user_id, quiz_id, correct, xp_earned) VALUES (?, ?, ?, ?)'
     )
-      .bind(userId, quizId, isCorrect ? 1 : 0, isCorrect ? quiz.xpReward : 0)
+      .bind(userId, quizId, isCorrect ? 1 : 0, isCorrect ? quiz.xp : 0)
       .run()
 
     if (isCorrect) {
@@ -813,7 +831,7 @@ app.post('/api/quiz/:quizId/answer', async (c) => {
         .first() as { xp: number, level: number } | null
 
       if (user) {
-        const newXp = user.xp + quiz.xpReward
+        const newXp = user.xp + quiz.xp
         const xpPerLevel = 1000
         const newLevel = Math.floor(newXp / xpPerLevel) + 1
 
@@ -823,7 +841,7 @@ app.post('/api/quiz/:quizId/answer', async (c) => {
 
         // キャッシュ追加
         await db.prepare('UPDATE assets SET cash_balance = cash_balance + ? WHERE user_id = ?')
-          .bind(quiz.cashReward, userId)
+          .bind(quiz.reward, userId)
           .run()
       }
     }
@@ -831,8 +849,8 @@ app.post('/api/quiz/:quizId/answer', async (c) => {
     return c.json({
       correct: isCorrect,
       explanation: quiz.explanation,
-      xpReward: isCorrect ? quiz.xpReward : 0,
-      cashReward: isCorrect ? quiz.cashReward : 0
+      xpReward: isCorrect ? quiz.xp : 0,
+      cashReward: isCorrect ? quiz.reward : 0
     })
   } catch (error) {
     console.error('Quiz answer error:', error)
