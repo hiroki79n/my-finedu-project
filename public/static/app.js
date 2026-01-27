@@ -1659,7 +1659,7 @@ const TradeModal = ({ stock, userId, onClose, onSuccess }) => {
 };
 
 // ===== クイズ画面 =====
-const QuizScreen = ({ user, onNavigate, onXpEarned, questId }) => {
+const QuizScreen = ({ user, onNavigate, onXpEarned, questId, chapterId }) => {
   const [quizzes, setQuizzes] = useState([]);
   const [currentQuiz, setCurrentQuiz] = useState(null);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -1674,8 +1674,15 @@ const QuizScreen = ({ user, onNavigate, onXpEarned, questId }) => {
     try {
       const response = await fetch('/api/quiz');
       const data = await response.json();
-      // questIdが指定されている場合は、そのクイズだけをフィルタ
-      if (questId) {
+      // chapterIdが指定されている場合は、そのチャプターのクイズをフィルタ
+      if (chapterId) {
+        const filteredQuizzes = data.quizzes.filter(q => q.chapter_id === chapterId);
+        setQuizzes(filteredQuizzes);
+        if (filteredQuizzes.length > 0) {
+          setCurrentQuiz(filteredQuizzes[0]);
+        }
+      } else if (questId) {
+        // 後方互換性のため、questIdのみの場合も対応
         const filteredQuiz = data.quizzes.find(q => q.id === questId);
         setQuizzes(filteredQuiz ? [filteredQuiz] : []);
         if (filteredQuiz) {
@@ -1723,9 +1730,16 @@ const QuizScreen = ({ user, onNavigate, onXpEarned, questId }) => {
   };
 
   const handleNextQuiz = () => {
-    setCurrentQuiz(null);
-    setSelectedAnswer(null);
-    setResult(null);
+    const currentIndex = quizzes.findIndex(q => q.id === currentQuiz.id);
+    if (currentIndex < quizzes.length - 1) {
+      // 次のクイズへ
+      setCurrentQuiz(quizzes[currentIndex + 1]);
+      setSelectedAnswer(null);
+      setResult(null);
+    } else {
+      // 全問完了、マップに戻る
+      onNavigate('map');
+    }
   };
 
   if (loading) {
@@ -1738,12 +1752,12 @@ const QuizScreen = ({ user, onNavigate, onXpEarned, questId }) => {
 
   if (currentQuiz) {
     return (
-      <div className="min-h-screen max-w-md mx-auto p-6">
+      <div className="min-h-screen max-w-md mx-auto p-6 bg-gradient-to-b from-purple-50 to-blue-50">
         <div className="max-w-2xl mx-auto">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-3xl p-8 card-shadow"
+            className="bg-white rounded-3xl p-8 card-shadow text-gray-800"
           >
             {!result ? (
               <>
@@ -1820,11 +1834,11 @@ const QuizScreen = ({ user, onNavigate, onXpEarned, questId }) => {
                 )}
 
                 <Button
-                  onClick={() => onNavigate('map')}
+                  onClick={handleNextQuiz}
                   variant="primary"
                   className="w-full"
                 >
-                  マップに戻る
+                  {quizzes.findIndex(q => q.id === currentQuiz.id) < quizzes.length - 1 ? '次のクイズへ' : 'マップに戻る'}
                 </Button>
               </>
             )}
@@ -1841,14 +1855,14 @@ const QuizScreen = ({ user, onNavigate, onXpEarned, questId }) => {
   }
 
   return (
-    <div className="min-h-screen max-w-md mx-auto p-6">
+    <div className="min-h-screen max-w-md mx-auto p-6 bg-gradient-to-b from-purple-50 to-blue-50">
       <div className="max-w-4xl mx-auto">
         <motion.div
           initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           className="flex justify-between items-center mb-6"
         >
-          <h1 className="text-4xl font-bold text-white">🧠 クイズチャレンジ</h1>
+          <h1 className="text-4xl font-bold text-gray-800">🧠 クイズチャレンジ</h1>
           <Button variant="outline" onClick={() => onNavigate('map')}>
             ← ホームに戻る
           </Button>
@@ -1886,7 +1900,7 @@ const QuizScreen = ({ user, onNavigate, onXpEarned, questId }) => {
 };
 
 // ===== 冒険マップ画面 (MapScreen) =====
-const MapScreen = ({ user, onNavigate, onXpEarned, setSelectedQuestId }) => {
+const MapScreen = ({ user, onNavigate, onXpEarned, setSelectedQuestId, setSelectedChapterId }) => {
   const [selectedQuest, setSelectedQuest] = useState(null);
   const [completedQuests, setCompletedQuests] = useState([101]); // デモで最初のクエストを完了扱い
 
@@ -1983,6 +1997,7 @@ const MapScreen = ({ user, onNavigate, onXpEarned, setSelectedQuestId }) => {
   const subQuests = [
     {
       id: 'crypto',
+      chapter_id: 6,
       title: '仮想通貨の洞窟',
       icon: '₿',
       color: 'from-amber-500 to-yellow-600',
@@ -1995,6 +2010,7 @@ const MapScreen = ({ user, onNavigate, onXpEarned, setSelectedQuestId }) => {
     },
     {
       id: 'history',
+      chapter_id: 7,
       title: '歴史の図書館',
       icon: '📚',
       color: 'from-indigo-500 to-purple-600',
@@ -2007,6 +2023,7 @@ const MapScreen = ({ user, onNavigate, onXpEarned, setSelectedQuestId }) => {
     },
     {
       id: 'tax',
+      chapter_id: 8,
       title: '税金の役所',
       icon: '🏢',
       color: 'from-gray-500 to-slate-600',
@@ -2028,8 +2045,14 @@ const MapScreen = ({ user, onNavigate, onXpEarned, setSelectedQuestId }) => {
 
   const handleStartQuest = () => {
     soundSystem.playClick();
-    if (selectedQuest && setSelectedQuestId) {
+    if (selectedQuest && setSelectedQuestId && setSelectedChapterId) {
       setSelectedQuestId(selectedQuest.id);
+      // チャプターIDをセット（メインクエストの場合はchapter.id、サブクエストの場合はchapter_idを直接セット）
+      if (selectedQuest.chapter && selectedQuest.chapter.id) {
+        setSelectedChapterId(selectedQuest.chapter.id);
+      } else if (selectedQuest.chapter && selectedQuest.chapter.chapter_id) {
+        setSelectedChapterId(selectedQuest.chapter.chapter_id);
+      }
     }
     setSelectedQuest(null);
     onNavigate('quiz');
@@ -2889,6 +2912,7 @@ const App = () => {
   const [buddyMessage, setBuddyMessage] = useState('');
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [selectedQuestId, setSelectedQuestId] = useState(null);
+  const [selectedChapterId, setSelectedChapterId] = useState(null);
 
   const handleLogin = (userData, assetData) => {
     setUser(userData);
@@ -2989,7 +3013,7 @@ const App = () => {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -100 }}
           >
-            <MapScreen user={user} onNavigate={handleNavigate} onXpEarned={handleXpEarned} setSelectedQuestId={setSelectedQuestId} />
+            <MapScreen user={user} onNavigate={handleNavigate} onXpEarned={handleXpEarned} setSelectedQuestId={setSelectedQuestId} setSelectedChapterId={setSelectedChapterId} />
           </motion.div>
         )}
 
@@ -3000,7 +3024,7 @@ const App = () => {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -100 }}
           >
-            <QuizScreen user={user} onNavigate={handleNavigate} onXpEarned={handleXpEarned} questId={selectedQuestId} />
+            <QuizScreen user={user} onNavigate={handleNavigate} onXpEarned={handleXpEarned} questId={selectedQuestId} chapterId={selectedChapterId} />
           </motion.div>
         )}
 
