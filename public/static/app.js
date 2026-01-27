@@ -953,6 +953,17 @@ const HomeScreen = ({ user, asset, onNavigate }) => {
           <span>{fabText}</span>
         </motion.button>
       </motion.div>
+
+      {/* Finn Navigator */}
+      <FinnNavigator 
+        mode="basic"
+        message="こんにちは！投資の冒険を始めましょう！🎯"
+        position="bottom-right"
+        onClick={() => {
+          soundSystem.playNotification();
+          onNavigate('map');
+        }}
+      />
     </div>
   );
 };
@@ -1390,6 +1401,13 @@ const MarketScreen = ({ user, onNavigate }) => {
           />
         )}
       </AnimatePresence>
+
+      {/* Finn Navigator */}
+      <FinnNavigator 
+        mode="basic"
+        message="良い投資先を見つけたかな？💰"
+        position="bottom-right"
+      />
     </div>
   );
 };
@@ -1850,6 +1868,13 @@ const QuizScreen = ({ user, onNavigate, onXpEarned, questId, chapterId }) => {
             </Button>
           </div>
         </div>
+
+        {/* Finn Navigator for Quiz Screen */}
+        <FinnNavigator 
+          mode="basic"
+          message={result ? (result.correct ? "素晴らしい！正解です！🎉" : "次は頑張ろう！💪") : "落ち着いて考えてみよう！🤔"}
+          position="bottom-right"
+        />
       </div>
     );
   }
@@ -1895,7 +1920,91 @@ const QuizScreen = ({ user, onNavigate, onXpEarned, questId, chapterId }) => {
           ))}
         </div>
       </div>
+
+      {/* Finn Navigator for Quiz List */}
+      <FinnNavigator 
+        mode="basic"
+        message="クイズに挑戦して知識を深めよう！📚"
+        position="bottom-right"
+      />
     </div>
+  );
+};
+
+// ===== Finnナビゲーターコンポーネント =====
+const FinnNavigator = ({ mode = 'basic', expression = 'joyful', message, position = 'bottom-right', onClick }) => {
+  const [isVisible, setIsVisible] = useState(true);
+  const [showMessage, setShowMessage] = useState(false);
+
+  useEffect(() => {
+    if (message) {
+      setShowMessage(true);
+      const timer = setTimeout(() => setShowMessage(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
+
+  // Finnの画像を表示（基本モード使用）
+  const finnImage = '/static/finn/finn-basic.png';
+
+  // 位置のスタイル
+  const positionStyles = {
+    'bottom-right': 'bottom-24 right-6',
+    'bottom-left': 'bottom-24 left-6',
+    'top-right': 'top-24 right-6',
+    'top-left': 'top-24 left-6',
+    'center': 'top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2'
+  };
+
+  if (!isVisible) return null;
+
+  return (
+    <motion.div
+      initial={{ scale: 0, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      exit={{ scale: 0, opacity: 0 }}
+      className={`fixed ${positionStyles[position]} z-50`}
+    >
+      {/* メッセージ吹き出し */}
+      {showMessage && message && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 10 }}
+          className="absolute bottom-full right-0 mb-4 max-w-xs"
+        >
+          <div className="bg-white rounded-2xl p-4 shadow-2xl border-2 border-teal-400 relative">
+            <div className="text-gray-800 text-sm font-medium">{message}</div>
+            {/* 吹き出しの三角 */}
+            <div className="absolute -bottom-2 right-8 w-4 h-4 bg-white border-r-2 border-b-2 border-teal-400 transform rotate-45"></div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Finnキャラクター */}
+      <motion.div
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={onClick}
+        className="cursor-pointer"
+      >
+        <div className="relative w-24 h-24 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-full p-1 shadow-2xl">
+          <div className="w-full h-full bg-white rounded-full flex items-center justify-center overflow-hidden">
+            <img 
+              src={finnImage} 
+              alt="Finn Navigator" 
+              className="w-20 h-20 object-contain"
+            />
+          </div>
+          {/* アクティブインジケーター */}
+          <motion.div
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ repeat: Infinity, duration: 2 }}
+            className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white"
+          />
+        </div>
+      </motion.div>
+    </motion.div>
   );
 };
 
@@ -2393,6 +2502,13 @@ const MapScreen = ({ user, onNavigate, onXpEarned, setSelectedQuestId, setSelect
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Finn Navigator */}
+      <FinnNavigator 
+        mode="basic"
+        message="クエストを選んで冒険しよう！💪"
+        position="bottom-left"
+      />
     </div>
   );
 };
