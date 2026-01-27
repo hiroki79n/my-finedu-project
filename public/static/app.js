@@ -2007,20 +2007,7 @@ const MapScreen = ({ user, onNavigate, onXpEarned }) => {
 
   // クエストクリック処理
   const handleQuestClick = (quest, chapter) => {
-    if (completedQuests.includes(quest.id)) return; // 完了済みは無視
-    
-    // 前のクエストが完了しているかチェック
-    const allQuests = chapters.flatMap(ch => [...ch.quests, ch.boss]);
-    const questIndex = allQuests.findIndex(q => q.id === quest.id);
-    
-    if (questIndex > 0) {
-      const prevQuest = allQuests[questIndex - 1];
-      if (!completedQuests.includes(prevQuest.id)) {
-        soundSystem.playError();
-        return;
-      }
-    }
-    
+    // テスト用：全クエストクリック可能
     soundSystem.playNotification();
     setSelectedQuest({ ...quest, chapter });
   };
@@ -2046,13 +2033,8 @@ const MapScreen = ({ user, onNavigate, onXpEarned }) => {
 
   // クエストがロックされているか
   const isQuestLocked = (quest) => {
-    const allQuests = chapters.flatMap(ch => [...ch.quests, ch.boss]);
-    const questIndex = allQuests.findIndex(q => q.id === quest.id);
-    
-    if (questIndex === 0) return false; // 最初のクエストは常にアンロック
-    
-    const prevQuest = allQuests[questIndex - 1];
-    return !completedQuests.includes(prevQuest.id);
+    // テスト用：全クエストアンロック
+    return false;
   };
 
   // クエストの色を取得
