@@ -2323,30 +2323,47 @@ const MapScreen = ({ user, onNavigate, onXpEarned, setSelectedQuestId, setSelect
 
   const handleStartQuest = () => {
     soundSystem.playClick();
-    if (selectedQuest && setSelectedQuestId && setSelectedChapterId) {
-      setSelectedQuestId(selectedQuest.id);
-      
-      // チャプターIDをセット
-      let targetChapterId = null;
-      
-      // メインクエストの場合: chapter.idを使用
-      if (selectedQuest.chapter && selectedQuest.chapter.id) {
-        targetChapterId = selectedQuest.chapter.id;
-      } 
-      // サブクエストの場合: chapter.chapter_idを使用
-      else if (selectedQuest.chapter && selectedQuest.chapter.chapter_id) {
-        targetChapterId = selectedQuest.chapter.chapter_id;
-      }
-      
-      console.log('Starting quest:', selectedQuest.id, 'Chapter ID:', targetChapterId);
-      
-      if (targetChapterId) {
-        setSelectedChapterId(targetChapterId);
-      } else {
-        console.warn('No chapter ID found for quest:', selectedQuest);
-      }
+    
+    if (!selectedQuest) {
+      console.error('No quest selected');
+      return;
     }
+    
+    // チャプターIDをセット
+    let targetChapterId = null;
+    
+    // メインクエストの場合: chapter.idを使用
+    if (selectedQuest.chapter && selectedQuest.chapter.id) {
+      targetChapterId = selectedQuest.chapter.id;
+    } 
+    // サブクエストの場合: chapter.chapter_idを使用
+    else if (selectedQuest.chapter && selectedQuest.chapter.chapter_id) {
+      targetChapterId = selectedQuest.chapter.chapter_id;
+    }
+    
+    console.log('=== Starting Quest ===');
+    console.log('Quest ID:', selectedQuest.id);
+    console.log('Quest Title:', selectedQuest.title);
+    console.log('Chapter:', selectedQuest.chapter);
+    console.log('Target Chapter ID:', targetChapterId);
+    
+    if (setSelectedQuestId) {
+      setSelectedQuestId(selectedQuest.id);
+      console.log('Set questId:', selectedQuest.id);
+    }
+    
+    if (setSelectedChapterId && targetChapterId) {
+      setSelectedChapterId(targetChapterId);
+      console.log('Set chapterId:', targetChapterId);
+    } else {
+      console.warn('No chapter ID found or setter missing');
+    }
+    
+    // モーダルを閉じる
     setSelectedQuest(null);
+    
+    // クイズ画面に遷移
+    console.log('Navigating to quiz screen...');
     onNavigate('quiz');
   };
 
