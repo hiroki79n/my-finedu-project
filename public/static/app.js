@@ -1921,6 +1921,7 @@ const FinnGlobalOverlay = ({ currentScreen }) => {
   const [showMessage, setShowMessage] = useState(false);
   const [message, setMessage] = useState('');
   const [isDragging, setIsDragging] = useState(false);
+  const [isReacting, setIsReacting] = useState(false); // リアクション中フラグ
   
   // ウィンドウサイズ取得
   const [windowSize, setWindowSize] = useState({
@@ -1939,9 +1940,14 @@ const FinnGlobalOverlay = ({ currentScreen }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // ルートに応じたメッセージ変更
+  // ルートに応じたメッセージとキャラクター画像を変更
   useEffect(() => {
     let newMessage = '';
+    
+    // 画面遷移時のリアクション（ジャンプアニメーション）
+    setIsReacting(true);
+    const reactionTimer = setTimeout(() => setIsReacting(false), 600);
+    
     switch (currentScreen) {
       case 'home':
         newMessage = 'こんにちは！投資の冒険を始めましょう！🎯';
@@ -1969,8 +1975,13 @@ const FinnGlobalOverlay = ({ currentScreen }) => {
       setMessage(newMessage);
       setShowMessage(true);
       const timer = setTimeout(() => setShowMessage(false), 5000);
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+        clearTimeout(reactionTimer);
+      };
     }
+    
+    return () => clearTimeout(reactionTimer);
   }, [currentScreen]);
 
   // ドラッグ終了時に四隅にスナップ
@@ -2002,7 +2013,17 @@ const FinnGlobalOverlay = ({ currentScreen }) => {
     event.target.style.transform = `translate(${snapX}px, ${snapY}px)`;
   };
 
-  const finnImage = '/static/finn/finn-basic.png';
+  // 画面に応じたキャラクター画像を選択
+  const getFinnImage = () => {
+    // Market, Portfolio, News画面ではチャート版を使用
+    if (['market', 'portfolio', 'news'].includes(currentScreen)) {
+      return '/static/finn/finn-chart.png';
+    }
+    // その他の画面ではノーマル版を使用
+    return '/static/finn/finn-normal.png';
+  };
+
+  const finnImage = getFinnImage();
 
   return (
     <motion.div
@@ -2041,28 +2062,78 @@ const FinnGlobalOverlay = ({ currentScreen }) => {
 
       {/* Finnキャラクター */}
       <motion.div
-        whileHover={!isDragging ? { scale: 1.1 } : {}}
-        whileTap={{ scale: 0.95 }}
-        animate={isDragging ? { rotate: [0, -5, 5, -5, 0] } : {}}
-        transition={isDragging ? { repeat: Infinity, duration: 0.5 } : {}}
-        className="pointer-events-auto"
+        whileHover={!isDragging && !isReacting ? { scale: 1.15, y: -5 } : {}}
+        whileTap={{ scale: 0.9 }}
+        animate={
+          isDragging ? { 
+            rotate: [0, -8, 8, -8, 0],
+            y: [0, -3, 0, -3, 0]
+          } : isReacting ? {
+            // 画面遷移時のジャンプリアクション
+            y: [0, -30, 0],
+            rotate: [0, -10, 10, 0],
+            scale: [1, 1.2, 1]
+          } : {
+            // 通常時の浮遊アニメーション
+            y: [0, -10, 0],
+            rotate: [0, -2, 2, -2, 0]
+          }
+        }
+        transition={
+          isDragging ? 
+            { repeat: Infinity, duration: 0.4 } : 
+          isReacting ?
+            { duration: 0.6, ease: "easeOut" } :
+            { 
+              y: { repeat: Infinity, duration: 3, ease: "easeInOut" },
+              rotate: { repeat: Infinity, duration: 4, ease: "easeInOut" }
+            }
+        }
+        className="pointer-events-auto relative"
       >
-        <div className="relative w-24 h-24 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-full p-1 shadow-2xl">
-          <div className="w-full h-full bg-white rounded-full flex items-center justify-center overflow-hidden">
-            <img 
-              src={finnImage} 
-              alt="Finn Navigator" 
-              className="w-20 h-20 object-contain"
-              draggable="false"
-            />
-          </div>
-          {/* アクティブインジケーター */}
+        {/* 影 */}
+        <motion.div
+          animate={{ scale: [1, 0.95, 1], opacity: [0.3, 0.2, 0.3] }}
+          transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+          className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-20 h-4 bg-black/20 rounded-full blur-md"
+        />
+        
+        {/* キャラクター本体（背景透過PNG） */}
+        <motion.img 
+          key={finnImage}
+          src={finnImage} 
+          alt="Finn Navigator" 
+          className="relative w-32 h-32 object-contain drop-shadow-2xl"
+          draggable="false"
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+        />
+        
+        {/* アクティブインジケーター（キャラクターの右上） */}
+        <motion.div
+          animate={{ scale: [1, 1.3, 1], opacity: [0.8, 1, 0.8] }}
+          transition={{ repeat: Infinity, duration: 2 }}
+          className="absolute top-2 right-2 w-5 h-5 bg-green-400 rounded-full border-3 border-white shadow-lg"
+        >
           <motion.div
-            animate={{ scale: [1, 1.2, 1] }}
+            animate={{ scale: [1, 1.5, 1], opacity: [0.6, 0, 0.6] }}
             transition={{ repeat: Infinity, duration: 2 }}
-            className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white"
+            className="absolute inset-0 bg-green-400 rounded-full"
           />
-        </div>
+        </motion.div>
+        
+        {/* クリック可能なヒントエリア */}
+        {!isDragging && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0.5, 0.8, 0.5] }}
+            transition={{ repeat: Infinity, duration: 2 }}
+            className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 text-xs text-teal-600 font-bold whitespace-nowrap pointer-events-none"
+          >
+            ドラッグして移動 🖱️
+          </motion.div>
+        )}
       </motion.div>
     </motion.div>
   );
