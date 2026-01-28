@@ -1662,6 +1662,9 @@ const TradeModal = ({ stock, userId, onClose, onSuccess }) => {
 
 // ===== クイズ画面 =====
 const QuizScreen = ({ user, onNavigate, onXpEarned, questId, chapterId }) => {
+  console.log('=== QuizScreen Mounted ===');
+  console.log('Props:', { userId: user?.id, questId, chapterId });
+  
   const [quizzes, setQuizzes] = useState([]);
   const [currentQuiz, setCurrentQuiz] = useState(null);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
@@ -3235,8 +3238,12 @@ const App = () => {
   };
 
   const handleNavigate = (screen) => {
+    console.log('=== handleNavigate called ===');
+    console.log('Current screen:', currentScreen);
+    console.log('Target screen:', screen);
     soundSystem.playClick(); // ナビゲーション音を再生
     setCurrentScreen(screen);
+    console.log('setCurrentScreen executed');
   };
 
   const handleXpEarned = (xp) => {
@@ -3268,6 +3275,13 @@ const App = () => {
       soundSystem.playClick();
     }
   };
+
+  // デバッグログ: レンダリング時の状態を出力
+  console.log('=== App Render ===');
+  console.log('currentScreen:', currentScreen);
+  console.log('user:', user ? user.username : 'null');
+  console.log('selectedQuestId:', selectedQuestId);
+  console.log('selectedChapterId:', selectedChapterId);
 
   return (
     <>
