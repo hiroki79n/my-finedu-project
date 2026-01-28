@@ -1670,22 +1670,31 @@ const QuizScreen = ({ user, onNavigate, onXpEarned, questId, chapterId }) => {
 
   useEffect(() => {
     fetchQuizzes();
-  }, []);
+  }, [chapterId, questId]); // chapterIdとquestIdが変更されたら再取得
 
   const fetchQuizzes = async () => {
+    setLoading(true);
     try {
       const response = await fetch('/api/quiz');
       const data = await response.json();
+      
+      console.log('Fetched quizzes:', data.quizzes.length);
+      console.log('chapterId:', chapterId, 'questId:', questId);
+      
       // chapterIdが指定されている場合は、そのチャプターのクイズをフィルタ
       if (chapterId) {
         const filteredQuizzes = data.quizzes.filter(q => q.chapter_id === chapterId);
+        console.log('Filtered quizzes for chapter', chapterId, ':', filteredQuizzes.length);
         setQuizzes(filteredQuizzes);
         if (filteredQuizzes.length > 0) {
           setCurrentQuiz(filteredQuizzes[0]);
+        } else {
+          console.warn('No quizzes found for chapter', chapterId);
         }
       } else if (questId) {
         // 後方互換性のため、questIdのみの場合も対応
         const filteredQuiz = data.quizzes.find(q => q.id === questId);
+        console.log('Filtered quiz for questId', questId, ':', filteredQuiz);
         setQuizzes(filteredQuiz ? [filteredQuiz] : []);
         if (filteredQuiz) {
           setCurrentQuiz(filteredQuiz);
@@ -1746,8 +1755,37 @@ const QuizScreen = ({ user, onNavigate, onXpEarned, questId, chapterId }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen max-w-md mx-auto flex items-center justify-center">
-        <div className="spinner"></div>
+      <div className="min-h-screen max-w-md mx-auto flex items-center justify-center bg-gradient-to-b from-purple-50 to-blue-50">
+        <div className="text-center">
+          <div className="spinner mb-4"></div>
+          <p className="text-gray-600">クイズを読み込んでいます...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // クイズが見つからない場合のエラー表示
+  if (!loading && quizzes.length === 0) {
+    return (
+      <div className="min-h-screen max-w-md mx-auto p-6 bg-gradient-to-b from-purple-50 to-blue-50">
+        <div className="max-w-2xl mx-auto">
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-3xl p-8 card-shadow text-center"
+          >
+            <div className="text-6xl mb-4">😢</div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">
+              クイズが見つかりません
+            </h2>
+            <p className="text-gray-600 mb-6">
+              {chapterId ? `Chapter ${chapterId} のクイズがまだ準備されていません。` : 'クイズデータの読み込みに失敗しました。'}
+            </p>
+            <Button onClick={() => onNavigate('map')}>
+              マップに戻る
+            </Button>
+          </motion.div>
+        </div>
       </div>
     );
   }
@@ -2287,11 +2325,25 @@ const MapScreen = ({ user, onNavigate, onXpEarned, setSelectedQuestId, setSelect
     soundSystem.playClick();
     if (selectedQuest && setSelectedQuestId && setSelectedChapterId) {
       setSelectedQuestId(selectedQuest.id);
-      // チャプターIDをセット（メインクエストの場合はchapter.id、サブクエストの場合はchapter_idを直接セット）
+      
+      // チャプターIDをセット
+      let targetChapterId = null;
+      
+      // メインクエストの場合: chapter.idを使用
       if (selectedQuest.chapter && selectedQuest.chapter.id) {
-        setSelectedChapterId(selectedQuest.chapter.id);
-      } else if (selectedQuest.chapter && selectedQuest.chapter.chapter_id) {
-        setSelectedChapterId(selectedQuest.chapter.chapter_id);
+        targetChapterId = selectedQuest.chapter.id;
+      } 
+      // サブクエストの場合: chapter.chapter_idを使用
+      else if (selectedQuest.chapter && selectedQuest.chapter.chapter_id) {
+        targetChapterId = selectedQuest.chapter.chapter_id;
+      }
+      
+      console.log('Starting quest:', selectedQuest.id, 'Chapter ID:', targetChapterId);
+      
+      if (targetChapterId) {
+        setSelectedChapterId(targetChapterId);
+      } else {
+        console.warn('No chapter ID found for quest:', selectedQuest);
       }
     }
     setSelectedQuest(null);
