@@ -954,16 +954,6 @@ const HomeScreen = ({ user, asset, onNavigate }) => {
         </motion.button>
       </motion.div>
 
-      {/* Finn Navigator */}
-      <FinnNavigator 
-        mode="basic"
-        message="こんにちは！投資の冒険を始めましょう！🎯"
-        position="bottom-right"
-        onClick={() => {
-          soundSystem.playNotification();
-          onNavigate('map');
-        }}
-      />
     </div>
   );
 };
@@ -1402,12 +1392,6 @@ const MarketScreen = ({ user, onNavigate }) => {
         )}
       </AnimatePresence>
 
-      {/* Finn Navigator */}
-      <FinnNavigator 
-        mode="basic"
-        message="良い投資先を見つけたかな？💰"
-        position="bottom-right"
-      />
     </div>
   );
 };
@@ -1932,46 +1916,120 @@ const QuizScreen = ({ user, onNavigate, onXpEarned, questId, chapterId }) => {
 };
 
 // ===== Finnナビゲーターコンポーネント =====
-const FinnNavigator = ({ mode = 'basic', expression = 'joyful', message, position = 'bottom-right', onClick }) => {
-  const [isVisible, setIsVisible] = useState(true);
+// ===== Global Finn Overlay with Drag & Snap =====
+const FinnGlobalOverlay = ({ currentScreen }) => {
   const [showMessage, setShowMessage] = useState(false);
+  const [message, setMessage] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
+  
+  // ウィンドウサイズ取得
+  const [windowSize, setWindowSize] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight
+  });
 
   useEffect(() => {
-    if (message) {
+    const handleResize = () => {
+      setWindowSize({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // ルートに応じたメッセージ変更
+  useEffect(() => {
+    let newMessage = '';
+    switch (currentScreen) {
+      case 'home':
+        newMessage = 'こんにちは！投資の冒険を始めましょう！🎯';
+        break;
+      case 'map':
+        newMessage = 'クエストを選んで冒険しよう！💪';
+        break;
+      case 'quiz':
+        newMessage = '落ち着いて考えてみよう！🤔';
+        break;
+      case 'market':
+        newMessage = '良い投資先を見つけたかな？💰';
+        break;
+      case 'portfolio':
+        newMessage = 'ポートフォリオをバランス良く！📊';
+        break;
+      case 'news':
+        newMessage = '最新ニュースをチェック！📰';
+        break;
+      default:
+        newMessage = '';
+    }
+    
+    if (newMessage) {
+      setMessage(newMessage);
       setShowMessage(true);
       const timer = setTimeout(() => setShowMessage(false), 5000);
       return () => clearTimeout(timer);
     }
-  }, [message]);
+  }, [currentScreen]);
 
-  // Finnの画像を表示（基本モード使用）
-  const finnImage = '/static/finn/finn-basic.png';
-
-  // 位置のスタイル
-  const positionStyles = {
-    'bottom-right': 'bottom-24 right-6',
-    'bottom-left': 'bottom-24 left-6',
-    'top-right': 'top-24 right-6',
-    'top-left': 'top-24 left-6',
-    'center': 'top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2'
+  // ドラッグ終了時に四隅にスナップ
+  const handleDragEnd = (event, info) => {
+    setIsDragging(false);
+    
+    const { x, y } = info.point;
+    const { width, height } = windowSize;
+    
+    // 四隅の座標を計算（マージン考慮）
+    const margin = 100;
+    let snapX, snapY;
+    
+    // 横方向の判定
+    if (x < width / 2) {
+      snapX = margin; // 左
+    } else {
+      snapX = width - margin; // 右
+    }
+    
+    // 縦方向の判定
+    if (y < height / 2) {
+      snapY = margin; // 上
+    } else {
+      snapY = height - margin; // 下
+    }
+    
+    // アニメーションでスナップ
+    event.target.style.transform = `translate(${snapX}px, ${snapY}px)`;
   };
 
-  if (!isVisible) return null;
+  const finnImage = '/static/finn/finn-basic.png';
 
   return (
     <motion.div
-      initial={{ scale: 0, opacity: 0 }}
+      drag
+      dragMomentum={false}
+      dragElastic={0}
+      onDragStart={() => setIsDragging(true)}
+      onDragEnd={handleDragEnd}
+      dragConstraints={{
+        left: 50,
+        right: windowSize.width - 150,
+        top: 50,
+        bottom: windowSize.height - 150
+      }}
+      initial={{ x: windowSize.width - 150, y: windowSize.height - 150, scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      exit={{ scale: 0, opacity: 0 }}
-      className={`fixed ${positionStyles[position]} z-50`}
+      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+      className="fixed z-[9999] cursor-grab active:cursor-grabbing"
+      style={{ touchAction: 'none' }}
     >
-      {/* メッセージ吹き出し */}
-      {showMessage && message && (
+      {/* メッセージ吹き出し（ドラッグ中は非表示） */}
+      {showMessage && message && !isDragging && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 10 }}
-          className="absolute bottom-full right-0 mb-4 max-w-xs"
+          className="absolute bottom-full right-0 mb-4 max-w-xs pointer-events-none"
         >
           <div className="bg-white rounded-2xl p-4 shadow-2xl border-2 border-teal-400 relative">
             <div className="text-gray-800 text-sm font-medium">{message}</div>
@@ -1983,10 +2041,11 @@ const FinnNavigator = ({ mode = 'basic', expression = 'joyful', message, positio
 
       {/* Finnキャラクター */}
       <motion.div
-        whileHover={{ scale: 1.1 }}
+        whileHover={!isDragging ? { scale: 1.1 } : {}}
         whileTap={{ scale: 0.95 }}
-        onClick={onClick}
-        className="cursor-pointer"
+        animate={isDragging ? { rotate: [0, -5, 5, -5, 0] } : {}}
+        transition={isDragging ? { repeat: Infinity, duration: 0.5 } : {}}
+        className="pointer-events-auto"
       >
         <div className="relative w-24 h-24 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-full p-1 shadow-2xl">
           <div className="w-full h-full bg-white rounded-full flex items-center justify-center overflow-hidden">
@@ -1994,6 +2053,7 @@ const FinnNavigator = ({ mode = 'basic', expression = 'joyful', message, positio
               src={finnImage} 
               alt="Finn Navigator" 
               className="w-20 h-20 object-contain"
+              draggable="false"
             />
           </div>
           {/* アクティブインジケーター */}
@@ -2503,12 +2563,6 @@ const MapScreen = ({ user, onNavigate, onXpEarned, setSelectedQuestId, setSelect
         )}
       </AnimatePresence>
 
-      {/* Finn Navigator */}
-      <FinnNavigator 
-        mode="basic"
-        message="クエストを選んで冒険しよう！💪"
-        position="bottom-left"
-      />
     </div>
   );
 };
@@ -3076,8 +3130,14 @@ const App = () => {
   };
 
   return (
-    <AppContext.Provider value={{ user, asset, buddyMood, setBuddyMood, buddyMessage, setBuddyMessage }}>
-      <AnimatePresence mode="wait">
+    <>
+      {/* Global Finn Overlay - 全画面で常駐 */}
+      {user && currentScreen !== 'auth' && (
+        <FinnGlobalOverlay currentScreen={currentScreen} />
+      )}
+      
+      <AppContext.Provider value={{ user, asset, buddyMood, setBuddyMood, buddyMessage, setBuddyMessage }}>
+        <AnimatePresence mode="wait">
         {currentScreen === 'auth' && (
           <motion.div
             key="auth"
@@ -3199,6 +3259,7 @@ const App = () => {
         </motion.button>
       )}
     </AppContext.Provider>
+    </>
   );
 };
 
