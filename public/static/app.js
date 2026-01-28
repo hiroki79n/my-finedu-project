@@ -1894,12 +1894,7 @@ const QuizScreen = ({ user, onNavigate, onXpEarned, questId, chapterId }) => {
           </div>
         </div>
 
-        {/* Finn Navigator for Quiz Screen */}
-        <FinnNavigator 
-          mode="basic"
-          message={result ? (result.correct ? "素晴らしい！正解です！🎉" : "次は頑張ろう！💪") : "落ち着いて考えてみよう！🤔"}
-          position="bottom-right"
-        />
+        {/* Finn Navigator removed - using FinnGlobalOverlay instead */}
       </div>
     );
   }
@@ -1946,12 +1941,7 @@ const QuizScreen = ({ user, onNavigate, onXpEarned, questId, chapterId }) => {
         </div>
       </div>
 
-      {/* Finn Navigator for Quiz List */}
-      <FinnNavigator 
-        mode="basic"
-        message="クイズに挑戦して知識を深めよう！📚"
-        position="bottom-right"
-      />
+      {/* Finn Navigator removed - using FinnGlobalOverlay instead */}
     </div>
   );
 };
