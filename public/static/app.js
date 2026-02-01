@@ -1154,64 +1154,249 @@ const HomeScreen = ({ user, asset, onNavigate }) => {
 
 // ===== ニュース画面 =====
 const NewsScreen = ({ user, onNavigate }) => {
-  // 今日のニュース（サンプルデータ）
-  const newsItems = [
+  const [selectedCategory, setSelectedCategory] = useState('全て');
+  
+  // カテゴリーリスト
+  const categories = [
+    { id: 'all', name: '全て', icon: '📰' },
+    { id: 'economy', name: '経済', icon: '💱' },
+    { id: 'tech', name: 'テクノロジー', icon: '🤖' },
+    { id: 'pharma', name: '製薬', icon: '💊' },
+    { id: 'retail', name: '小売', icon: '🛒' },
+    { id: 'commodity', name: 'コモディティ', icon: '⚡' },
+    { id: 'finance', name: '金融', icon: '🏦' },
+    { id: 'energy', name: 'エネルギー', icon: '⚡' }
+  ];
+
+  // ニュースデータ（拡張版）
+  const allNewsItems = [
+    // 経済カテゴリー
     {
       id: 1,
-      category: '為替',
+      category: '経済',
+      categoryId: 'economy',
       icon: '💱',
       title: '円安進行で輸出関連株に注目',
-      description: '1ドル=150円台に突入。自動車メーカーや電機メーカーの業績改善が期待されています。',
+      description: '1ドル=150円台に突入。自動車メーカーや電機メーカーの業績改善が期待されています。為替の変動により、輸出企業の収益が大幅に改善する見込みです。',
       impact: 'positive',
       stocks: ['トヨタ自動車', '任天堂', 'ソニーグループ'],
       color: 'from-green-500 to-emerald-600',
-      borderColor: 'border-green-400'
+      borderColor: 'border-green-400',
+      date: '2026-02-01'
     },
     {
       id: 2,
-      category: 'コモディティ',
-      icon: '⚡',
-      title: '金価格が過去最高値を更新',
-      description: '世界的な不安定要因により、安全資産としての金への需要が高まっています。',
+      category: '経済',
+      categoryId: 'economy',
+      icon: '💱',
+      title: '日銀が金融政策の見直しを検討',
+      description: 'インフレ目標達成により、日本銀行が金融緩和政策の修正を検討中。金利上昇の可能性が高まっています。',
       impact: 'neutral',
-      stocks: ['金', '銀'],
-      color: 'from-yellow-500 to-amber-600',
-      borderColor: 'border-yellow-400'
+      stocks: ['三菱UFJ', '三井住友FG'],
+      color: 'from-blue-500 to-cyan-600',
+      borderColor: 'border-blue-400',
+      date: '2026-02-01'
     },
     {
       id: 3,
+      category: '経済',
+      categoryId: 'economy',
+      icon: '💰',
+      title: 'GDP成長率が予想を上回る',
+      description: '2025年Q4のGDP成長率が年率2.5%を記録。個人消費の回復が牽引役となっています。',
+      impact: 'positive',
+      stocks: ['イオン', 'セブン&アイ'],
+      color: 'from-emerald-500 to-green-600',
+      borderColor: 'border-emerald-400',
+      date: '2026-01-31'
+    },
+    
+    // テクノロジーカテゴリー
+    {
+      id: 4,
       category: 'テクノロジー',
+      categoryId: 'tech',
       icon: '🤖',
       title: 'AI関連企業の株価が急騰',
-      description: '生成AIの普及により、関連企業への投資が加速。今後の成長が期待されています。',
+      description: '生成AIの普及により、関連企業への投資が加速。今後の成長が期待されています。特にクラウドサービスとAIチップメーカーに注目が集まっています。',
       impact: 'positive',
       stocks: ['ソフトバンクグループ', 'LINEヤフー'],
       color: 'from-blue-500 to-cyan-600',
-      borderColor: 'border-blue-400'
-    },
-    {
-      id: 4,
-      category: '製薬',
-      icon: '💊',
-      title: '新薬開発で製薬株に期待',
-      description: '武田薬品や第一三共の新薬治験が順調に進行。承認されれば大きな収益が見込まれます。',
-      impact: 'positive',
-      stocks: ['武田薬品', '第一三共'],
-      color: 'from-purple-500 to-pink-600',
-      borderColor: 'border-purple-400'
+      borderColor: 'border-blue-400',
+      date: '2026-02-01'
     },
     {
       id: 5,
+      category: 'テクノロジー',
+      categoryId: 'tech',
+      icon: '📱',
+      title: '半導体不足が解消へ',
+      description: '世界的な半導体供給が正常化。自動車産業や家電メーカーの生産が回復基調に。',
+      impact: 'positive',
+      stocks: ['ソニーグループ', '東京エレクトロン'],
+      color: 'from-purple-500 to-blue-600',
+      borderColor: 'border-purple-400',
+      date: '2026-01-31'
+    },
+    {
+      id: 6,
+      category: 'テクノロジー',
+      categoryId: 'tech',
+      icon: '🔐',
+      title: 'サイバーセキュリティ需要が急増',
+      description: 'ランサムウェア攻撃の増加により、セキュリティ対策への投資が拡大。関連企業の受注が好調です。',
+      impact: 'positive',
+      stocks: ['トレンドマイクロ', 'ラック'],
+      color: 'from-indigo-500 to-purple-600',
+      borderColor: 'border-indigo-400',
+      date: '2026-01-30'
+    },
+    
+    // 製薬カテゴリー
+    {
+      id: 7,
+      category: '製薬',
+      categoryId: 'pharma',
+      icon: '💊',
+      title: '新薬開発で製薬株に期待',
+      description: '武田薬品や第一三共の新薬治験が順調に進行。承認されれば大きな収益が見込まれます。がん治療薬の臨床試験で良好な結果が報告されています。',
+      impact: 'positive',
+      stocks: ['武田薬品', '第一三共'],
+      color: 'from-purple-500 to-pink-600',
+      borderColor: 'border-purple-400',
+      date: '2026-02-01'
+    },
+    {
+      id: 8,
+      category: '製薬',
+      categoryId: 'pharma',
+      icon: '🧬',
+      title: '再生医療分野に注目集まる',
+      description: 'iPS細胞を使った治療法の実用化が進展。バイオベンチャーへの投資が活発化しています。',
+      impact: 'positive',
+      stocks: ['武田薬品', 'アステラス製薬'],
+      color: 'from-pink-500 to-rose-600',
+      borderColor: 'border-pink-400',
+      date: '2026-01-30'
+    },
+    
+    // 小売カテゴリー
+    {
+      id: 9,
       category: '小売',
+      categoryId: 'retail',
       icon: '🛒',
       title: 'インフレ懸念で消費関連株が軟調',
       description: '物価上昇により消費者の購買力が低下。小売・アパレル業界に逆風が吹いています。',
       impact: 'negative',
       stocks: ['ファーストリテイリング', '楽天グループ'],
       color: 'from-red-500 to-rose-600',
-      borderColor: 'border-red-400'
+      borderColor: 'border-red-400',
+      date: '2026-02-01'
+    },
+    {
+      id: 10,
+      category: '小売',
+      categoryId: 'retail',
+      icon: '🏪',
+      title: 'コンビニ各社が値上げを実施',
+      description: '原材料費の高騰により、大手コンビニチェーンが商品価格を引き上げ。消費者の反応が注目されます。',
+      impact: 'negative',
+      stocks: ['セブン&アイ', 'ローソン'],
+      color: 'from-orange-500 to-red-600',
+      borderColor: 'border-orange-400',
+      date: '2026-01-31'
+    },
+    
+    // コモディティカテゴリー
+    {
+      id: 11,
+      category: 'コモディティ',
+      categoryId: 'commodity',
+      icon: '⚡',
+      title: '金価格が過去最高値を更新',
+      description: '世界的な不安定要因により、安全資産としての金への需要が高まっています。中央銀行の金購入も増加傾向です。',
+      impact: 'neutral',
+      stocks: ['田中貴金属', '住友金属鉱山'],
+      color: 'from-yellow-500 to-amber-600',
+      borderColor: 'border-yellow-400',
+      date: '2026-02-01'
+    },
+    {
+      id: 12,
+      category: 'コモディティ',
+      categoryId: 'commodity',
+      icon: '🛢️',
+      title: '原油価格が上昇トレンド',
+      description: 'OPEC+の減産決定により、原油価格が1バレル90ドルを突破。エネルギー関連株に追い風です。',
+      impact: 'positive',
+      stocks: ['INPEX', '出光興産'],
+      color: 'from-amber-500 to-orange-600',
+      borderColor: 'border-amber-400',
+      date: '2026-01-30'
+    },
+    
+    // 金融カテゴリー
+    {
+      id: 13,
+      category: '金融',
+      categoryId: 'finance',
+      icon: '🏦',
+      title: '銀行株が金利上昇で上昇',
+      description: '政策金利の引き上げ期待により、メガバンクの株価が堅調に推移しています。',
+      impact: 'positive',
+      stocks: ['三菱UFJ', 'みずほFG'],
+      color: 'from-blue-500 to-indigo-600',
+      borderColor: 'border-blue-400',
+      date: '2026-02-01'
+    },
+    {
+      id: 14,
+      category: '金融',
+      categoryId: 'finance',
+      icon: '💳',
+      title: 'キャッシュレス決済がさらに拡大',
+      description: 'QR決済の利用者が5000万人を突破。決済関連企業の業績が好調です。',
+      impact: 'positive',
+      stocks: ['楽天グループ', 'PayPay'],
+      color: 'from-cyan-500 to-blue-600',
+      borderColor: 'border-cyan-400',
+      date: '2026-01-29'
+    },
+    
+    // エネルギーカテゴリー
+    {
+      id: 15,
+      category: 'エネルギー',
+      categoryId: 'energy',
+      icon: '⚡',
+      title: '再生可能エネルギー投資が加速',
+      description: '政府の脱炭素政策により、太陽光・風力発電への投資が急増。関連企業に注目が集まっています。',
+      impact: 'positive',
+      stocks: ['東京電力', 'エネオス'],
+      color: 'from-green-500 to-teal-600',
+      borderColor: 'border-green-400',
+      date: '2026-02-01'
+    },
+    {
+      id: 16,
+      category: 'エネルギー',
+      categoryId: 'energy',
+      icon: '🔋',
+      title: 'EV用バッテリー需要が急増',
+      description: '電気自動車の普及により、リチウムイオン電池の需要が拡大。材料メーカーの受注が好調です。',
+      impact: 'positive',
+      stocks: ['パナソニック', 'GSユアサ'],
+      color: 'from-teal-500 to-green-600',
+      borderColor: 'border-teal-400',
+      date: '2026-01-31'
     }
   ];
+
+  // カテゴリーでフィルタリング
+  const filteredNews = selectedCategory === '全て' 
+    ? allNewsItems 
+    : allNewsItems.filter(news => news.category === selectedCategory);
 
   const getImpactBadge = (impact) => {
     if (impact === 'positive') return { text: '📈 上昇期待', color: 'bg-green-500' };
@@ -1220,83 +1405,120 @@ const NewsScreen = ({ user, onNavigate }) => {
   };
 
   return (
-    <div className="min-h-screen max-w-md mx-auto bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 pb-24">
+    <div className="min-h-screen max-w-md mx-auto bg-slate-950 pb-24">
       {/* ヘッダー */}
-      <motion.div
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="sticky top-0 bg-gradient-to-r from-gray-900 to-gray-800 px-6 py-4 z-20 border-b border-gray-700"
-      >
-        <div className="flex items-center justify-between">
+      <div className="sticky top-0 bg-slate-900/90 backdrop-blur-xl px-6 py-4 z-20 border-b border-slate-800">
+        <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-xl font-black text-white flex items-center gap-2">
               📰 今日のニュース
             </h1>
-            <p className="text-xs text-gray-400 italic">市場を動かすトピックス</p>
+            <p className="text-xs text-slate-400">市場を動かすトピックス</p>
           </div>
           <button
             onClick={() => {
               soundSystem.playClick();
               onNavigate('home');
             }}
-            className="text-white hover:text-gray-300"
+            className="text-white hover:text-slate-300"
           >
             <span className="text-2xl">✕</span>
           </button>
         </div>
-      </motion.div>
+
+        {/* カテゴリータブ */}
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
+          {categories.map((category) => (
+            <motion.button
+              key={category.id}
+              onClick={() => {
+                soundSystem.playClick();
+                setSelectedCategory(category.name);
+              }}
+              whileTap={{ scale: 0.95 }}
+              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-bold transition-all ${
+                selectedCategory === category.name
+                  ? 'bg-emerald-500 text-white'
+                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+              }`}
+            >
+              <span className="mr-1">{category.icon}</span>
+              {category.name}
+            </motion.button>
+          ))}
+        </div>
+      </div>
 
       {/* ニュース一覧 */}
       <div className="p-4 space-y-4">
-        {newsItems.map((news, index) => {
-          const badge = getImpactBadge(news.impact);
-          
-          return (
-            <motion.div
-              key={news.id}
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: index * 0.1 }}
-              className={`bg-gradient-to-br ${news.color} rounded-2xl p-5 border-2 ${news.borderColor}`}
-            >
-              {/* カテゴリと影響度 */}
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">{news.icon}</span>
-                  <span className="text-xs font-bold text-white/80">{news.category}</span>
-                </div>
-                <div className={`${badge.color} text-white text-xs px-3 py-1 rounded-full font-bold`}>
-                  {badge.text}
-                </div>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={selectedCategory}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-4"
+          >
+            {filteredNews.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="text-4xl mb-3">📭</div>
+                <div className="text-slate-400">このカテゴリーにはニュースがありません</div>
               </div>
+            ) : (
+              filteredNews.map((news, index) => {
+                const badge = getImpactBadge(news.impact);
+                
+                return (
+                  <motion.div
+                    key={news.id}
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: index * 0.05 }}
+                    className={`bg-gradient-to-br ${news.color} rounded-2xl p-5 border-2 ${news.borderColor}`}
+                  >
+                    {/* カテゴリと影響度 */}
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">{news.icon}</span>
+                        <span className="text-xs font-bold text-white/80">{news.category}</span>
+                        <span className="text-xs text-white/60">• {news.date}</span>
+                      </div>
+                      <div className={`${badge.color} text-white text-xs px-3 py-1 rounded-full font-bold`}>
+                        {badge.text}
+                      </div>
+                    </div>
 
-              {/* タイトル */}
-              <h2 className="text-lg font-bold text-white mb-2">
-                {news.title}
-              </h2>
+                    {/* タイトル */}
+                    <h2 className="text-lg font-bold text-white mb-2">
+                      {news.title}
+                    </h2>
 
-              {/* 説明 */}
-              <p className="text-sm text-white/80 mb-3 leading-relaxed">
-                {news.description}
-              </p>
+                    {/* 説明 */}
+                    <p className="text-sm text-white/80 mb-3 leading-relaxed">
+                      {news.description}
+                    </p>
 
-              {/* 関連銘柄 */}
-              <div className="bg-black/20 rounded-xl p-3">
-                <p className="text-xs text-white/70 mb-2">🔍 関連銘柄</p>
-                <div className="flex flex-wrap gap-2">
-                  {news.stocks.map((stock, i) => (
-                    <span
-                      key={i}
-                      className="text-xs bg-white/20 backdrop-blur-sm text-white px-2 py-1 rounded-lg"
-                    >
-                      {stock}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          );
-        })}
+                    {/* 関連銘柄 */}
+                    <div className="bg-black/20 rounded-xl p-3">
+                      <p className="text-xs text-white/70 mb-2">🔍 関連銘柄</p>
+                      <div className="flex flex-wrap gap-2">
+                        {news.stocks.map((stock, i) => (
+                          <span
+                            key={i}
+                            className="text-xs bg-white/20 backdrop-blur-sm text-white px-2 py-1 rounded-lg"
+                          >
+                            {stock}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       {/* マーケットへのCTA */}
