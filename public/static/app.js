@@ -621,6 +621,7 @@ const AuthScreen = ({ onLogin }) => {
 const BottomNav = ({ currentScreen, onNavigate }) => {
   const navItems = [
     { id: 'home', icon: '🏠', label: 'ホーム' },
+    { id: 'news', icon: '📰', label: 'ニュース' },
     { id: 'portfolio', icon: '💼', label: '資産' },
     { id: 'history', icon: '📜', label: '履歴' },
     { id: 'settings', icon: '⚙️', label: '設定' }
