@@ -1045,12 +1045,6 @@ const HomeScreen = ({ user, asset, onNavigate }) => {
     }
   }, []);
 
-  useEffect(() => {
-    if (totalAssets) {
-      fetchCityItems();
-    }
-  }, [totalAssets]);
-
   const fetchTotalAssets = async () => {
     try {
       const response = await fetch(`/api/user/${user.id}/total-assets`);
