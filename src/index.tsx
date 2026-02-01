@@ -1013,6 +1013,16 @@ app.get('/', (c) => {
             }
         }
         
+        /* Scrollbar Hide */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
         /* Pop X Theme Overrides */
         body.theme-pop {
             background: linear-gradient(135deg, #FFF7ED 0%, #FED7AA 100%);
@@ -1029,7 +1039,7 @@ app.get('/', (c) => {
         }
     </style>
 </head>
-<body class="min-h-screen">
+<body class="min-h-screen bg-slate-950">
     <div id="root"></div>
 
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
