@@ -2592,137 +2592,172 @@ const MapScreen = ({ user, onNavigate, onXpEarned, setSelectedQuestId, setSelect
   const [selectedQuest, setSelectedQuest] = useState(null);
   const [completedQuests, setCompletedQuests] = useState([101]); // デモで最初のクエストを完了扱い
 
-  // Chapter構造データ（後から変更可能）
+  // Chapter構造データ（新カリキュラム対応）
   const chapters = [
     {
       id: 1,
-      title: '価値の誕生と交換',
-      subtitle: 'Origin',
-      stage: 'はじまりの孤島',
-      icon: '🏝️',
+      title: 'お金と経済の概念',
+      subtitle: 'Basics',
+      stage: 'インフレの島',
+      icon: '💰',
       color: 'from-green-500 to-emerald-600',
       borderColor: 'border-green-400',
       difficulty: 1,
-      type: 'main', // メインクエスト
+      type: 'main',
       quests: [
-        { id: 101, title: '物々交換の限界', type: 'simulation', icon: '🐟', reward: 300, xp: 30, description: '魚と肉を交換せよ' },
-        { id: 102, title: '貝殻からコインへ', type: 'lesson', icon: '🐚', reward: 400, xp: 40, description: 'なぜ腐らないものがお金に？' },
-        { id: 103, title: '信用の魔法', type: 'quiz', icon: '📜', reward: 500, xp: 50, description: '紙幣が便利な理由' }
-      ],
-      boss: { id: 199, name: 'インフレ・スライム', icon: '🫧', reward: 1000, xp: 100, description: 'お金が増えすぎると価値が下がる！' }
+        { id: 101, title: 'インフレと預金', type: 'quiz', icon: '🏦', reward: 300, xp: 30, description: '実質価値を理解する' },
+        { id: 105, title: '72の法則', type: 'quiz', icon: '🔢', reward: 300, xp: 30, description: '複利の威力を知る' },
+        { id: 110, title: '投資の3要素', type: 'quiz', icon: '⏰', reward: 300, xp: 30, description: '時間の重要性' }
+      ]
     },
     {
       id: 2,
-      title: '労働と社会の歯車',
-      subtitle: 'Society',
-      stage: 'ギルドの街',
-      icon: '🏛️',
+      title: '給与明細・税・社会保険',
+      subtitle: 'Tax & Insurance',
+      stage: '税務の街',
+      icon: '📋',
       color: 'from-blue-500 to-cyan-600',
       borderColor: 'border-blue-400',
       difficulty: 2,
       type: 'main',
       quests: [
-        { id: 201, title: '仕事選び', type: 'lesson', icon: '💼', reward: 600, xp: 60, description: '会社員、公務員、起業家…' },
-        { id: 202, title: '生活費サバイバル', type: 'simulation', icon: '🏠', reward: 700, xp: 70, description: '可処分所得を計算せよ' },
-        { id: 203, title: '銀行の金庫', type: 'lesson', icon: '🏦', reward: 800, xp: 80, description: '金利でお金が増える仕組み' }
-      ],
-      boss: { id: 299, name: '浪費モンスター', icon: '💳', reward: 1500, xp: 150, description: 'クレジットカードの罠！' }
+        { id: 201, title: '給与天引き', type: 'quiz', icon: '💼', reward: 400, xp: 40, description: '社会保険料を知る' },
+        { id: 202, title: '住民税', type: 'quiz', icon: '🏘️', reward: 400, xp: 40, description: '後払いの仕組み' },
+        { id: 209, title: '所得税制度', type: 'quiz', icon: '📊', reward: 400, xp: 40, description: '累進課税を理解' }
+      ]
     },
     {
       id: 3,
-      title: '企業の森と株式会社',
-      subtitle: 'Enterprise',
-      stage: 'カンパニー・フォレスト',
-      icon: '🌲',
+      title: 'キャッシュフロー設計',
+      subtitle: 'Life Defense',
+      stage: '生活防衛の砦',
+      icon: '🛡️',
       color: 'from-purple-500 to-pink-600',
       borderColor: 'border-purple-400',
       difficulty: 3,
       type: 'main',
       quests: [
-        { id: 301, title: 'ピザ屋を創業せよ', type: 'simulation', icon: '🍕', reward: 900, xp: 90, description: '株券を発行して仲間を集める' },
-        { id: 302, title: '株価の変動', type: 'lesson', icon: '📈', reward: 1000, xp: 100, description: '需要と業績で値段が変わる' },
-        { id: 303, title: '配当の果実', type: 'quiz', icon: '💰', reward: 1100, xp: 110, description: 'インカムゲインの喜び' }
-      ],
-      boss: { id: 399, name: '赤字ドラゴン', icon: '🐉', reward: 2000, xp: 200, description: '倒産すると株が紙切れに！' }
+        { id: 301, title: '生活防衛資金', type: 'quiz', icon: '💵', reward: 500, xp: 50, description: '備えあれば憂いなし' },
+        { id: 303, title: 'リボ払い金利', type: 'quiz', icon: '💳', reward: 500, xp: 50, description: '高金利の罠' },
+        { id: 308, title: '貯蓄率', type: 'quiz', icon: '🐷', reward: 500, xp: 50, description: '先取り貯蓄' }
+      ]
     },
     {
       id: 4,
-      title: '世界市場とリスク',
-      subtitle: 'Global Market',
-      stage: '為替の海',
-      icon: '🌊',
+      title: '保険の最適化',
+      subtitle: 'Risk Management',
+      stage: '保障の城',
+      icon: '🏰',
       color: 'from-orange-500 to-red-600',
       borderColor: 'border-orange-400',
       difficulty: 4,
       type: 'main',
       quests: [
-        { id: 401, title: 'ハンバーガーの値段', type: 'lesson', icon: '🍔', reward: 1200, xp: 120, description: '海外に行くと値段が違う？' },
-        { id: 402, title: '円安の波', type: 'simulation', icon: '💱', reward: 1300, xp: 130, description: 'iPhoneが高くなる理由' },
-        { id: 403, title: '貿易の船', type: 'quiz', icon: '🚢', reward: 1400, xp: 140, description: '日本の輸出と輸入' }
-      ],
-      boss: { id: 499, name: 'カントリー・リスク', icon: '⚡', reward: 2500, xp: 250, description: '戦争や政治で市場が大荒れ！' }
+        { id: 401, title: '公的保障', type: 'quiz', icon: '🏥', reward: 600, xp: 60, description: '日本の手厚い制度' },
+        { id: 402, title: '高額療養費', type: 'quiz', icon: '💊', reward: 600, xp: 60, description: '医療費の上限' },
+        { id: 404, title: '貯蓄型保険', type: 'quiz', icon: '📉', reward: 600, xp: 60, description: '投資効率の真実' }
+      ]
     },
     {
       id: 5,
-      title: '未来への投資',
-      subtitle: 'Future X',
-      stage: '天空都市ゼスタ',
-      icon: '🏙️',
+      title: '資産運用の入口実践',
+      subtitle: 'Investment Start',
+      stage: 'NISA の塔',
+      icon: '📈',
       color: 'from-yellow-500 to-amber-600',
       borderColor: 'border-yellow-400',
       difficulty: 5,
       type: 'main',
       quests: [
-        { id: 501, title: 'タマゴを分けるカゴ', type: 'lesson', icon: '🥚', reward: 1500, xp: 150, description: '分散投資の魔法' },
-        { id: 502, title: '複利のタイムマシン', type: 'simulation', icon: '⏰', reward: 1600, xp: 160, description: '雪だるま式に増やす' },
-        { id: 503, title: '未来のお金', type: 'quiz', icon: '🤖', reward: 1700, xp: 170, description: 'AI時代にどう稼ぐ？' }
-      ],
-      boss: { id: 599, name: '未知数X', icon: '❌', reward: 5000, xp: 500, description: '正解のない未来で生き残れ！' }
+        { id: 501, title: 'NISAメリット', type: 'quiz', icon: '✨', reward: 700, xp: 70, description: '非課税の力' },
+        { id: 502, title: 'インデックスファンド', type: 'quiz', icon: '🌍', reward: 700, xp: 70, description: '長期投資の王道' },
+        { id: 504, title: '分散投資', type: 'quiz', icon: '🥚', reward: 700, xp: 70, description: '卵とカゴの格言' }
+      ]
+    },
+    {
+      id: 6,
+      title: '長期ライフプラン設計',
+      subtitle: 'Retirement',
+      stage: '老後資金の山',
+      icon: '⛰️',
+      color: 'from-indigo-500 to-purple-600',
+      borderColor: 'border-indigo-400',
+      difficulty: 6,
+      type: 'main',
+      quests: [
+        { id: 601, title: '三大資金', type: 'quiz', icon: '💼', reward: 800, xp: 80, description: '人生の大きな支出' },
+        { id: 602, title: 'iDeCo節税', type: 'quiz', icon: '📜', reward: 800, xp: 80, description: '最強の税制優遇' },
+        { id: 603, title: 'iDeCo受給年齢', type: 'quiz', icon: '🔒', reward: 800, xp: 80, description: '60歳まで引き出せない' }
+      ]
+    },
+    {
+      id: 7,
+      title: 'ストック系報酬の管理',
+      subtitle: 'SO/RSU',
+      stage: 'ストックの渓谷',
+      icon: '📊',
+      color: 'from-pink-500 to-rose-600',
+      borderColor: 'border-pink-400',
+      difficulty: 7,
+      type: 'main',
+      quests: [
+        { id: 701, title: 'ベスティング', type: 'quiz', icon: '⏳', reward: 900, xp: 90, description: '権利確定の仕組み' },
+        { id: 702, title: '集中リスク', type: 'quiz', icon: '⚠️', reward: 900, xp: 90, description: '卵を一つのカゴに' },
+        { id: 707, title: '自社株売却', type: 'quiz', icon: '💱', reward: 900, xp: 90, description: '分散の重要性' }
+      ]
+    },
+    {
+      id: 8,
+      title: '住宅選びの意思決定',
+      subtitle: 'Housing',
+      stage: '住居選択の岐路',
+      icon: '🏠',
+      color: 'from-teal-500 to-cyan-600',
+      borderColor: 'border-teal-400',
+      difficulty: 8,
+      type: 'main',
+      quests: [
+        { id: 801, title: '流動性', type: 'quiz', icon: '🔄', reward: 1000, xp: 100, description: '売りやすさが重要' },
+        { id: 802, title: '住居費比率', type: 'quiz', icon: '📊', reward: 1000, xp: 100, description: '手取りの20-25%' },
+        { id: 808, title: '賃貸メリット', type: 'quiz', icon: '🚚', reward: 1000, xp: 100, description: '移動の自由' }
+      ]
+    },
+    {
+      id: 9,
+      title: '金融トラブル・情報リテラシー',
+      subtitle: 'Defense',
+      stage: '詐欺の迷宮',
+      icon: '🛡️',
+      color: 'from-red-500 to-orange-600',
+      borderColor: 'border-red-400',
+      difficulty: 9,
+      type: 'main',
+      quests: [
+        { id: 901, title: '詐欺見抜き', type: 'quiz', icon: '🚨', reward: 1100, xp: 110, description: '高利回りの罠' },
+        { id: 902, title: 'ポンジスキーム', type: 'quiz', icon: '💸', reward: 1100, xp: 110, description: '自転車操業の破綻' },
+        { id: 908, title: '防衛策', type: 'quiz', icon: '🔐', reward: 1100, xp: 110, description: '理解できないものに投資しない' }
+      ]
+    },
+    {
+      id: 10,
+      title: '行動設計と習慣化',
+      subtitle: 'Action',
+      stage: '習慣の聖域',
+      icon: '🎯',
+      color: 'from-emerald-500 to-green-600',
+      borderColor: 'border-emerald-400',
+      difficulty: 10,
+      type: 'main',
+      quests: [
+        { id: 1001, title: '自動積立', type: 'quiz', icon: '🤖', reward: 1200, xp: 120, description: '意志力に頼らない' },
+        { id: 1002, title: '投資開始方法', type: 'quiz', icon: '🏃', reward: 1200, xp: 120, description: '少額で走りながら学ぶ' },
+        { id: 1010, title: '即実行', type: 'quiz', icon: '⚡', reward: 1200, xp: 120, description: '今日から行動を変える' }
+      ]
     }
   ];
 
-  // サブクエスト（並列エリア・いつでもアクセス可能）
-  const subQuests = [
-    {
-      id: 'crypto',
-      chapter_id: 6,
-      title: '仮想通貨の洞窟',
-      icon: '₿',
-      color: 'from-amber-500 to-yellow-600',
-      borderColor: 'border-amber-400',
-      description: 'ビットコインとブロックチェーンの世界',
-      quests: [
-        { id: 601, title: 'ビットコイン入門', type: 'lesson', icon: '₿', reward: 800, xp: 80, description: 'デジタル通貨とは？' },
-        { id: 602, title: 'マイニングの仕組み', type: 'simulation', icon: '⛏️', reward: 900, xp: 90, description: '採掘で報酬を得る' }
-      ]
-    },
-    {
-      id: 'history',
-      chapter_id: 7,
-      title: '歴史の図書館',
-      icon: '📚',
-      color: 'from-indigo-500 to-purple-600',
-      borderColor: 'border-indigo-400',
-      description: '金融の歴史を学ぶ',
-      quests: [
-        { id: 701, title: 'バブル経済', type: 'lesson', icon: '🫧', reward: 700, xp: 70, description: '1980年代の日本経済' },
-        { id: 702, title: 'リーマンショック', type: 'quiz', icon: '📉', reward: 800, xp: 80, description: '2008年の金融危機' }
-      ]
-    },
-    {
-      id: 'tax',
-      chapter_id: 8,
-      title: '税金の役所',
-      icon: '🏢',
-      color: 'from-gray-500 to-slate-600',
-      borderColor: 'border-gray-400',
-      description: '税金と社会保障を理解',
-      quests: [
-        { id: 801, title: '所得税の仕組み', type: 'lesson', icon: '💴', reward: 600, xp: 60, description: '累進課税とは？' },
-        { id: 802, title: '確定申告', type: 'simulation', icon: '📝', reward: 700, xp: 70, description: '税金を申告してみよう' }
-      ]
-    }
-  ];
+  // サブクエストは削除（メインクエストのみに集中）
+  const subQuests = [];
 
   // クエストクリック処理
   const handleQuestClick = (quest, chapter) => {
