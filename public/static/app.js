@@ -2814,13 +2814,13 @@ const MapScreen = ({ user, onNavigate, onXpEarned, setSelectedQuestId, setSelect
 
   // Chapterが完了しているかチェック
   const isChapterCompleted = (chapter) => {
-    const chapterQuests = [...chapter.quests, chapter.boss];
+    const chapterQuests = chapter.quests || [];
     return chapterQuests.every(q => completedQuests.includes(q.id));
   };
 
   // Chapterの進捗を計算
   const getChapterProgress = (chapter) => {
-    const chapterQuests = [...chapter.quests, chapter.boss];
+    const chapterQuests = chapter.quests || [];
     const completed = chapterQuests.filter(q => completedQuests.includes(q.id)).length;
     return { completed, total: chapterQuests.length };
   };
@@ -2881,7 +2881,7 @@ const MapScreen = ({ user, onNavigate, onXpEarned, setSelectedQuestId, setSelect
         {chapters.map((chapter, index) => {
           const progress = getChapterProgress(chapter);
           const isCompleted = isChapterCompleted(chapter);
-          const allQuests = [...chapter.quests, chapter.boss];
+          const allQuests = chapter.quests || [];
           
           return (
             <motion.div
