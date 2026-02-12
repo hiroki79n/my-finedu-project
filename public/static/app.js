@@ -905,30 +905,91 @@ const QuestRail = ({ onNavigate, cash }) => {
 };
 
 // ===== Chat Modal (Bottom Sheet) Component =====
-const ChatModal = ({ isOpen, onClose, user }) => {
+const ChatModal = ({ isOpen, onClose, user, newsItem }) => {
   const [messages, setMessages] = useState([]);
+  const [userInput, setUserInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
 
   useEffect(() => {
-    if (isOpen) {
-      // Simulate AI response
+    if (isOpen && newsItem) {
+      // Generate initial AI response based on news content
       setTimeout(() => {
-        setMessages([
-          {
-            id: 1,
-            type: 'finn',
-            text: 'このニュースは半導体業界に大きな影響を与えそうだね！🤔'
-          },
-          {
-            id: 2,
-            type: 'finn',
-            text: 'AI需要の拡大で、半導体メーカーの株価が上がる可能性があるよ。特にソニーグループやキーエンスに注目だね！📈'
-          }
-        ]);
+        const initialMessages = generateNewsAnalysis(newsItem);
+        setMessages(initialMessages);
       }, 300);
     } else {
       setMessages([]);
+      setUserInput('');
     }
-  }, [isOpen]);
+  }, [isOpen, newsItem]);
+
+  const generateNewsAnalysis = (news) => {
+    const impactText = news.impact === 'positive' ? '良い影響' : 
+                       news.impact === 'negative' ? '悪い影響' : '中立的な影響';
+    
+    return [
+      {
+        id: 1,
+        type: 'finn',
+        text: `この「${news.title}」というニュースについて説明するね！🤔`
+      },
+      {
+        id: 2,
+        type: 'finn',
+        text: news.description
+      },
+      {
+        id: 3,
+        type: 'finn',
+        text: `このニュースは市場に${impactText}を与えると予想されるよ。${news.stocks.length > 0 ? `特に${news.stocks.join('、')}などの銘柄に注目だね！` : ''}📊`
+      }
+    ];
+  };
+
+  const handleSendMessage = () => {
+    if (!userInput.trim()) return;
+
+    // Add user message
+    const userMessage = {
+      id: messages.length + 1,
+      type: 'user',
+      text: userInput
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
+    setUserInput('');
+    setIsTyping(true);
+
+    // Simulate AI response
+    setTimeout(() => {
+      const aiResponse = generateAIResponse(userInput, newsItem);
+      setMessages(prev => [...prev, aiResponse]);
+      setIsTyping(false);
+    }, 1000);
+  };
+
+  const generateAIResponse = (question, news) => {
+    const lowerQuestion = question.toLowerCase();
+    let response = '';
+
+    if (lowerQuestion.includes('なぜ') || lowerQuestion.includes('理由')) {
+      response = `${news.category}分野では、${news.description.substring(0, 50)}...という背景があるからだよ。経済の仕組みを理解すると、ニュースの意味がよく分かるようになるね！💡`;
+    } else if (lowerQuestion.includes('いつ') || lowerQuestion.includes('タイミング')) {
+      response = `投資のタイミングは難しいけど、${news.impact === 'positive' ? '上昇期待' : news.impact === 'negative' ? '下落懸念' : '中立'}の局面では、慎重に市場を見守るのがいいよ。長期的な視点も大事だね！📈`;
+    } else if (lowerQuestion.includes('買') || lowerQuestion.includes('売')) {
+      response = `投資判断は最終的に自分で決めることが大切だよ！このニュースを参考に、${news.stocks.length > 0 ? news.stocks[0] : '関連銘柄'}の財務状況や将来性を調べてみるといいね。僕はサポート役として情報提供するよ！🎯`;
+    } else if (lowerQuestion.includes('影響') || lowerQuestion.includes('どう')) {
+      response = `このニュースは${news.category}セクター全体に影響を与える可能性があるよ。${news.stocks.join('、')}などの企業は特に注目されているんだ。市場の反応を見てみよう！🔍`;
+    } else {
+      response = `なるほど！${news.title}について、もっと詳しく知りたいんだね。${news.category}分野は今後も注目されるテーマだから、ニュースをチェックし続けるといいよ！何か具体的に知りたいことはある？😊`;
+    }
+
+    return {
+      id: messages.length + 2,
+      type: 'finn',
+      text: response
+    };
+  };
 
   if (!isOpen) return null;
 
@@ -980,23 +1041,95 @@ const ChatModal = ({ isOpen, onClose, user }) => {
                 {messages.map((msg, index) => (
                   <motion.div
                     key={msg.id}
-                    initial={{ x: -20, opacity: 0 }}
+                    initial={{ x: msg.type === 'finn' ? -20 : 20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ delay: index * 0.2 }}
+                    className={`flex gap-2 ${msg.type === 'user' ? 'flex-row-reverse' : ''}`}
+                  >
+                    {msg.type === 'finn' && (
+                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold text-sm">
+                        F
+                      </div>
+                    )}
+                    <div className={`flex-1 rounded-2xl p-3 ${
+                      msg.type === 'finn' 
+                        ? 'bg-slate-800 rounded-tl-none' 
+                        : 'bg-emerald-600 rounded-tr-none'
+                    }`}>
+                      <p className="text-white text-sm">{msg.text}</p>
+                    </div>
+                    {msg.type === 'user' && (
+                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center text-white font-bold text-sm">
+                        {user?.username?.[0]?.toUpperCase() || 'U'}
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+                {isTyping && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
                     className="flex gap-2"
                   >
                     <div className="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold text-sm">
                       F
                     </div>
                     <div className="flex-1 bg-slate-800 rounded-2xl rounded-tl-none p-3">
-                      <p className="text-white text-sm">{msg.text}</p>
+                      <div className="flex gap-1">
+                        <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                      </div>
                     </div>
                   </motion.div>
-                ))}
+                )}
               </div>
 
-              {/* Actions */}
-              <div className="p-4 border-t border-slate-700 space-y-2">
+              {/* Input Field */}
+              <div className="p-4 border-t border-slate-700">
+                {/* Quick Actions */}
+                <div className="flex gap-2 mb-3 overflow-x-auto scrollbar-hide">
+                  <button
+                    onClick={() => setUserInput('このニュースの影響は？')}
+                    className="flex-shrink-0 bg-slate-800 text-slate-300 rounded-full px-3 py-1.5 text-xs font-medium hover:bg-slate-700 transition-colors"
+                  >
+                    💡 影響を知る
+                  </button>
+                  <button
+                    onClick={() => setUserInput('関連銘柄の詳細は？')}
+                    className="flex-shrink-0 bg-slate-800 text-slate-300 rounded-full px-3 py-1.5 text-xs font-medium hover:bg-slate-700 transition-colors"
+                  >
+                    📊 銘柄情報
+                  </button>
+                  <button
+                    onClick={() => setUserInput('投資するタイミングは？')}
+                    className="flex-shrink-0 bg-slate-800 text-slate-300 rounded-full px-3 py-1.5 text-xs font-medium hover:bg-slate-700 transition-colors"
+                  >
+                    ⏰ タイミング
+                  </button>
+                </div>
+
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={userInput}
+                    onChange={(e) => setUserInput(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                    placeholder="フィンに質問してみよう..."
+                    className="flex-1 bg-slate-800 text-white rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                  <button
+                    onClick={handleSendMessage}
+                    disabled={!userInput.trim() || isTyping}
+                    className="bg-emerald-500 text-white rounded-xl px-4 py-3 font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-emerald-600 transition-colors"
+                  >
+                    <span>📤</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Bottom Action */}
+              <div className="px-4 pb-4">
                 <motion.button
                   onClick={() => {
                     soundSystem.playClick();
@@ -1009,16 +1142,8 @@ const ChatModal = ({ isOpen, onClose, user }) => {
                   whileTap={{ scale: 0.95 }}
                   className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 text-white rounded-xl py-3 font-bold flex items-center justify-center gap-2"
                 >
-                  <span>📊</span>
-                  関連銘柄を見る
-                </motion.button>
-                
-                <motion.button
-                  onClick={onClose}
-                  whileTap={{ scale: 0.95 }}
-                  className="w-full bg-slate-800 text-slate-300 rounded-xl py-3 font-bold"
-                >
-                  閉じる
+                  <span>🏛️</span>
+                  市場で取引する
                 </motion.button>
               </div>
             </div>
@@ -1156,6 +1281,8 @@ const HomeScreen = ({ user, asset, onNavigate }) => {
 // ===== ニュース画面 =====
 const NewsScreen = ({ user, onNavigate }) => {
   const [selectedCategory, setSelectedCategory] = useState('全て');
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [selectedNews, setSelectedNews] = useState(null);
   
   // カテゴリーリスト
   const categories = [
@@ -1501,7 +1628,7 @@ const NewsScreen = ({ user, onNavigate }) => {
                     </p>
 
                     {/* 関連銘柄 */}
-                    <div className="bg-black/20 rounded-xl p-3">
+                    <div className="bg-black/20 rounded-xl p-3 mb-3">
                       <p className="text-xs text-white/70 mb-2">🔍 関連銘柄</p>
                       <div className="flex flex-wrap gap-2">
                         {news.stocks.map((stock, i) => (
@@ -1514,6 +1641,25 @@ const NewsScreen = ({ user, onNavigate }) => {
                         ))}
                       </div>
                     </div>
+
+                    {/* フィンに聞くボタン */}
+                    <motion.button
+                      onClick={() => {
+                        soundSystem.playClick();
+                        setSelectedNews(news);
+                        setIsChatOpen(true);
+                      }}
+                      whileTap={{ scale: 0.95 }}
+                      className="w-full bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white rounded-xl py-3 font-bold flex items-center justify-center gap-2 transition-colors border border-white/20"
+                    >
+                      <img 
+                        src="/static/finn/finn-normal.png" 
+                        alt="Finn" 
+                        className="w-5 h-5"
+                      />
+                      <span>フィンに聞く</span>
+                      <span className="text-xs">💬</span>
+                    </motion.button>
                   </motion.div>
                 );
               })
@@ -1539,6 +1685,17 @@ const NewsScreen = ({ user, onNavigate }) => {
           🏛️ XESTA市場で取引する
         </button>
       </motion.div>
+
+      {/* フィンとのチャットモーダル */}
+      <ChatModal 
+        isOpen={isChatOpen}
+        onClose={() => {
+          setIsChatOpen(false);
+          setSelectedNews(null);
+        }}
+        user={user}
+        newsItem={selectedNews}
+      />
     </div>
   );
 };
