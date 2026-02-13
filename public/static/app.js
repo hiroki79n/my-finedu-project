@@ -754,7 +754,7 @@ const NewsHero = ({ onOpenChat }) => {
         {/* Finn Character - positioned at bottom right */}
         <div className="absolute bottom-4 right-4">
           <motion.img
-            src="/static/finn/finn-chart.png"
+            src="/static/finn/finn-chart.png?v=2026021308"
             alt="Finn"
             className="w-24 h-24 drop-shadow-2xl"
             animate={{ 
@@ -1019,7 +1019,7 @@ const ChatModal = ({ isOpen, onClose, user, newsItem }) => {
               <div className="p-4 border-b border-slate-700 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <img 
-                    src="/static/finn/finn-normal.png" 
+                    src="/static/finn/finn-normal.png?v=2026021308" 
                     alt="Finn" 
                     className="w-12 h-12"
                   />
@@ -1653,7 +1653,7 @@ const NewsScreen = ({ user, onNavigate }) => {
                       className="w-full bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white rounded-xl py-3 font-bold flex items-center justify-center gap-2 transition-colors border border-white/20"
                     >
                       <img 
-                        src="/static/finn/finn-normal.png" 
+                        src="/static/finn/finn-normal.png?v=2026021308" 
                         alt="Finn" 
                         className="w-5 h-5"
                       />
@@ -2620,12 +2620,14 @@ const FinnGlobalOverlay = ({ currentScreen }) => {
 
   // 画面に応じたキャラクター画像を選択
   const getFinnImage = () => {
+    // キャッシュバスティング用のバージョンパラメータ
+    const version = '?v=2026021308';
     // Market, Portfolio, News画面ではチャート版を使用
     if (['market', 'portfolio', 'news'].includes(currentScreen)) {
-      return '/static/finn/finn-chart.png';
+      return '/static/finn/finn-chart.png' + version;
     }
     // その他の画面ではノーマル版を使用
-    return '/static/finn/finn-normal.png';
+    return '/static/finn/finn-normal.png' + version;
   };
 
   const finnImage = getFinnImage();
