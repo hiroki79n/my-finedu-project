@@ -621,9 +621,9 @@ const AuthScreen = ({ onLogin }) => {
 const BottomNav = ({ currentScreen, onNavigate }) => {
   const navItems = [
     { id: 'home', icon: '🏠', label: 'ホーム' },
+    { id: 'market', icon: '📈', label: '市場' },
     { id: 'news', icon: '📰', label: 'ニュース' },
     { id: 'portfolio', icon: '💼', label: '資産' },
-    { id: 'history', icon: '📜', label: '履歴' },
     { id: 'settings', icon: '⚙️', label: '設定' }
   ];
 
@@ -838,8 +838,8 @@ const QuestRail = ({ onNavigate, cash }) => {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-bold text-white flex items-center gap-2">
-          <span>⚔️</span>
-          クエストで稼ぐ
+          <span>⭐</span>
+          おすすめクエスト
         </h3>
         {needsCash && (
           <motion.div
@@ -847,7 +847,7 @@ const QuestRail = ({ onNavigate, cash }) => {
             transition={{ duration: 1, repeat: Infinity }}
             className="px-2 py-1 bg-yellow-500 rounded-full text-xs font-bold text-slate-900"
           >
-            おすすめ
+            報酬ゲット！
           </motion.div>
         )}
       </div>
@@ -1231,11 +1231,55 @@ const HomeScreen = ({ user, asset, onNavigate }) => {
 
       {/* Main Content */}
       <div className="p-4 space-y-6">
-        {/* News Hero Section */}
-        <NewsHero onOpenChat={() => setIsChatOpen(true)} />
+        {/* Quest Main Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-br from-emerald-900/30 to-cyan-900/30 backdrop-blur rounded-3xl p-6 border border-emerald-500/30"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-2xl font-black text-white flex items-center gap-2">
+                🎯 クエストで稼ぐ
+              </h2>
+              <p className="text-sm text-slate-300 mt-1">
+                金融知識を学んで報酬をゲット！
+              </p>
+            </div>
+          </div>
 
-        {/* Action Nudge */}
-        <ActionNudge onOpenChat={() => setIsChatOpen(true)} />
+          {/* Progress Overview */}
+          <div className="bg-slate-900/50 rounded-xl p-4 mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-slate-400">今日の進捗</span>
+              <span className="text-sm font-bold text-emerald-400">
+                {user.xp || 0} XP
+              </span>
+            </div>
+            <div className="w-full bg-slate-700 rounded-full h-2">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${Math.min((user.xp || 0) / 1000 * 100, 100)}%` }}
+                className="bg-gradient-to-r from-emerald-500 to-cyan-500 h-2 rounded-full"
+                transition={{ duration: 1, delay: 0.5 }}
+              />
+            </div>
+          </div>
+
+          {/* Start Quest Button */}
+          <motion.button
+            onClick={() => {
+              soundSystem.playClick();
+              onNavigate('map');
+            }}
+            whileTap={{ scale: 0.95 }}
+            className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 text-white rounded-xl py-4 font-bold text-lg flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/50"
+          >
+            <span>🗺️</span>
+            クエストマップへ
+            <span>→</span>
+          </motion.button>
+        </motion.div>
 
         {/* Quest Rail */}
         <QuestRail onNavigate={onNavigate} cash={cash} />
@@ -1267,13 +1311,6 @@ const HomeScreen = ({ user, asset, onNavigate }) => {
           </motion.div>
         )}
       </div>
-
-      {/* Chat Modal */}
-      <ChatModal 
-        isOpen={isChatOpen} 
-        onClose={() => setIsChatOpen(false)}
-        user={user}
-      />
     </div>
   );
 };
