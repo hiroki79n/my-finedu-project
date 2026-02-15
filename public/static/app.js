@@ -3114,27 +3114,35 @@ const MapScreen = ({ user, onNavigate, onXpEarned, setSelectedQuestId, setSelect
     return 'bg-blue-600';
   };
 
+  // 全クエストをフラットなリストに変換
+  const allQuestsFlat = chapters.flatMap(chapter => 
+    chapter.quests.map(quest => ({
+      ...quest,
+      chapter: chapter
+    }))
+  );
+
   return (
-    <div className="min-h-screen max-w-md mx-auto bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 pb-24">
+    <div className="min-h-screen max-w-md mx-auto bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 pb-24 overflow-hidden">
       {/* XESTAヘッダー */}
       <motion.div
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="sticky top-0 bg-gradient-to-r from-gray-900 to-gray-800 px-6 py-4 z-20 border-b border-gray-700"
+        className="sticky top-0 bg-gradient-to-r from-slate-900 to-slate-800 px-6 py-4 z-20 border-b border-slate-700 backdrop-blur-md"
       >
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-black text-white flex items-center gap-2">
-              ⚔️ Quest Forest
+              🗺️ クエストパス
             </h1>
-            <p className="text-xs text-gray-400 italic">冒険の森で学び、稼ぐ</p>
+            <p className="text-xs text-slate-400 italic">学びの道を進もう</p>
           </div>
           <button
             onClick={() => {
               soundSystem.playClick();
               onNavigate('home');
             }}
-            className="text-white hover:text-gray-300"
+            className="text-white hover:text-slate-300"
           >
             <span className="text-2xl">✕</span>
           </button>
@@ -3142,206 +3150,157 @@ const MapScreen = ({ user, onNavigate, onXpEarned, setSelectedQuestId, setSelect
         <div className="mt-3 flex items-center justify-between text-sm">
           <div className="flex items-center gap-2">
             <span className="text-yellow-400">🔥</span>
-            <span className="text-gray-300">{user.streak_count}日連続</span>
+            <span className="text-slate-300">{user.streak_count}日連続</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-gray-400">Lv.{user.level}</span>
-            <span className="text-gray-500">|</span>
+            <span className="text-slate-400">Lv.{user.level}</span>
+            <span className="text-slate-500">|</span>
             <span className="text-yellow-400 font-bold">{user.xp} XP</span>
           </div>
         </div>
       </motion.div>
 
-      {/* Chapters（上から下へスクロール：通常順序で表示） */}
-      <div className="p-4 space-y-8">
-        {chapters.map((chapter, index) => {
-          const progress = getChapterProgress(chapter);
-          const isCompleted = isChapterCompleted(chapter);
-          const allQuests = chapter.quests || [];
+      {/* 垂直パス（Duolingoスタイル） */}
+      <div className="relative px-8 py-12">
+        {/* SVG Path（連続した道） */}
+        <svg className="absolute top-0 left-1/2 h-full w-1" style={{ transform: 'translateX(-50%)' }}>
+          {allQuestsFlat.map((quest, index) => {
+            if (index === allQuestsFlat.length - 1) return null;
+            
+            const isCompleted = completedQuests.includes(quest.id);
+            const nextCompleted = completedQuests.includes(allQuestsFlat[index + 1].id);
+            const pathColor = isCompleted ? '#22c55e' : '#475569';
+            
+            // ジグザグパターン
+            const startY = index * 180 + 60;
+            const endY = (index + 1) * 180 + 60;
+            const midY = (startY + endY) / 2;
+            
+            // 左右交互に振る
+            const startX = (index % 2 === 0) ? 0 : 0;
+            const endX = ((index + 1) % 2 === 0) ? 0 : 0;
+            
+            return (
+              <motion.line
+                key={`path-${quest.id}`}
+                x1={startX}
+                y1={startY}
+                x2={endX}
+                y2={endY}
+                stroke={pathColor}
+                strokeWidth="4"
+                strokeDasharray={isCompleted ? "0" : "8 4"}
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 0.5, delay: index * 0.05 }}
+              />
+            );
+          })}
+        </svg>
+
+        {/* クエストノード */}
+        {allQuestsFlat.map((quest, index) => {
+          const isLocked = isQuestLocked(quest);
+          const isQuestCompleted = completedQuests.includes(quest.id);
+          const isBoss = quest.id.toString().endsWith('99');
+          const chapter = quest.chapter;
+          
+          // 左右交互に配置
+          const isLeft = index % 2 === 0;
+          const xPosition = isLeft ? 'left-8' : 'right-8';
+          const alignClass = isLeft ? 'items-end' : 'items-start';
           
           return (
             <motion.div
-              key={chapter.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="space-y-4"
+              key={quest.id}
+              initial={{ opacity: 0, x: isLeft ? -50 : 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.08 }}
+              className={`relative flex ${alignClass} mb-24`}
+              style={{ minHeight: '120px' }}
             >
-              {/* Chapter ヘッダー */}
-              <div className={`bg-gradient-to-br ${chapter.color} rounded-2xl p-5 border-2 ${chapter.borderColor}`}>
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="text-4xl">{chapter.icon}</div>
-                    <div>
-                      <h2 className="text-lg font-black text-white">
-                        Chapter {chapter.id}: {chapter.title}
-                      </h2>
-                      <p className="text-xs text-white/80">{chapter.subtitle}</p>
-                      <p className="text-xs text-white/60 mt-1">📍 {chapter.stage}</p>
-                    </div>
-                  </div>
-                  {isCompleted && (
-                    <div className="bg-white/20 backdrop-blur-sm rounded-full px-3 py-1">
-                      <span className="text-xs font-bold text-white">✓ 完了</span>
-                    </div>
-                  )}
+              {/* クエストカード */}
+              <motion.div
+                whileHover={!isLocked ? { scale: 1.05 } : {}}
+                whileTap={!isLocked ? { scale: 0.95 } : {}}
+                onClick={() => !isLocked && handleQuestClick(quest, chapter)}
+                className={`
+                  ${isLocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                  ${isQuestCompleted ? 'bg-gradient-to-br from-green-600 to-emerald-700 border-green-400' : 
+                    isBoss ? 'bg-gradient-to-br from-red-600 to-rose-700 border-red-400' : 
+                    'bg-gradient-to-br from-blue-600 to-cyan-700 border-blue-400'}
+                  rounded-2xl p-4 border-3 shadow-2xl backdrop-blur-sm
+                  ${isLeft ? 'mr-auto' : 'ml-auto'}
+                  w-64 relative
+                `}
+              >
+                {/* チャプターバッジ */}
+                <div className={`absolute -top-3 ${isLeft ? 'left-3' : 'right-3'} px-3 py-1 rounded-full text-xs font-bold bg-slate-900/80 text-white border border-white/30`}>
+                  Ch.{chapter.id} {chapter.icon}
                 </div>
-                
-                {/* 進捗バー */}
-                <div className="bg-black/20 rounded-full h-2 overflow-hidden mb-2">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${(progress.completed / progress.total) * 100}%` }}
-                    className="h-full bg-white/40"
-                  />
-                </div>
-                <p className="text-xs text-white/70 text-right">
-                  {progress.completed}/{progress.total} クエスト完了
-                </p>
-              </div>
 
-              {/* Chapter内のクエスト */}
-              <div className="space-y-3 pl-4">
-                {allQuests.map((quest, questIndex) => {
-                  const isLocked = isQuestLocked(quest);
-                  const isQuestCompleted = completedQuests.includes(quest.id);
-                  const isBoss = quest.id.toString().endsWith('99');
-                  
-                  return (
-                    <motion.div
-                      key={quest.id}
-                      initial={{ x: -20, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: index * 0.1 + questIndex * 0.05 }}
-                      whileHover={!isLocked ? { scale: 1.02 } : {}}
-                      whileTap={!isLocked ? { scale: 0.98 } : {}}
-                      onClick={() => !isLocked && handleQuestClick(quest, chapter)}
-                      className={`
-                        ${isLocked ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                        ${isBoss ? 'bg-gradient-to-br from-red-900 to-red-800 border-red-500' : 'bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700'}
-                        rounded-xl p-4 border-2 relative
-                      `}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className={`
-                            ${isBoss ? 'text-5xl' : 'text-4xl'}
-                            ${isLocked ? 'grayscale' : ''}
-                          `}>
-                            {isLocked ? '🔒' : quest.icon}
-                          </div>
-                          <div>
-                            <h3 className="font-bold text-white text-sm">
-                              {quest.title || quest.name}
-                            </h3>
-                            {quest.description && (
-                              <p className="text-xs text-gray-400 mt-1">{quest.description}</p>
-                            )}
-                            <div className="flex items-center gap-3 mt-2 text-xs">
-                              <span className="flex items-center gap-1">
-                                <span className="text-green-400">💰</span>
-                                <span className="text-green-300">¥{quest.reward}</span>
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <span className="text-yellow-400">⭐</span>
-                                <span className="text-yellow-300">+{quest.xp}</span>
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* 完了チェック */}
-                        {isQuestCompleted && (
-                          <div className="bg-green-500 rounded-full w-8 h-8 flex items-center justify-center text-white text-sm">
-                            ✓
-                          </div>
-                        )}
-                        
-                        {/* ボスバッジ */}
-                        {isBoss && !isLocked && (
-                          <div className="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded-full font-bold">
-                            BOSS
-                          </div>
-                        )}
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
+                <div className="flex items-center gap-3 mt-2">
+                  <div className={`
+                    text-5xl
+                    ${isLocked ? 'grayscale' : ''}
+                    ${isQuestCompleted ? 'drop-shadow-lg' : ''}
+                  `}>
+                    {isLocked ? '🔒' : isQuestCompleted ? '✅' : quest.icon}
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-black text-white text-base">
+                      {quest.title || quest.name}
+                    </h3>
+                    {quest.description && (
+                      <p className="text-xs text-white/80 mt-1">{quest.description}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* 報酬表示 */}
+                <div className="flex items-center gap-3 mt-3 justify-center">
+                  <div className="bg-white/20 rounded-full px-3 py-1 flex items-center gap-1">
+                    <span className="text-yellow-300">💰</span>
+                    <span className="text-white font-bold text-sm">¥{quest.reward}</span>
+                  </div>
+                  <div className="bg-white/20 rounded-full px-3 py-1 flex items-center gap-1">
+                    <span className="text-yellow-300">⭐</span>
+                    <span className="text-white font-bold text-sm">+{quest.xp}</span>
+                  </div>
+                </div>
+
+                {/* ボスバッジ */}
+                {isBoss && !isLocked && (
+                  <div className="absolute -top-3 -right-3 bg-red-500 text-white text-xs px-3 py-1 rounded-full font-black shadow-lg animate-pulse">
+                    👑 BOSS
+                  </div>
+                )}
+
+                {/* 完了マーク */}
+                {isQuestCompleted && (
+                  <div className="absolute -bottom-2 -right-2 bg-yellow-400 rounded-full w-10 h-10 flex items-center justify-center text-2xl shadow-xl animate-bounce">
+                    ⭐
+                  </div>
+                )}
+              </motion.div>
             </motion.div>
           );
         })}
+
+        {/* ゴール */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: allQuestsFlat.length * 0.08 }}
+          className="flex flex-col items-center justify-center mt-12"
+        >
+          <div className="bg-gradient-to-br from-yellow-500 to-orange-600 rounded-3xl p-8 border-4 border-yellow-400 shadow-2xl text-center">
+            <div className="text-6xl mb-3">🏆</div>
+            <h2 className="text-2xl font-black text-white mb-2">ゴール達成！</h2>
+            <p className="text-sm text-white/90">すべてのクエストをクリアしよう</p>
+          </div>
+        </motion.div>
       </div>
-
-      {/* サブクエスト（並列エリア） */}
-      <motion.div
-        initial={{ x: -50, opacity: 0 }}
-        animate={{ x: 0, opacity: 1 }}
-        transition={{ delay: 0.8 }}
-        className="p-4 mt-8"
-      >
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-black text-white mb-2">📖 The Library</h2>
-          <p className="text-sm text-gray-400">いつでも学べる特別エリア</p>
-        </div>
-
-        <div className="space-y-4">
-          {subQuests.map((area) => (
-            <motion.div
-              key={area.id}
-              initial={{ scale: 0.95 }}
-              whileHover={{ scale: 1.02 }}
-              className={`bg-gradient-to-br ${area.color} rounded-2xl p-4 border-2 ${area.borderColor}`}
-            >
-              <div className="flex items-center gap-3 mb-3">
-                <div className="text-4xl">{area.icon}</div>
-                <div>
-                  <h3 className="text-lg font-bold text-white">{area.title}</h3>
-                  <p className="text-xs text-white/80">{area.description}</p>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                {area.quests.map((quest) => {
-                  const isCompleted = completedQuests.includes(quest.id);
-                  
-                  return (
-                    <motion.div
-                      key={quest.id}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => handleQuestClick(quest, { ...area, type: 'sub' })}
-                      className="bg-white/10 backdrop-blur-sm rounded-xl p-3 cursor-pointer hover:bg-white/20 transition-colors"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-2xl">{quest.icon}</span>
-                          <div>
-                            <div className="text-sm font-bold text-white">{quest.title}</div>
-                            <div className="text-xs text-white/70">{quest.description}</div>
-                          </div>
-                        </div>
-                        {isCompleted && (
-                          <div className="bg-green-500 rounded-full w-6 h-6 flex items-center justify-center text-white text-xs">
-                            ✓
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-3 mt-2 text-xs">
-                        <span className="flex items-center gap-1">
-                          <span className="text-green-300">💰 ¥{quest.reward}</span>
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <span className="text-yellow-300">⭐ +{quest.xp}</span>
-                        </span>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
 
       {/* クエスト詳細モーダル */}
       <AnimatePresence>
