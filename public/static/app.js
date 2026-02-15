@@ -825,11 +825,54 @@ const ActionNudge = ({ onOpenChat }) => {
 // ===== Quest Rail Component =====
 const QuestRail = ({ onNavigate, cash }) => {
   const quests = [
-    { id: 101, title: '物々交換の限界', icon: '🐟', reward: 300, difficulty: 'easy' },
-    { id: 102, title: '貝殻からコインへ', icon: '🐚', reward: 400, difficulty: 'easy' },
-    { id: 103, title: '信用の魔法', icon: '📜', reward: 500, difficulty: 'easy' },
-    { id: 201, title: '仕事選び', icon: '💼', reward: 600, difficulty: 'medium' },
-    { id: 202, title: '生活費サバイバル', icon: '🏠', reward: 700, difficulty: 'medium' }
+    { id: 101, title: '物々交換の限界', icon: '🐟', reward: 300, difficulty: 'easy', type: 'quest' },
+    { id: 102, title: '貝殻からコインへ', icon: '🐚', reward: 400, difficulty: 'easy', type: 'quest' },
+    { id: 103, title: '信用の魔法', icon: '📜', reward: 500, difficulty: 'easy', type: 'quest' },
+    { id: 201, title: '仕事選び', icon: '💼', reward: 600, difficulty: 'medium', type: 'quest' },
+    { id: 202, title: '生活費サバイバル', icon: '🏠', reward: 700, difficulty: 'medium', type: 'quest' }
+  ];
+
+  // 今日の時事ニュース（クエストの中に統合）
+  const todayNews = [
+    {
+      id: 'news-1',
+      title: 'AI関連企業の株価が急騰',
+      icon: '🤖',
+      category: 'テクノロジー',
+      type: 'news',
+      impact: 'positive',
+      stocks: ['ソフトバンクグループ', 'LINEヤフー']
+    },
+    {
+      id: 'news-2',
+      title: '円安進行で輸出関連株に注目',
+      icon: '💱',
+      category: '経済',
+      type: 'news',
+      impact: 'positive',
+      stocks: ['トヨタ自動車', '任天堂']
+    },
+    {
+      id: 'news-3',
+      title: '新薬開発で製薬株に期待',
+      icon: '💊',
+      category: '製薬',
+      type: 'news',
+      impact: 'positive',
+      stocks: ['武田薬品', '第一三共']
+    }
+  ];
+
+  // クエストとニュースを混ぜる（ニュースは2番目と5番目に配置）
+  const mixedItems = [
+    quests[0],
+    todayNews[0],  // ニュース1
+    quests[1],
+    quests[2],
+    todayNews[1],  // ニュース2
+    quests[3],
+    quests[4],
+    todayNews[2]   // ニュース3
   ];
 
   const needsCash = cash < 1000;
@@ -854,47 +897,84 @@ const QuestRail = ({ onNavigate, cash }) => {
 
       {/* Horizontal Scroll */}
       <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
-        {quests.map((quest, index) => (
-          <motion.button
-            key={quest.id}
-            initial={{ x: 50, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: index * 0.1 }}
-            onClick={() => {
-              soundSystem.playClick();
-              onNavigate('map');
-            }}
-            whileTap={{ scale: 0.95 }}
-            className="flex-shrink-0 w-32 bg-slate-900/50 backdrop-blur rounded-xl p-3 border border-slate-700 hover:border-emerald-500 transition-colors"
-          >
-            <div className="text-3xl mb-2">{quest.icon}</div>
-            <div className="text-xs font-bold text-white mb-1 line-clamp-2">
-              {quest.title}
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-emerald-400 font-bold">+¥{quest.reward}</span>
-              <span className={`px-1.5 py-0.5 rounded ${
-                quest.difficulty === 'easy' 
-                  ? 'bg-emerald-500/20 text-emerald-400'
-                  : 'bg-yellow-500/20 text-yellow-400'
-              }`}>
-                {quest.difficulty === 'easy' ? '初級' : '中級'}
-              </span>
-            </div>
-          </motion.button>
-        ))}
+        {mixedItems.map((item, index) => {
+          if (item.type === 'news') {
+            // ニュースカード
+            return (
+              <motion.button
+                key={item.id}
+                initial={{ x: 50, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: index * 0.1 }}
+                onClick={() => {
+                  soundSystem.playClick();
+                  onNavigate('news');
+                }}
+                whileTap={{ scale: 0.95 }}
+                className="flex-shrink-0 w-32 bg-gradient-to-br from-blue-600/20 to-purple-600/20 backdrop-blur rounded-xl p-3 border border-blue-500/50 hover:border-blue-400 transition-colors"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-2xl">{item.icon}</div>
+                  <div className="text-xs px-1.5 py-0.5 bg-blue-500/30 text-blue-300 rounded">
+                    📰
+                  </div>
+                </div>
+                <div className="text-xs font-bold text-white mb-2 line-clamp-2 text-left">
+                  {item.title}
+                </div>
+                <div className="flex items-center gap-1 text-xs">
+                  <span className="text-blue-300 text-[10px]">{item.category}</span>
+                  {item.impact === 'positive' && (
+                    <span className="text-green-400">📈</span>
+                  )}
+                </div>
+              </motion.button>
+            );
+          } else {
+            // 通常のクエストカード
+            return (
+              <motion.button
+                key={item.id}
+                initial={{ x: 50, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: index * 0.1 }}
+                onClick={() => {
+                  soundSystem.playClick();
+                  onNavigate('map');
+                }}
+                whileTap={{ scale: 0.95 }}
+                className="flex-shrink-0 w-32 bg-slate-900/50 backdrop-blur rounded-xl p-3 border border-slate-700 hover:border-emerald-500 transition-colors"
+              >
+                <div className="text-3xl mb-2">{item.icon}</div>
+                <div className="text-xs font-bold text-white mb-1 line-clamp-2">
+                  {item.title}
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-emerald-400 font-bold">+¥{item.reward}</span>
+                  <span className={`px-1.5 py-0.5 rounded ${
+                    item.difficulty === 'easy' 
+                      ? 'bg-emerald-500/20 text-emerald-400'
+                      : 'bg-yellow-500/20 text-yellow-400'
+                  }`}>
+                    {item.difficulty === 'easy' ? '初級' : '中級'}
+                  </span>
+                </div>
+              </motion.button>
+            );
+          }
+        })}
         
         {/* View All Card */}
         <motion.button
           initial={{ x: 50, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
-          transition={{ delay: quests.length * 0.1 }}
+          transition={{ delay: mixedItems.length * 0.1 }}
           onClick={() => {
             soundSystem.playClick();
             onNavigate('map');
           }}
           whileTap={{ scale: 0.95 }}
-          className="flex-shrink-0 w-32 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl p-3 flex flex-col items-center justify-center gap-2"
+          className="flex-shrink-0 w-32 bg-gradient-to-br from-emerald-600 to-cyan-600 rounded-xl p-3 flex flex-col items-center justify-center gap-2"
         >
           <div className="text-3xl">🗺️</div>
           <div className="text-xs font-bold text-white">すべて見る</div>
@@ -1240,10 +1320,10 @@ const HomeScreen = ({ user, asset, onNavigate }) => {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-2xl font-black text-white flex items-center gap-2">
-                🎯 クエストで稼ぐ
+                📅 今日のクエスト
               </h2>
               <p className="text-sm text-slate-300 mt-1">
-                金融知識を学んで報酬をゲット！
+                学んで報酬をゲット！
               </p>
             </div>
           </div>
