@@ -2871,6 +2871,48 @@ const MapScreen = ({ user, onNavigate, onXpEarned, setSelectedQuestId, setSelect
   // Chapter構造データ（新カリキュラム対応）
   const chapters = [
     {
+      id: 0,
+      title: '価値交換の歴史',
+      subtitle: 'History of Value Exchange',
+      stage: '物々交換の起源',
+      icon: '🔄',
+      color: 'from-amber-500 to-orange-600',
+      borderColor: 'border-amber-400',
+      difficulty: 0,
+      type: 'intro',
+      quests: [
+        { 
+          id: 1, 
+          title: '物々交換の誕生', 
+          type: 'video', 
+          icon: '🤝', 
+          reward: 200, 
+          xp: 20, 
+          description: '人類最古の経済活動',
+          videoUrl: '/static/videos/barter_history.mp4',
+          videoDescription: 'お金が生まれる前、人々はどうやって価値を交換していたのでしょうか？物々交換の歴史から現代の経済まで、わかりやすく解説します。'
+        },
+        { 
+          id: 2, 
+          title: '貝殻から貨幣へ', 
+          type: 'quiz', 
+          icon: '🐚', 
+          reward: 200, 
+          xp: 20, 
+          description: '最初のお金の誕生'
+        },
+        { 
+          id: 3, 
+          title: '信用経済の始まり', 
+          type: 'quiz', 
+          icon: '📜', 
+          reward: 200, 
+          xp: 20, 
+          description: '紙幣と信用の発明'
+        }
+      ]
+    },
+    {
       id: 1,
       title: 'お金と経済の概念',
       subtitle: 'Basics',
@@ -3341,6 +3383,25 @@ const MapScreen = ({ user, onNavigate, onXpEarned, setSelectedQuestId, setSelect
                   <p className="text-sm text-gray-300">{selectedQuest.description}</p>
                 )}
               </div>
+
+              {/* 動画プレビュー（videoUrlがある場合） */}
+              {selectedQuest.videoUrl && (
+                <div className="mb-4 rounded-xl overflow-hidden bg-black">
+                  <video 
+                    controls 
+                    className="w-full"
+                    poster="/static/finn/finn-chart.png"
+                  >
+                    <source src={selectedQuest.videoUrl} type="video/mp4" />
+                    お使いのブラウザは動画タグをサポートしていません。
+                  </video>
+                  {selectedQuest.videoDescription && (
+                    <div className="p-3 bg-slate-900/50">
+                      <p className="text-xs text-slate-300">{selectedQuest.videoDescription}</p>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="bg-black/30 rounded-xl p-4 mb-4 space-y-2">
                 <div className="flex justify-between">
