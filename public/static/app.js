@@ -2369,32 +2369,41 @@ const QuizScreen = ({ user, onNavigate, onXpEarned, questId, chapterId }) => {
   const fetchQuizzes = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/quiz');
+      // ユーザーIDとチャプターIDをクエリパラメータとして送信
+      let url = '/api/quiz';
+      const params = new URLSearchParams();
+      
+      if (user?.id) {
+        params.append('userId', user.id);
+      }
+      if (chapterId !== null && chapterId !== undefined) {
+        params.append('chapterId', chapterId.toString());
+      }
+      
+      if (params.toString()) {
+        url += '?' + params.toString();
+      }
+      
+      console.log('Fetching quizzes from:', url);
+      const response = await fetch(url);
       const data = await response.json();
       
       console.log('Fetched quizzes:', data.quizzes.length);
       console.log('chapterId:', chapterId, 'questId:', questId);
       
-      // chapterIdが指定されている場合は、そのチャプターのクイズをフィルタ
-      if (chapterId) {
-        const filteredQuizzes = data.quizzes.filter(q => q.chapter_id === chapterId);
-        console.log('Filtered quizzes for chapter', chapterId, ':', filteredQuizzes.length);
-        setQuizzes(filteredQuizzes);
-        if (filteredQuizzes.length > 0) {
-          setCurrentQuiz(filteredQuizzes[0]);
-        } else {
-          console.warn('No quizzes found for chapter', chapterId);
-        }
-      } else if (questId) {
-        // 後方互換性のため、questIdのみの場合も対応
-        const filteredQuiz = data.quizzes.find(q => q.id === questId);
-        console.log('Filtered quiz for questId', questId, ':', filteredQuiz);
-        setQuizzes(filteredQuiz ? [filteredQuiz] : []);
-        if (filteredQuiz) {
-          setCurrentQuiz(filteredQuiz);
+      // APIがすでにフィルタ済みなので、そのまま使用
+      if (data.quizzes.length > 0) {
+        // 間違えた問題が優先的にソートされているので、そのまま設定
+        setQuizzes(data.quizzes);
+        setCurrentQuiz(data.quizzes[0]);
+        
+        const wrongCount = data.quizzes.filter(q => q.is_wrong).length;
+        if (wrongCount > 0) {
+          console.log(`間違えた問題が ${wrongCount} 問あります（優先的に出題）`);
         }
       } else {
-        setQuizzes(data.quizzes);
+        console.warn('No quizzes found');
+        setQuizzes([]);
       }
     } catch (err) {
       console.error('Failed to fetch quizzes:', err);
@@ -2868,6 +2877,26 @@ const MapScreen = ({ user, onNavigate, onXpEarned, setSelectedQuestId, setSelect
   const [selectedQuest, setSelectedQuest] = useState(null);
   const [completedQuests, setCompletedQuests] = useState([101]); // デモで最初のクエストを完了扱い
 
+  // 各チャプターのクエストを20問生成する関数
+  const generateQuests = (chapterId, baseReward, baseXp, count = 20) => {
+    const quests = [];
+    const startId = chapterId * 100 + 1;
+    
+    for (let i = 0; i < count; i++) {
+      quests.push({
+        id: startId + i,
+        title: `レッスン ${i + 1}`,
+        type: 'quiz',
+        icon: ['📝', '📚', '💡', '🎯', '⭐'][i % 5],
+        reward: baseReward,
+        xp: baseXp,
+        description: `チャプター${chapterId}の学習`
+      });
+    }
+    
+    return quests;
+  };
+
   // Chapter構造データ（新カリキュラム対応）
   const chapters = [
     {
@@ -2892,24 +2921,7 @@ const MapScreen = ({ user, onNavigate, onXpEarned, setSelectedQuestId, setSelect
           videoUrl: '/static/videos/barter_history.mp4',
           videoDescription: 'お金が生まれる前、人々はどうやって価値を交換していたのでしょうか？物々交換の歴史から現代の経済まで、わかりやすく解説します。'
         },
-        { 
-          id: 2, 
-          title: '貝殻から貨幣へ', 
-          type: 'quiz', 
-          icon: '🐚', 
-          reward: 200, 
-          xp: 20, 
-          description: '最初のお金の誕生'
-        },
-        { 
-          id: 3, 
-          title: '信用経済の始まり', 
-          type: 'quiz', 
-          icon: '📜', 
-          reward: 200, 
-          xp: 20, 
-          description: '紙幣と信用の発明'
-        }
+        ...generateQuests(0, 200, 20, 19).slice(1) // 残り19問を生成（ID 2-20）
       ]
     },
     {
@@ -2922,11 +2934,7 @@ const MapScreen = ({ user, onNavigate, onXpEarned, setSelectedQuestId, setSelect
       borderColor: 'border-green-400',
       difficulty: 1,
       type: 'main',
-      quests: [
-        { id: 101, title: 'インフレと預金', type: 'quiz', icon: '🏦', reward: 300, xp: 30, description: '実質価値を理解する' },
-        { id: 105, title: '72の法則', type: 'quiz', icon: '🔢', reward: 300, xp: 30, description: '複利の威力を知る' },
-        { id: 110, title: '投資の3要素', type: 'quiz', icon: '⏰', reward: 300, xp: 30, description: '時間の重要性' }
-      ]
+      quests: generateQuests(1, 300, 30, 20)
     },
     {
       id: 2,
@@ -2938,11 +2946,7 @@ const MapScreen = ({ user, onNavigate, onXpEarned, setSelectedQuestId, setSelect
       borderColor: 'border-blue-400',
       difficulty: 2,
       type: 'main',
-      quests: [
-        { id: 201, title: '給与天引き', type: 'quiz', icon: '💼', reward: 400, xp: 40, description: '社会保険料を知る' },
-        { id: 202, title: '住民税', type: 'quiz', icon: '🏘️', reward: 400, xp: 40, description: '後払いの仕組み' },
-        { id: 209, title: '所得税制度', type: 'quiz', icon: '📊', reward: 400, xp: 40, description: '累進課税を理解' }
-      ]
+      quests: generateQuests(2, 400, 40, 20)
     },
     {
       id: 3,
@@ -2954,11 +2958,7 @@ const MapScreen = ({ user, onNavigate, onXpEarned, setSelectedQuestId, setSelect
       borderColor: 'border-purple-400',
       difficulty: 3,
       type: 'main',
-      quests: [
-        { id: 301, title: '生活防衛資金', type: 'quiz', icon: '💵', reward: 500, xp: 50, description: '備えあれば憂いなし' },
-        { id: 303, title: 'リボ払い金利', type: 'quiz', icon: '💳', reward: 500, xp: 50, description: '高金利の罠' },
-        { id: 308, title: '貯蓄率', type: 'quiz', icon: '🐷', reward: 500, xp: 50, description: '先取り貯蓄' }
-      ]
+      quests: generateQuests(3, 500, 50, 20)
     },
     {
       id: 4,
@@ -2970,11 +2970,7 @@ const MapScreen = ({ user, onNavigate, onXpEarned, setSelectedQuestId, setSelect
       borderColor: 'border-orange-400',
       difficulty: 4,
       type: 'main',
-      quests: [
-        { id: 401, title: '公的保障', type: 'quiz', icon: '🏥', reward: 600, xp: 60, description: '日本の手厚い制度' },
-        { id: 402, title: '高額療養費', type: 'quiz', icon: '💊', reward: 600, xp: 60, description: '医療費の上限' },
-        { id: 404, title: '貯蓄型保険', type: 'quiz', icon: '📉', reward: 600, xp: 60, description: '投資効率の真実' }
-      ]
+      quests: generateQuests(4, 600, 60, 20)
     },
     {
       id: 5,
@@ -2986,11 +2982,7 @@ const MapScreen = ({ user, onNavigate, onXpEarned, setSelectedQuestId, setSelect
       borderColor: 'border-yellow-400',
       difficulty: 5,
       type: 'main',
-      quests: [
-        { id: 501, title: 'NISAメリット', type: 'quiz', icon: '✨', reward: 700, xp: 70, description: '非課税の力' },
-        { id: 502, title: 'インデックスファンド', type: 'quiz', icon: '🌍', reward: 700, xp: 70, description: '長期投資の王道' },
-        { id: 504, title: '分散投資', type: 'quiz', icon: '🥚', reward: 700, xp: 70, description: '卵とカゴの格言' }
-      ]
+      quests: generateQuests(5, 700, 70, 20)
     },
     {
       id: 6,
@@ -3002,11 +2994,7 @@ const MapScreen = ({ user, onNavigate, onXpEarned, setSelectedQuestId, setSelect
       borderColor: 'border-indigo-400',
       difficulty: 6,
       type: 'main',
-      quests: [
-        { id: 601, title: '三大資金', type: 'quiz', icon: '💼', reward: 800, xp: 80, description: '人生の大きな支出' },
-        { id: 602, title: 'iDeCo節税', type: 'quiz', icon: '📜', reward: 800, xp: 80, description: '最強の税制優遇' },
-        { id: 603, title: 'iDeCo受給年齢', type: 'quiz', icon: '🔒', reward: 800, xp: 80, description: '60歳まで引き出せない' }
-      ]
+      quests: generateQuests(6, 800, 80, 20)
     },
     {
       id: 7,
@@ -3018,11 +3006,7 @@ const MapScreen = ({ user, onNavigate, onXpEarned, setSelectedQuestId, setSelect
       borderColor: 'border-pink-400',
       difficulty: 7,
       type: 'main',
-      quests: [
-        { id: 701, title: 'ベスティング', type: 'quiz', icon: '⏳', reward: 900, xp: 90, description: '権利確定の仕組み' },
-        { id: 702, title: '集中リスク', type: 'quiz', icon: '⚠️', reward: 900, xp: 90, description: '卵を一つのカゴに' },
-        { id: 707, title: '自社株売却', type: 'quiz', icon: '💱', reward: 900, xp: 90, description: '分散の重要性' }
-      ]
+      quests: generateQuests(7, 900, 90, 20)
     },
     {
       id: 8,
@@ -3034,11 +3018,7 @@ const MapScreen = ({ user, onNavigate, onXpEarned, setSelectedQuestId, setSelect
       borderColor: 'border-teal-400',
       difficulty: 8,
       type: 'main',
-      quests: [
-        { id: 801, title: '流動性', type: 'quiz', icon: '🔄', reward: 1000, xp: 100, description: '売りやすさが重要' },
-        { id: 802, title: '住居費比率', type: 'quiz', icon: '📊', reward: 1000, xp: 100, description: '手取りの20-25%' },
-        { id: 808, title: '賃貸メリット', type: 'quiz', icon: '🚚', reward: 1000, xp: 100, description: '移動の自由' }
-      ]
+      quests: generateQuests(8, 1000, 100, 20)
     },
     {
       id: 9,
@@ -3050,11 +3030,7 @@ const MapScreen = ({ user, onNavigate, onXpEarned, setSelectedQuestId, setSelect
       borderColor: 'border-red-400',
       difficulty: 9,
       type: 'main',
-      quests: [
-        { id: 901, title: '詐欺見抜き', type: 'quiz', icon: '🚨', reward: 1100, xp: 110, description: '高利回りの罠' },
-        { id: 902, title: 'ポンジスキーム', type: 'quiz', icon: '💸', reward: 1100, xp: 110, description: '自転車操業の破綻' },
-        { id: 908, title: '防衛策', type: 'quiz', icon: '🔐', reward: 1100, xp: 110, description: '理解できないものに投資しない' }
-      ]
+      quests: generateQuests(9, 1100, 110, 20)
     },
     {
       id: 10,
@@ -3066,11 +3042,7 @@ const MapScreen = ({ user, onNavigate, onXpEarned, setSelectedQuestId, setSelect
       borderColor: 'border-emerald-400',
       difficulty: 10,
       type: 'main',
-      quests: [
-        { id: 1001, title: '自動積立', type: 'quiz', icon: '🤖', reward: 1200, xp: 120, description: '意志力に頼らない' },
-        { id: 1002, title: '投資開始方法', type: 'quiz', icon: '🏃', reward: 1200, xp: 120, description: '少額で走りながら学ぶ' },
-        { id: 1010, title: '即実行', type: 'quiz', icon: '⚡', reward: 1200, xp: 120, description: '今日から行動を変える' }
-      ]
+      quests: generateQuests(10, 1200, 120, 20)
     }
   ];
 

@@ -778,21 +778,65 @@ const quizzes = [
 app.get('/api/quiz', async (c) => {
   try {
     const db = c.env.DB
-    const result = await db.prepare('SELECT * FROM quizzes ORDER BY id').all()
+    const userId = c.req.query('userId') // オプション：ユーザーIDを指定
+    const chapterId = c.req.query('chapterId') // オプション：チャプターIDを指定
     
-    return c.json({
-      quizzes: result.results.map((q: any) => ({
-        id: q.id,
-        chapter_id: q.chapter_id,
-        title: q.title,
-        question: q.question,
-        options: JSON.parse(q.options),
-        correct_answer: q.correct_answer,
-        explanation: q.explanation,
-        xp: q.xp,
-        reward: q.reward
+    let query = 'SELECT * FROM quizzes'
+    const params: any[] = []
+    
+    // チャプターIDでフィルタ
+    if (chapterId) {
+      query += ' WHERE chapter_id = ?'
+      params.push(parseInt(chapterId))
+    }
+    
+    query += ' ORDER BY id'
+    
+    const result = await db.prepare(query).bind(...params).all()
+    
+    let quizzes = result.results.map((q: any) => ({
+      id: q.id,
+      chapter_id: q.chapter_id,
+      title: q.title,
+      question: q.question,
+      options: JSON.parse(q.options),
+      correct_answer: q.correct_answer,
+      explanation: q.explanation,
+      xp: q.xp,
+      reward: q.reward,
+      is_wrong: false // デフォルトは間違えていない
+    }))
+    
+    // ユーザーIDが指定されている場合、間違えた問題を優先的にソート
+    if (userId && chapterId) {
+      const wrongAnswers = await db.prepare(`
+        SELECT quiz_id, retry_count 
+        FROM wrong_answers 
+        WHERE user_id = ? AND chapter_id = ?
+        ORDER BY retry_count DESC, last_attempt ASC
+      `)
+        .bind(userId, parseInt(chapterId))
+        .all()
+      
+      const wrongQuizIds = new Set(wrongAnswers.results.map((w: any) => w.quiz_id))
+      
+      // 間違えた問題にフラグを立てる
+      quizzes = quizzes.map(q => ({
+        ...q,
+        is_wrong: wrongQuizIds.has(q.id),
+        retry_count: wrongAnswers.results.find((w: any) => w.quiz_id === q.id)?.retry_count || 0
       }))
-    })
+      
+      // 間違えた問題を先頭に、その他は通常順
+      quizzes.sort((a, b) => {
+        if (a.is_wrong && !b.is_wrong) return -1
+        if (!a.is_wrong && b.is_wrong) return 1
+        if (a.is_wrong && b.is_wrong) return b.retry_count - a.retry_count // retry回数が多い順
+        return a.id - b.id // 通常はID順
+      })
+    }
+    
+    return c.json({ quizzes })
   } catch (error) {
     console.error('Get quiz error:', error)
     return c.json({ error: 'Internal server error' }, 500)
@@ -823,6 +867,24 @@ app.post('/api/quiz/:quizId/answer', async (c) => {
     )
       .bind(userId, quizId, isCorrect ? 1 : 0, isCorrect ? quiz.xp : 0)
       .run()
+
+    // 間違えた問題を記録（チャプター内で再出題するため）
+    if (!isCorrect) {
+      await db.prepare(`
+        INSERT OR REPLACE INTO wrong_answers (user_id, quiz_id, chapter_id, retry_count, last_attempt)
+        VALUES (?, ?, ?, 
+          COALESCE((SELECT retry_count + 1 FROM wrong_answers WHERE user_id = ? AND quiz_id = ?), 1),
+          CURRENT_TIMESTAMP
+        )
+      `)
+        .bind(userId, quizId, quiz.chapter_id, userId, quizId)
+        .run()
+    } else {
+      // 正解した場合は、wrong_answersテーブルから削除
+      await db.prepare('DELETE FROM wrong_answers WHERE user_id = ? AND quiz_id = ?')
+        .bind(userId, quizId)
+        .run()
+    }
 
     if (isCorrect) {
       // XP追加
