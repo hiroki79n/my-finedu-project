@@ -724,10 +724,7 @@ function ChapterNode({ chapter, index, isUnlocked, crownLevel, isCurrent = false
             {chapter.totalQuestions}問
           </div>
         )}
-
-        {/* タップフィードバック領域拡大 */}
-        <div className="absolute inset-0 -m-4" />
-      </motion.button>
+      </div>
     </motion.div>
   );
 }
