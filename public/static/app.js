@@ -315,7 +315,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-100">
       <AnimatePresence mode="wait">
         {currentScreen === 'home' && (
           <HomeScreen 
@@ -362,13 +362,13 @@ function HomeScreen({ userProgress, chapters, onSelectChapter, isChapterUnlocked
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="min-h-screen"
+      className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-100"
     >
       {/* ヘッダー */}
       <div className="bg-white shadow-sm sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="text-2xl font-bold text-indigo-600">FINEDU</div>
+            <div className="text-2xl font-bold text-teal-600">FinGo</div>
             <div className="text-sm text-gray-500">Level 1: 交換の始まり</div>
           </div>
           <div className="flex items-center gap-4">
@@ -376,9 +376,9 @@ function HomeScreen({ userProgress, chapters, onSelectChapter, isChapterUnlocked
               <span className="text-amber-600">🔥</span>
               <span className="font-bold text-amber-800">{userProgress.streakDays}</span>
             </div>
-            <div className="flex items-center gap-2 bg-indigo-100 px-3 py-1 rounded-full">
-              <span className="text-indigo-600">⭐</span>
-              <span className="font-bold text-indigo-800">{userProgress.totalXp}</span>
+            <div className="flex items-center gap-2 bg-teal-100 px-3 py-1 rounded-full">
+              <span className="text-teal-600">⭐</span>
+              <span className="font-bold text-teal-800">{userProgress.totalXp}</span>
             </div>
           </div>
         </div>
@@ -388,7 +388,7 @@ function HomeScreen({ userProgress, chapters, onSelectChapter, isChapterUnlocked
       <div className="max-w-2xl mx-auto px-4 py-8">
         <div className="relative">
           {/* パス線 */}
-          <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-indigo-200 to-purple-200 transform -translate-x-1/2" />
+          <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-teal-200 to-cyan-300 transform -translate-x-1/2" />
 
           {/* チャプターノード */}
           <div className="relative space-y-12">
@@ -744,12 +744,12 @@ function QuizScreen({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50 flex flex-col">
       {/* プログレスバー */}
       <div className="bg-white shadow-sm">
         <div className="h-2 bg-gray-200">
           <div 
-            className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-300"
+            className="h-full bg-gradient-to-r from-teal-500 to-cyan-500 transition-all duration-300"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -757,7 +757,7 @@ function QuizScreen({
           <div className="text-sm text-gray-600">
             問題 {quizState.currentIndex + 1} / {quizState.questions.length}
           </div>
-          <div className="text-sm font-bold text-indigo-600">
+          <div className="text-sm font-bold text-teal-600">
             +{quizState.score} XP
           </div>
         </div>
@@ -821,7 +821,7 @@ function QuizScreen({
             <button
               onClick={handleSubmit}
               disabled={selectedAnswer === null}
-              className="w-full py-4 rounded-xl font-bold text-white bg-gradient-to-r from-indigo-500 to-purple-500 
+              className="w-full py-4 rounded-xl font-bold text-white bg-gradient-to-r from-teal-500 to-cyan-500 
                 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed
                 hover:shadow-lg transition-all"
             >
@@ -830,7 +830,7 @@ function QuizScreen({
           ) : (
             <button
               onClick={handleNext}
-              className="w-full py-4 rounded-xl font-bold text-white bg-gradient-to-r from-green-500 to-emerald-500
+              className="w-full py-4 rounded-xl font-bold text-white bg-gradient-to-r from-teal-600 to-cyan-600
                 hover:shadow-lg transition-all"
             >
               {quizState.currentIndex + 1 < quizState.questions.length ? '次へ' : '結果を見る'}
@@ -853,7 +853,7 @@ function AnswerButton({ option, index, selected, correct, showFeedback, onClick 
       bgClass = 'bg-red-100 border-2 border-red-500';
     }
   } else if (selected) {
-    bgClass = 'bg-indigo-100 border-2 border-indigo-500';
+    bgClass = 'bg-teal-100 border-2 border-teal-500';
   }
 
   return (
@@ -894,7 +894,7 @@ function ResultScreen({ score, crownLevel, totalXp, chapter, lesson, onContinue 
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 flex items-center justify-center p-4"
+      className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50 flex items-center justify-center p-4"
     >
       <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 text-center">
         <motion.div
@@ -915,19 +915,19 @@ function ResultScreen({ score, crownLevel, totalXp, chapter, lesson, onContinue 
         </div>
 
         <div className="space-y-4 mb-8">
-          <div className="flex items-center justify-between p-4 bg-indigo-50 rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-teal-50 rounded-lg">
             <span className="text-gray-600">正解率</span>
-            <span className="text-2xl font-bold text-indigo-600">{Math.round(score)}%</span>
+            <span className="text-2xl font-bold text-teal-600">{Math.round(score)}%</span>
           </div>
-          <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
+          <div className="flex items-center justify-between p-4 bg-cyan-50 rounded-lg">
             <span className="text-gray-600">獲得XP</span>
-            <span className="text-2xl font-bold text-purple-600">+{totalXp}</span>
+            <span className="text-2xl font-bold text-cyan-600">+{totalXp}</span>
           </div>
         </div>
 
         <button
           onClick={onContinue}
-          className="w-full py-4 rounded-xl font-bold text-white bg-gradient-to-r from-indigo-500 to-purple-500
+          className="w-full py-4 rounded-xl font-bold text-white bg-gradient-to-r from-teal-500 to-cyan-500
             hover:shadow-lg transition-all"
         >
           学習を続ける
