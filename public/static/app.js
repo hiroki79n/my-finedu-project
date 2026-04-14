@@ -378,12 +378,12 @@ function HomeScreen({ userProgress, chapters, onSelectChapter, isChapterUnlocked
     >
       {/* ダークモードヘッダー */}
       <div className="bg-slate-900/95 backdrop-blur-sm shadow-lg border-b border-teal-500/20 sticky top-0 z-10">
-        <div className="max-w-md mx-auto px-4 py-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="text-2xl font-bold bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent">
+        <div className="max-w-sm mx-auto px-3 py-3">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-xl font-bold bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent">
               FinGo
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <div className="flex items-center gap-1 bg-amber-500/20 backdrop-blur-sm px-2 py-1 rounded-full border border-amber-500/30">
                 <span className="text-amber-400">🔥</span>
                 <span className="text-sm font-bold text-amber-300">{userProgress.streakDays}</span>
@@ -399,7 +399,7 @@ function HomeScreen({ userProgress, chapters, onSelectChapter, isChapterUnlocked
       </div>
 
       {/* 山登り学習パス */}
-      <div className="max-w-md mx-auto px-4 py-8 relative">
+      <div className="max-w-sm mx-auto px-3 py-6 relative">
         {/* 山の背景 */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <svg className="w-full h-full opacity-10">
@@ -694,7 +694,7 @@ function BottomNavigation({ currentTab, onNavigate }) {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-md border-t border-teal-500/20 shadow-2xl z-20">
-      <div className="max-w-4xl mx-auto px-2 py-2 safe-area-bottom">
+      <div className="max-w-sm mx-auto px-2 py-2 safe-area-bottom">
         <div className="flex items-center justify-around">
           {tabs.map(tab => (
             <button
@@ -745,14 +745,14 @@ function MarketScreen({ onNavigate }) {
     >
       {/* ヘッダー */}
       <div className="bg-slate-900/95 backdrop-blur-sm shadow-lg border-b border-teal-500/20 sticky top-0 z-10">
-        <div className="max-w-md mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent">
+        <div className="max-w-sm mx-auto px-3 py-3">
+          <h1 className="text-xl font-bold bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent">
             📈 市場
           </h1>
         </div>
       </div>
 
-      <div className="max-w-md mx-auto px-4 py-6">
+      <div className="max-w-sm mx-auto px-3 py-4">
         {/* 主要指数 */}
         <div className="mb-6">
           <h2 className="text-lg font-bold text-teal-300 mb-3">主要指数</h2>
@@ -892,8 +892,8 @@ function NewsScreen({ onNavigate }) {
     >
       {/* ヘッダー */}
       <div className="bg-slate-900/95 backdrop-blur-sm shadow-lg border-b border-teal-500/20 sticky top-0 z-10">
-        <div className="max-w-md mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent">
+        <div className="max-w-sm mx-auto px-3 py-3">
+          <h1 className="text-xl font-bold bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent">
             📰 ニュース
           </h1>
           
@@ -916,8 +916,8 @@ function NewsScreen({ onNavigate }) {
         </div>
       </div>
 
-      <div className="max-w-md mx-auto px-4 py-6">
-        <div className="space-y-4">
+      <div className="max-w-sm mx-auto px-3 py-4">
+        <div className="space-y-3">
           {filteredNews.map(news => (
             <div
               key={news.id}
@@ -1016,14 +1016,14 @@ function PortfolioScreen({ userProgress, onNavigate }) {
     >
       {/* ヘッダー */}
       <div className="bg-slate-900/95 backdrop-blur-sm shadow-lg border-b border-teal-500/20 sticky top-0 z-10">
-        <div className="max-w-md mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent">
+        <div className="max-w-sm mx-auto px-3 py-3">
+          <h1 className="text-xl font-bold bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent">
             💼 資産
           </h1>
         </div>
       </div>
 
-      <div className="max-w-md mx-auto px-4 py-6">
+      <div className="max-w-sm mx-auto px-3 py-4">
         {/* 総資産カード */}
         <div className="bg-gradient-to-br from-teal-500/20 to-cyan-500/20 border border-teal-400/30 rounded-2xl p-6 mb-6 shadow-xl">
           <div className="text-sm text-teal-300 mb-2">総資産評価額</div>
@@ -1155,14 +1155,14 @@ function ProfileScreen({ userProgress, onNavigate }) {
     >
       {/* ヘッダー */}
       <div className="bg-slate-900/95 backdrop-blur-sm shadow-lg border-b border-teal-500/20 sticky top-0 z-10">
-        <div className="max-w-md mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent">
+        <div className="max-w-sm mx-auto px-3 py-3">
+          <h1 className="text-xl font-bold bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent">
             👤 プロフィール
           </h1>
         </div>
       </div>
 
-      <div className="max-w-md mx-auto px-4 py-6">
+      <div className="max-w-sm mx-auto px-3 py-4">
         {/* プロフィールカード */}
         <div className="bg-gradient-to-br from-teal-500/20 to-cyan-500/20 border border-teal-400/30 rounded-2xl p-6 mb-6 shadow-xl">
           <div className="flex items-center gap-4 mb-4">
@@ -1261,7 +1261,7 @@ function ChapterDetailScreen({ chapter, userProgress, onStartLesson, onBack }) {
     >
       {/* モバイルヘッダー */}
       <div className={`bg-gradient-to-br ${chapter.color} text-white rounded-b-3xl shadow-xl`}>
-        <div className="max-w-md mx-auto px-4 py-6">
+        <div className="max-w-sm mx-auto px-3 py-4">
           <button 
             onClick={onBack} 
             className="text-white mb-4 flex items-center gap-2 active:opacity-70 py-2 px-3 -ml-3 rounded-lg"
@@ -1538,8 +1538,8 @@ function QuizScreen({
       </div>
 
       {/* 問題エリア - モバイル最適化 */}
-      <div className="flex-1 flex items-start justify-center p-4 pt-6 overflow-y-auto">
-        <div className="max-w-md w-full">
+      <div className="flex-1 flex items-start justify-center p-3 pt-4 overflow-y-auto">
+        <div className="max-w-sm w-full">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentQuestion.id}
@@ -1808,3 +1808,4 @@ function generateDummyQuestions(lesson) {
 
 // ===== アプリ起動 =====
 ReactDOM.render(<App />, document.getElementById('root'));
+t.getElementById('root'));
