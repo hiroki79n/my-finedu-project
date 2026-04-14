@@ -315,7 +315,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <AnimatePresence mode="wait">
         {currentScreen === 'home' && (
           <HomeScreen 
@@ -355,96 +355,162 @@ function App() {
   );
 }
 
-// ===== ホーム画面 (学習ロード) =====
+// ===== ホーム画面 (山登りデザイン) =====
 function HomeScreen({ userProgress, chapters, onSelectChapter, isChapterUnlocked, onNavigate }) {
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-100 pb-20"
+      className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 pb-20"
     >
-      {/* モバイル最適化ヘッダー */}
-      <div className="bg-white shadow-sm sticky top-0 z-10">
+      {/* ダークモードヘッダー */}
+      <div className="bg-slate-900/95 backdrop-blur-sm shadow-lg border-b border-teal-500/20 sticky top-0 z-10">
         <div className="max-w-md mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-3">
-            <div className="text-2xl font-bold text-teal-600">FinGo</div>
+            <div className="text-2xl font-bold bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent">
+              FinGo
+            </div>
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1 bg-amber-100 px-2 py-1 rounded-full">
-                <span className="text-amber-600">🔥</span>
-                <span className="text-sm font-bold text-amber-800">{userProgress.streakDays}</span>
+              <div className="flex items-center gap-1 bg-amber-500/20 backdrop-blur-sm px-2 py-1 rounded-full border border-amber-500/30">
+                <span className="text-amber-400">🔥</span>
+                <span className="text-sm font-bold text-amber-300">{userProgress.streakDays}</span>
               </div>
-              <div className="flex items-center gap-1 bg-teal-100 px-2 py-1 rounded-full">
-                <span className="text-teal-600">⭐</span>
-                <span className="text-sm font-bold text-teal-800">{userProgress.totalXp}</span>
+              <div className="flex items-center gap-1 bg-teal-500/20 backdrop-blur-sm px-2 py-1 rounded-full border border-teal-500/30">
+                <span className="text-teal-400">⭐</span>
+                <span className="text-sm font-bold text-teal-300">{userProgress.totalXp}</span>
               </div>
             </div>
           </div>
-          <div className="text-xs text-gray-500 text-center">Level 1: 交換の始まり</div>
+          <div className="text-xs text-teal-400/80 text-center font-medium">Level 1: 交換の始まり 🏔️</div>
         </div>
       </div>
 
-      {/* Duolingo風 学習パス (道つながり) */}
-      <div className="max-w-md mx-auto px-4 py-6">
-        <div className="relative">
-          {/* SVGパス背景 */}
-          <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ height: `${chapters.length * 180}px` }}>
+      {/* 山登り学習パス */}
+      <div className="max-w-md mx-auto px-4 py-8 relative">
+        {/* 山の背景 */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <svg className="w-full h-full opacity-10">
             <defs>
-              <linearGradient id="pathGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" style={{ stopColor: '#5EEAD4', stopOpacity: 0.6 }} />
-                <stop offset="100%" style={{ stopColor: '#06B6D4', stopOpacity: 0.8 }} />
+              <linearGradient id="mountainGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style={{ stopColor: '#14B8A6', stopOpacity: 0.3 }} />
+                <stop offset="100%" style={{ stopColor: '#06B6D4', stopOpacity: 0.1 }} />
               </linearGradient>
             </defs>
+            <path
+              d="M 0 800 L 100 600 L 200 700 L 300 400 L 400 500 L 500 200 L 600 300 L 700 100 L 800 0 L 900 100 L 900 1000 L 0 1000 Z"
+              fill="url(#mountainGradient)"
+            />
+          </svg>
+        </div>
+
+        <div className="relative">
+          {/* レール(線路)のようなパス */}
+          <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ height: `${chapters.length * 200}px` }}>
+            <defs>
+              <linearGradient id="railGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style={{ stopColor: '#14B8A6', stopOpacity: 0.8 }} />
+                <stop offset="50%" style={{ stopColor: '#06B6D4', stopOpacity: 0.9 }} />
+                <stop offset="100%" style={{ stopColor: '#2DD4BF', stopOpacity: 0.7 }} />
+              </linearGradient>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+            
+            {/* メインレール */}
             {chapters.map((chapter, index) => {
               if (index === chapters.length - 1) return null;
-              const y1 = index * 180 + 90;
-              const y2 = (index + 1) * 180 + 90;
+              
+              // 山登りの曲線 - 下から上へ、左右にジグザグ
+              const baseY = (chapters.length - index) * 200;
+              const nextBaseY = (chapters.length - index - 1) * 200;
               const isEven = index % 2 === 0;
-              const x1 = isEven ? '30%' : '70%';
-              const x2 = !isEven ? '30%' : '70%';
-              const cx = isEven ? '50%' : '50%';
+              const x1 = isEven ? '25%' : '75%';
+              const x2 = !isEven ? '25%' : '75%';
               
               return (
-                <path
-                  key={`path-${index}`}
-                  d={`M ${x1} ${y1} Q ${cx} ${(y1 + y2) / 2} ${x2} ${y2}`}
-                  stroke="url(#pathGradient)"
-                  strokeWidth="8"
-                  fill="none"
-                  strokeLinecap="round"
-                />
+                <g key={`rail-${index}`}>
+                  {/* 外側のグローライン */}
+                  <path
+                    d={`M ${x1} ${baseY} Q 50% ${(baseY + nextBaseY) / 2 - 30} ${x2} ${nextBaseY}`}
+                    stroke="url(#railGradient)"
+                    strokeWidth="12"
+                    fill="none"
+                    strokeLinecap="round"
+                    filter="url(#glow)"
+                    opacity="0.6"
+                  />
+                  {/* メインレール */}
+                  <path
+                    d={`M ${x1} ${baseY} Q 50% ${(baseY + nextBaseY) / 2 - 30} ${x2} ${nextBaseY}`}
+                    stroke="url(#railGradient)"
+                    strokeWidth="6"
+                    fill="none"
+                    strokeLinecap="round"
+                  />
+                  {/* レールの枕木 */}
+                  {[0.25, 0.5, 0.75].map((t, i) => {
+                    const y = baseY - (baseY - nextBaseY) * t;
+                    return (
+                      <line
+                        key={`tie-${index}-${i}`}
+                        x1="40%"
+                        y1={y}
+                        x2="60%"
+                        y2={y}
+                        stroke="#14B8A6"
+                        strokeWidth="2"
+                        opacity="0.3"
+                      />
+                    );
+                  })}
+                </g>
               );
             })}
           </svg>
 
-          {/* チャプターノード */}
-          <div className="relative space-y-24">
+          {/* チャプターノード - 山を登るように配置 */}
+          <div className="relative" style={{ paddingTop: `${chapters.length * 200 - 200}px` }}>
             {chapters.map((chapter, index) => {
               const isUnlocked = isChapterUnlocked(chapter);
               const progress = userProgress.completedChapters[chapter.id];
               const crownLevel = progress?.crownLevel || 0;
               
               return (
-                <ChapterNode
+                <div
                   key={chapter.id}
-                  chapter={chapter}
-                  index={index}
-                  isUnlocked={isUnlocked}
-                  crownLevel={crownLevel}
-                  onClick={() => onSelectChapter(chapter)}
-                />
+                  className="absolute"
+                  style={{ 
+                    top: `${(chapters.length - index - 1) * 200}px`,
+                    left: 0,
+                    right: 0
+                  }}
+                >
+                  <ChapterNode
+                    chapter={chapter}
+                    index={index}
+                    isUnlocked={isUnlocked}
+                    crownLevel={crownLevel}
+                    onClick={() => onSelectChapter(chapter)}
+                  />
+                </div>
               );
             })}
           </div>
         </div>
 
-        {/* 次のレベルプレビュー */}
-        <div className="mt-12 text-center">
-          <div className="inline-block bg-white rounded-2xl shadow-lg p-6 max-w-xs">
-            <div className="text-gray-400 text-5xl mb-3">🔒</div>
-            <div className="text-gray-700 font-bold text-lg">Level 2</div>
-            <div className="text-gray-600 text-sm">お金の誕生</div>
-            <div className="text-xs text-gray-400 mt-2">
+        {/* 山頂 - 次のレベルプレビュー */}
+        <div className="mt-16 text-center relative">
+          <div className="inline-block bg-slate-800/80 backdrop-blur-md border border-teal-500/30 rounded-2xl shadow-2xl p-6 max-w-xs">
+            <div className="text-5xl mb-3 opacity-50">🏔️</div>
+            <div className="text-teal-400 font-bold text-lg">Level 2</div>
+            <div className="text-teal-300/80 text-sm">お金の誕生</div>
+            <div className="text-xs text-gray-500 mt-2">
               Level 1を完了すると解放
             </div>
           </div>
@@ -457,7 +523,7 @@ function HomeScreen({ userProgress, chapters, onSelectChapter, isChapterUnlocked
   );
 }
 
-// ===== チャプターノード (Duolingo風 モバイル最適化) =====
+// ===== チャプターノード (山登りダークデザイン) =====
 function ChapterNode({ chapter, index, isUnlocked, crownLevel, onClick }) {
   const isEven = index % 2 === 0;
   const getCrownDisplay = () => {
@@ -468,8 +534,8 @@ function ChapterNode({ chapter, index, isUnlocked, crownLevel, onClick }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
+      initial={{ opacity: 0, scale: 0.8, y: 50 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ delay: index * 0.1, type: 'spring', stiffness: 200 }}
       className={`flex items-center ${isEven ? 'justify-start ml-4' : 'justify-end mr-4'}`}
     >
@@ -480,28 +546,33 @@ function ChapterNode({ chapter, index, isUnlocked, crownLevel, onClick }) {
         className="relative"
         style={{ touchAction: 'manipulation' }}
       >
-        {/* メインノード - モバイル最適化サイズ */}
+        {/* グローエフェクト */}
+        {isUnlocked && (
+          <div className={`absolute inset-0 rounded-full bg-gradient-to-br ${chapter.color} opacity-30 blur-xl animate-pulse`} />
+        )}
+
+        {/* メインノード - ダークモード */}
         <div 
           className={`
-            w-20 h-20 rounded-full shadow-xl flex items-center justify-center text-3xl
-            transition-all duration-200 border-4 border-white
+            relative w-20 h-20 rounded-full shadow-2xl flex items-center justify-center text-3xl
+            transition-all duration-200 border-4
             ${isUnlocked 
-              ? `bg-gradient-to-br ${chapter.color} cursor-pointer active:shadow-2xl` 
-              : 'bg-gray-300 cursor-not-allowed'
+              ? `bg-gradient-to-br ${chapter.color} border-teal-400/50 cursor-pointer active:shadow-teal-500/50 shadow-teal-500/30` 
+              : 'bg-slate-700 border-slate-600 cursor-not-allowed'
             }
           `}
         >
           {isUnlocked ? chapter.icon : '🔒'}
         </div>
 
-        {/* Crown表示 - モバイル用小型化 */}
+        {/* Crown表示 - ダークモード */}
         {crownLevel > 0 && (
-          <div className="absolute -top-1 -right-1 bg-white rounded-full shadow-lg px-1.5 py-0.5 border-2 border-teal-200">
+          <div className="absolute -top-1 -right-1 bg-slate-800 rounded-full shadow-lg px-1.5 py-0.5 border-2 border-teal-400">
             {getCrownDisplay()}
           </div>
         )}
 
-        {/* 進捗リング */}
+        {/* 進捗リング - ダークモード */}
         {isUnlocked && crownLevel > 0 && (
           <svg className="absolute inset-0 w-full h-full -rotate-90" style={{ transform: 'rotate(-90deg)' }}>
             <circle
@@ -513,17 +584,18 @@ function ChapterNode({ chapter, index, isUnlocked, crownLevel, onClick }) {
               fill="none"
               strokeDasharray={`${(crownLevel / 4) * 240} 240`}
               strokeLinecap="round"
-              opacity="0.6"
+              opacity="0.8"
+              filter="url(#glow)"
             />
           </svg>
         )}
 
-        {/* タイトル - モバイル用配置最適化 */}
+        {/* タイトル - ダークモード */}
         <div className={`absolute top-full mt-3 ${isEven ? 'left-0' : 'right-0'} w-24 text-center`}>
-          <div className={`text-xs font-bold leading-tight ${isUnlocked ? 'text-gray-800' : 'text-gray-400'}`}>
+          <div className={`text-xs font-bold leading-tight ${isUnlocked ? 'text-teal-300' : 'text-gray-600'}`}>
             {chapter.title}
           </div>
-          <div className="text-[10px] text-gray-500 mt-0.5">
+          <div className={`text-[10px] mt-0.5 ${isUnlocked ? 'text-teal-500/70' : 'text-gray-700'}`}>
             {chapter.totalQuestions}問
           </div>
         </div>
@@ -535,7 +607,7 @@ function ChapterNode({ chapter, index, isUnlocked, crownLevel, onClick }) {
   );
 }
 
-// ===== ボトムナビゲーション =====
+// ===== ボトムナビゲーション (ダークモード) =====
 function BottomNavigation({ currentTab }) {
   const tabs = [
     { id: 'home', icon: '🏠', label: 'ホーム' },
@@ -544,14 +616,16 @@ function BottomNavigation({ currentTab }) {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-20">
+    <div className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-md border-t border-teal-500/20 shadow-2xl z-20">
       <div className="max-w-md mx-auto px-4 py-2 safe-area-bottom">
         <div className="flex items-center justify-around">
           {tabs.map(tab => (
             <button
               key={tab.id}
-              className={`flex flex-col items-center py-2 px-4 rounded-lg transition-colors ${
-                currentTab === tab.id ? 'text-teal-600' : 'text-gray-400'
+              className={`flex flex-col items-center py-2 px-4 rounded-lg transition-all ${
+                currentTab === tab.id 
+                  ? 'text-teal-400 bg-teal-500/10' 
+                  : 'text-gray-500 hover:text-gray-400'
               }`}
               style={{ touchAction: 'manipulation' }}
             >
@@ -575,7 +649,7 @@ function ChapterDetailScreen({ chapter, userProgress, onStartLesson, onBack }) {
       initial={{ opacity: 0, x: 100 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -100 }}
-      className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-100 pb-6"
+      className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 pb-6"
     >
       {/* モバイルヘッダー */}
       <div className={`bg-gradient-to-br ${chapter.color} text-white rounded-b-3xl shadow-xl`}>
@@ -651,8 +725,8 @@ function LessonCard({ lesson, index, isCompleted, onStart }) {
         className={`
           w-full p-4 rounded-2xl shadow-lg active:shadow-xl transition-all
           ${isBoss 
-            ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white border-2 border-purple-300' 
-            : 'bg-white active:bg-gray-50 border-2 border-teal-100'
+            ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white border-2 border-purple-400/50 shadow-purple-500/30' 
+            : 'bg-slate-800/80 backdrop-blur-sm active:bg-slate-700/80 border-2 border-teal-500/30 text-teal-100 shadow-teal-500/20'
           }
           flex items-center justify-between
         `}
@@ -663,10 +737,10 @@ function LessonCard({ lesson, index, isCompleted, onStart }) {
             {lesson.icon}
           </div>
           <div className="text-left">
-            <div className={`font-bold text-base ${isBoss ? 'text-white' : 'text-gray-800'}`}>
+            <div className={`font-bold text-base ${isBoss ? 'text-white' : 'text-teal-200'}`}>
               {lesson.title}
             </div>
-            <div className={`text-xs ${isBoss ? 'text-white/90' : 'text-gray-500'} mt-0.5`}>
+            <div className={`text-xs ${isBoss ? 'text-white/90' : 'text-teal-400/80'} mt-0.5`}>
               {lesson.questionCount}問 {isBoss && '• Boss 🏆'}
             </div>
           </div>
@@ -836,9 +910,9 @@ function QuizScreen({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col">
       {/* モバイル最適化プログレスバー */}
-      <div className="bg-white shadow-sm">
+      <div className="bg-slate-900/95 backdrop-blur-sm shadow-lg border-b border-teal-500/20">
         <div className="h-1.5 bg-gray-200">
           <div 
             className="h-full bg-gradient-to-r from-teal-500 to-cyan-500 transition-all duration-300"
@@ -846,7 +920,7 @@ function QuizScreen({
           />
         </div>
         <div className="px-4 py-2 flex justify-between items-center">
-          <div className="text-xs text-gray-600 font-medium">
+          <div className="text-xs text-teal-400/80 font-medium">
             {quizState.currentIndex + 1} / {quizState.questions.length}
           </div>
           <div className="text-xs font-bold text-teal-600 bg-teal-50 px-2 py-1 rounded-full">
@@ -864,10 +938,10 @@ function QuizScreen({
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-3xl shadow-2xl p-5"
+              className="bg-slate-800/90 backdrop-blur-md border border-teal-500/20 rounded-3xl shadow-2xl p-5"
             >
               {/* 問題文 - モバイル用フォントサイズ */}
-              <h2 className="text-lg font-bold text-gray-800 mb-6 leading-relaxed">
+              <h2 className="text-lg font-bold text-teal-100 mb-6 leading-relaxed">
                 {currentQuestion.question}
               </h2>
 
@@ -891,13 +965,13 @@ function QuizScreen({
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
-                  className="mt-5 p-4 rounded-2xl bg-gradient-to-br from-teal-50 to-cyan-50 border border-teal-200"
+                  className="mt-5 p-4 rounded-2xl bg-slate-700/50 backdrop-blur-sm border border-teal-500/30"
                 >
                   <div className={`font-bold mb-2 text-base flex items-center gap-2 ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
                     <span className="text-2xl">{isCorrect ? '✅' : '❌'}</span>
                     <span>{isCorrect ? '正解！' : '不正解'}</span>
                   </div>
-                  <div className="text-sm text-gray-700 leading-relaxed">
+                  <div className="text-sm text-teal-200/90 leading-relaxed">
                     {currentQuestion.explanation}
                   </div>
                 </motion.div>
@@ -908,7 +982,7 @@ function QuizScreen({
       </div>
 
       {/* モバイル最適化アクションボタン */}
-      <div className="bg-white border-t border-gray-200 p-4 safe-area-bottom">
+      <div className="bg-slate-900/95 backdrop-blur-sm border-t border-teal-500/20 p-4 safe-area-bottom">
         <div className="max-w-md mx-auto">
           {!showFeedback ? (
             <button
@@ -939,8 +1013,8 @@ function QuizScreen({
 
 // ===== 回答ボタン (モバイル最適化) =====
 function AnswerButton({ option, index, selected, correct, showFeedback, onClick }) {
-  let bgClass = 'bg-white border-2 border-gray-200 active:bg-teal-50';
-  let textClass = 'text-gray-800';
+  let bgClass = 'bg-slate-700/50 border-2 border-slate-600 active:bg-slate-600/50';
+  let textClass = 'text-teal-100';
   
   if (showFeedback) {
     if (correct) {
@@ -965,7 +1039,7 @@ function AnswerButton({ option, index, selected, correct, showFeedback, onClick 
     >
       <div className="flex items-center gap-3">
         <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0
-          ${selected ? 'bg-teal-500 text-white' : 'bg-gray-100 text-gray-600'}
+          ${selected ? 'bg-teal-500 text-white' : 'bg-slate-600 text-teal-300'}
           ${showFeedback && correct ? 'bg-green-500 text-white' : ''}
           ${showFeedback && selected && !correct ? 'bg-red-500 text-white' : ''}
         `}>
@@ -997,9 +1071,9 @@ function ResultScreen({ score, crownLevel, totalXp, chapter, lesson, onContinue 
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50 flex items-center justify-center p-4"
+      className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4"
     >
-      <div className="max-w-sm w-full bg-white rounded-3xl shadow-2xl p-6 text-center">
+      <div className="max-w-sm w-full bg-slate-800/90 backdrop-blur-md border border-teal-500/20 rounded-3xl shadow-2xl p-6 text-center">
         {/* アニメーション付きアイコン */}
         <motion.div
           initial={{ scale: 0, rotate: -180 }}
@@ -1015,7 +1089,7 @@ function ResultScreen({ score, crownLevel, totalXp, chapter, lesson, onContinue 
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <h2 className="text-xl font-bold text-gray-800 mb-3">
+          <h2 className="text-xl font-bold text-teal-100 mb-3">
             {lesson.title}
           </h2>
 
@@ -1029,11 +1103,11 @@ function ResultScreen({ score, crownLevel, totalXp, chapter, lesson, onContinue 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.5 }}
-              className="flex items-center justify-between p-4 bg-gradient-to-r from-teal-50 to-teal-100 rounded-2xl border border-teal-200"
+              className="flex items-center justify-between p-4 bg-gradient-to-r from-teal-900/40 to-teal-800/40 rounded-2xl border border-teal-500/30 backdrop-blur-sm"
             >
               <div className="flex items-center gap-2">
                 <span className="text-2xl">🎯</span>
-                <span className="text-sm text-gray-600 font-medium">正解率</span>
+                <span className="text-sm text-teal-300/90 font-medium">正解率</span>
               </div>
               <span className="text-2xl font-bold text-teal-600">{Math.round(score)}%</span>
             </motion.div>
@@ -1042,11 +1116,11 @@ function ResultScreen({ score, crownLevel, totalXp, chapter, lesson, onContinue 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.6 }}
-              className="flex items-center justify-between p-4 bg-gradient-to-r from-cyan-50 to-cyan-100 rounded-2xl border border-cyan-200"
+              className="flex items-center justify-between p-4 bg-gradient-to-r from-cyan-900/40 to-cyan-800/40 rounded-2xl border border-cyan-500/30 backdrop-blur-sm"
             >
               <div className="flex items-center gap-2">
                 <span className="text-2xl">⭐</span>
-                <span className="text-sm text-gray-600 font-medium">獲得XP</span>
+                <span className="text-sm text-cyan-300/90 font-medium">獲得XP</span>
               </div>
               <span className="text-2xl font-bold text-cyan-600">+{totalXp}</span>
             </motion.div>

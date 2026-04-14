@@ -1093,9 +1093,9 @@ app.get('/', (c) => {
             --color-primary: #14B8A6;
             --color-secondary: #06B6D4;
             --color-accent: #2DD4BF;
-            --color-background: #F0FDFA;
-            --color-surface: #FFFFFF;
-            --color-text: #134E4A;
+            --color-background: #0F172A;
+            --color-surface: #1E293B;
+            --color-text: #F0FDFA;
             --color-textSecondary: #5EEAD4;
             --font-primary: 'Inter', sans-serif;
             --font-heading: 'Inter', sans-serif;
@@ -1104,7 +1104,7 @@ app.get('/', (c) => {
         
         body {
             font-family: var(--font-primary);
-            background: linear-gradient(135deg, #F0FDFA 0%, #CCFBF1 100%);
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
             min-height: 100vh;
             color: var(--color-text);
             transition: background 0.3s ease, color 0.3s ease;
