@@ -474,12 +474,24 @@ function HomeScreen({ userProgress, chapters, onSelectChapter, isChapterUnlocked
             })}
           </svg>
 
-          {/* チャプターノード - 山を登るように配置 */}
+          {/* チャプターノード - 山を登るように配置 (センター寄り、段階的サイズ) */}
           <div className="relative" style={{ paddingTop: `${chapters.length * 200 - 200}px` }}>
             {chapters.map((chapter, index) => {
               const isUnlocked = isChapterUnlocked(chapter);
               const progress = userProgress.completedChapters[chapter.id];
               const crownLevel = progress?.crownLevel || 0;
+              
+              // 現在の進捗に基づいて「現在位置」を決定
+              const currentChapterIndex = chapters.findIndex(ch => !userProgress.completedChapters[ch.id]?.crownLevel);
+              const targetIndex = currentChapterIndex === -1 ? chapters.length - 1 : currentChapterIndex;
+              
+              // 現在位置からの距離に基づいてサイズを計算
+              const distance = Math.abs(index - targetIndex);
+              let scale = 1.0;
+              if (distance === 0) scale = 1.2; // 現在位置: 最大
+              else if (distance === 1) scale = 1.0; // 1つ離れた位置
+              else if (distance === 2) scale = 0.85; // 2つ離れた位置
+              else scale = 0.7; // それ以上離れた位置
               
               return (
                 <div
@@ -496,6 +508,8 @@ function HomeScreen({ userProgress, chapters, onSelectChapter, isChapterUnlocked
                     index={index}
                     isUnlocked={isUnlocked}
                     crownLevel={crownLevel}
+                    isCurrent={index === targetIndex}
+                    scale={scale}
                     onClick={() => onSelectChapter(chapter)}
                   />
                 </div>
@@ -523,8 +537,8 @@ function HomeScreen({ userProgress, chapters, onSelectChapter, isChapterUnlocked
   );
 }
 
-// ===== チャプターノード (山登りダークデザイン) =====
-function ChapterNode({ chapter, index, isUnlocked, crownLevel, onClick }) {
+// ===== チャプターノード (山登りダークデザイン - センター寄り、段階的サイズ) =====
+function ChapterNode({ chapter, index, isUnlocked, crownLevel, isCurrent = false, scale = 1.0, onClick }) {
   const isEven = index % 2 === 0;
   const getCrownDisplay = () => {
     if (crownLevel === 0) return null;
@@ -532,12 +546,23 @@ function ChapterNode({ chapter, index, isUnlocked, crownLevel, onClick }) {
     return <span className="text-base">{'👑'.repeat(crownLevel)}</span>;
   };
 
+  // スケールに基づいてサイズを計算
+  const baseSize = 80;
+  const nodeSize = Math.round(baseSize * scale);
+  const iconSize = Math.round(30 * scale);
+  const fontSize = `${iconSize}px`;
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.8, y: 50 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       transition={{ delay: index * 0.1, type: 'spring', stiffness: 200 }}
-      className={`flex items-center ${isEven ? 'justify-start ml-4' : 'justify-end mr-4'}`}
+      className="flex items-center justify-center"
+      style={{
+        // センター寄り配置: 左右のオフセットを小さく
+        marginLeft: isEven ? '10%' : '0',
+        marginRight: isEven ? '0' : '10%'
+      }}
     >
       <motion.button
         onClick={onClick}
@@ -545,44 +570,72 @@ function ChapterNode({ chapter, index, isUnlocked, crownLevel, onClick }) {
         whileTap={isUnlocked ? { scale: 0.9 } : {}}
         className="relative"
         style={{ touchAction: 'manipulation' }}
+        animate={{ scale: isCurrent ? 1.05 : 1 }}
+        transition={{ duration: 0.3 }}
       >
-        {/* グローエフェクト */}
+        {/* グローエフェクト - 現在位置で強調 */}
         {isUnlocked && (
-          <div className={`absolute inset-0 rounded-full bg-gradient-to-br ${chapter.color} opacity-30 blur-xl animate-pulse`} />
+          <div 
+            className={`absolute inset-0 rounded-full bg-gradient-to-br ${chapter.color} blur-xl ${isCurrent ? 'opacity-50 animate-pulse' : 'opacity-30'}`}
+            style={{
+              width: `${nodeSize + 20}px`,
+              height: `${nodeSize + 20}px`,
+              left: '-10px',
+              top: '-10px'
+            }}
+          />
         )}
 
-        {/* メインノード - ダークモード */}
+        {/* メインノード - ダークモード + スケール対応 */}
         <div 
           className={`
-            relative w-20 h-20 rounded-full shadow-2xl flex items-center justify-center text-3xl
+            relative rounded-full shadow-2xl flex items-center justify-center
             transition-all duration-200 border-4
             ${isUnlocked 
               ? `bg-gradient-to-br ${chapter.color} border-teal-400/50 cursor-pointer active:shadow-teal-500/50 shadow-teal-500/30` 
               : 'bg-slate-700 border-slate-600 cursor-not-allowed'
             }
+            ${isCurrent ? 'ring-4 ring-teal-400/30' : ''}
           `}
+          style={{
+            width: `${nodeSize}px`,
+            height: `${nodeSize}px`,
+            fontSize: fontSize
+          }}
         >
           {isUnlocked ? chapter.icon : '🔒'}
         </div>
 
-        {/* Crown表示 - ダークモード */}
+        {/* Crown表示 - ダークモード + スケール対応 */}
         {crownLevel > 0 && (
-          <div className="absolute -top-1 -right-1 bg-slate-800 rounded-full shadow-lg px-1.5 py-0.5 border-2 border-teal-400">
+          <div 
+            className="absolute -top-1 -right-1 bg-slate-800 rounded-full shadow-lg px-1.5 py-0.5 border-2 border-teal-400"
+            style={{
+              fontSize: `${Math.round(16 * scale)}px`
+            }}
+          >
             {getCrownDisplay()}
           </div>
         )}
 
-        {/* 進捗リング - ダークモード */}
+        {/* 進捗リング - ダークモード + スケール対応 */}
         {isUnlocked && crownLevel > 0 && (
-          <svg className="absolute inset-0 w-full h-full -rotate-90" style={{ transform: 'rotate(-90deg)' }}>
+          <svg 
+            className="absolute inset-0 -rotate-90" 
+            style={{ 
+              transform: 'rotate(-90deg)',
+              width: `${nodeSize}px`,
+              height: `${nodeSize}px`
+            }}
+          >
             <circle
               cx="50%"
               cy="50%"
-              r="38"
+              r={nodeSize / 2 - 6}
               stroke="#14B8A6"
-              strokeWidth="3"
+              strokeWidth={Math.max(2, Math.round(3 * scale))}
               fill="none"
-              strokeDasharray={`${(crownLevel / 4) * 240} 240`}
+              strokeDasharray={`${(crownLevel / 4) * 240 * scale} ${240 * scale}`}
               strokeLinecap="round"
               opacity="0.8"
               filter="url(#glow)"
@@ -590,12 +643,22 @@ function ChapterNode({ chapter, index, isUnlocked, crownLevel, onClick }) {
           </svg>
         )}
 
-        {/* タイトル - ダークモード */}
-        <div className={`absolute top-full mt-3 ${isEven ? 'left-0' : 'right-0'} w-24 text-center`}>
-          <div className={`text-xs font-bold leading-tight ${isUnlocked ? 'text-teal-300' : 'text-gray-600'}`}>
+        {/* タイトル - ダークモード + スケール対応 */}
+        <div 
+          className={`absolute top-full mt-2 w-28 text-center`}
+          style={{
+            fontSize: `${Math.round(12 * scale)}px`,
+            left: '50%',
+            transform: 'translateX(-50%)'
+          }}
+        >
+          <div className={`font-bold leading-tight ${isUnlocked ? 'text-teal-300' : 'text-gray-600'}`}>
             {chapter.title}
           </div>
-          <div className={`text-[10px] mt-0.5 ${isUnlocked ? 'text-teal-500/70' : 'text-gray-700'}`}>
+          <div 
+            className={`mt-0.5 ${isUnlocked ? 'text-teal-500/70' : 'text-gray-700'}`}
+            style={{ fontSize: `${Math.round(10 * scale)}px` }}
+          >
             {chapter.totalQuestions}問
           </div>
         </div>
