@@ -327,6 +327,18 @@ function App() {
             onNavigate={navigate}
           />
         )}
+        {currentScreen === 'market' && (
+          <MarketScreen key="market" onNavigate={navigate} />
+        )}
+        {currentScreen === 'news' && (
+          <NewsScreen key="news" onNavigate={navigate} />
+        )}
+        {currentScreen === 'portfolio' && (
+          <PortfolioScreen key="portfolio" userProgress={userProgress} onNavigate={navigate} />
+        )}
+        {currentScreen === 'profile' && (
+          <ProfileScreen key="profile" userProgress={userProgress} onNavigate={navigate} />
+        )}
         {currentScreen === 'chapterDetail' && selectedChapter && (
           <ChapterDetailScreen
             key="chapterDetail"
@@ -532,7 +544,7 @@ function HomeScreen({ userProgress, chapters, onSelectChapter, isChapterUnlocked
       </div>
 
       {/* ボトムナビゲーション */}
-      <BottomNavigation currentTab="home" />
+      <BottomNavigation currentTab="home" onNavigate={onNavigate} />
     </motion.div>
   );
 }
@@ -670,35 +682,568 @@ function ChapterNode({ chapter, index, isUnlocked, crownLevel, isCurrent = false
   );
 }
 
-// ===== ボトムナビゲーション (ダークモード) =====
-function BottomNavigation({ currentTab }) {
+// ===== ボトムナビゲーション (ダークモード - 5タブ) =====
+function BottomNavigation({ currentTab, onNavigate }) {
   const tabs = [
     { id: 'home', icon: '🏠', label: 'ホーム' },
-    { id: 'review', icon: '📚', label: '復習' },
+    { id: 'market', icon: '📈', label: '市場' },
+    { id: 'news', icon: '📰', label: 'ニュース' },
+    { id: 'portfolio', icon: '💼', label: '資産' },
     { id: 'profile', icon: '👤', label: 'プロフィール' }
   ];
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-md border-t border-teal-500/20 shadow-2xl z-20">
-      <div className="max-w-md mx-auto px-4 py-2 safe-area-bottom">
+      <div className="max-w-4xl mx-auto px-2 py-2 safe-area-bottom">
         <div className="flex items-center justify-around">
           {tabs.map(tab => (
             <button
               key={tab.id}
-              className={`flex flex-col items-center py-2 px-4 rounded-lg transition-all ${
+              onClick={() => onNavigate && onNavigate(tab.id)}
+              className={`flex flex-col items-center py-2 px-2 rounded-lg transition-all ${
                 currentTab === tab.id 
                   ? 'text-teal-400 bg-teal-500/10' 
                   : 'text-gray-500 hover:text-gray-400'
               }`}
               style={{ touchAction: 'manipulation' }}
             >
-              <span className="text-2xl mb-1">{tab.icon}</span>
-              <span className="text-xs font-medium">{tab.label}</span>
+              <span className="text-xl mb-1">{tab.icon}</span>
+              <span className="text-[10px] font-medium">{tab.label}</span>
             </button>
           ))}
         </div>
       </div>
     </div>
+  );
+}
+
+// ===== 市場画面 (Market Screen) =====
+function MarketScreen({ onNavigate }) {
+  const [selectedIndex, setSelectedIndex] = useState('NIKKEI');
+  
+  const indices = [
+    { id: 'NIKKEI', name: '日経平均', value: '¥38,915', change: '+2.3%', trend: 'up' },
+    { id: 'TOPIX', name: 'TOPIX', value: '2,715', change: '+1.8%', trend: 'up' },
+    { id: 'SP500', name: 'S&P 500', value: '$5,815', change: '-0.5%', trend: 'down' },
+    { id: 'NASDAQ', name: 'NASDAQ', value: '18,342', change: '+1.2%', trend: 'up' }
+  ];
+
+  const stocks = [
+    { symbol: 'AAPL', name: 'Apple', price: '$189.95', change: '+1.2%', trend: 'up' },
+    { symbol: 'GOOGL', name: 'Google', price: '$139.87', change: '-0.8%', trend: 'down' },
+    { symbol: 'TSLA', name: 'Tesla', price: '$248.42', change: '+3.5%', trend: 'up' },
+    { symbol: 'MSFT', name: 'Microsoft', price: '$415.26', change: '+0.7%', trend: 'up' },
+    { symbol: 'AMZN', name: 'Amazon', price: '$178.35', change: '+2.1%', trend: 'up' }
+  ];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 100 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -100 }}
+      className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 pb-24"
+    >
+      {/* ヘッダー */}
+      <div className="bg-slate-900/95 backdrop-blur-sm shadow-lg border-b border-teal-500/20 sticky top-0 z-10">
+        <div className="max-w-md mx-auto px-4 py-4">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent">
+            📈 市場
+          </h1>
+        </div>
+      </div>
+
+      <div className="max-w-md mx-auto px-4 py-6">
+        {/* 主要指数 */}
+        <div className="mb-6">
+          <h2 className="text-lg font-bold text-teal-300 mb-3">主要指数</h2>
+          <div className="grid grid-cols-2 gap-3">
+            {indices.map(index => (
+              <button
+                key={index.id}
+                onClick={() => setSelectedIndex(index.id)}
+                className={`p-4 rounded-xl transition-all ${
+                  selectedIndex === index.id
+                    ? 'bg-teal-500/20 border-2 border-teal-400/50 shadow-lg'
+                    : 'bg-slate-800/50 border border-slate-700/50'
+                }`}
+              >
+                <div className="text-left">
+                  <div className="text-xs text-gray-400 mb-1">{index.name}</div>
+                  <div className="text-lg font-bold text-white mb-1">{index.value}</div>
+                  <div className={`text-sm font-semibold ${
+                    index.trend === 'up' ? 'text-green-400' : 'text-red-400'
+                  }`}>
+                    {index.trend === 'up' ? '▲' : '▼'} {index.change}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 簡易チャート表示エリア */}
+        <div className="mb-6">
+          <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
+            <div className="text-center text-gray-400 py-12">
+              <div className="text-4xl mb-3">📊</div>
+              <div className="text-sm">チャート表示エリア</div>
+              <div className="text-xs text-gray-500 mt-2">今後のアップデートで実装予定</div>
+            </div>
+          </div>
+        </div>
+
+        {/* 注目銘柄 */}
+        <div>
+          <h2 className="text-lg font-bold text-teal-300 mb-3">注目銘柄</h2>
+          <div className="space-y-3">
+            {stocks.map(stock => (
+              <div
+                key={stock.symbol}
+                className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 hover:bg-slate-800/70 transition-all cursor-pointer"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-bold text-white">{stock.symbol}</div>
+                    <div className="text-xs text-gray-400">{stock.name}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm font-bold text-white">{stock.price}</div>
+                    <div className={`text-xs font-semibold ${
+                      stock.trend === 'up' ? 'text-green-400' : 'text-red-400'
+                    }`}>
+                      {stock.trend === 'up' ? '▲' : '▼'} {stock.change}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <BottomNavigation currentTab="market" onNavigate={onNavigate} />
+    </motion.div>
+  );
+}
+
+// ===== ニュース画面 (News Screen) =====
+function NewsScreen({ onNavigate }) {
+  const newsItems = [
+    {
+      id: 1,
+      title: '日銀、金融政策据え置き決定',
+      summary: '日本銀行は政策金利を現行水準に据え置くことを決定。市場は...',
+      category: '金融政策',
+      time: '2時間前',
+      image: '🏦',
+      importance: 'high'
+    },
+    {
+      id: 2,
+      title: 'テスラ、第3四半期決算を発表',
+      summary: '電気自動車大手テスラが好調な決算を発表。売上高は前年同期比...',
+      category: '企業',
+      time: '5時間前',
+      image: '🚗',
+      importance: 'medium'
+    },
+    {
+      id: 3,
+      title: '円相場、一時149円台まで下落',
+      summary: '外国為替市場で円安が進行。米ドルに対して一時149円台まで...',
+      category: '為替',
+      time: '1日前',
+      image: '💱',
+      importance: 'high'
+    },
+    {
+      id: 4,
+      title: 'ビットコイン、4万ドル突破',
+      summary: '暗号資産ビットコインが節目の4万ドルを突破。機関投資家の...',
+      category: '暗号資産',
+      time: '1日前',
+      image: '₿',
+      importance: 'medium'
+    },
+    {
+      id: 5,
+      title: '新NISA、利用者が急増',
+      summary: '2024年から始まった新NISAの利用者が急増。若年層を中心に...',
+      category: '投資',
+      time: '2日前',
+      image: '📊',
+      importance: 'low'
+    }
+  ];
+
+  const categories = ['すべて', '金融政策', '企業', '為替', '暗号資産', '投資'];
+  const [selectedCategory, setSelectedCategory] = useState('すべて');
+
+  const filteredNews = selectedCategory === 'すべて' 
+    ? newsItems 
+    : newsItems.filter(item => item.category === selectedCategory);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 100 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -100 }}
+      className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 pb-24"
+    >
+      {/* ヘッダー */}
+      <div className="bg-slate-900/95 backdrop-blur-sm shadow-lg border-b border-teal-500/20 sticky top-0 z-10">
+        <div className="max-w-md mx-auto px-4 py-4">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent">
+            📰 ニュース
+          </h1>
+          
+          {/* カテゴリタブ */}
+          <div className="flex gap-2 mt-3 overflow-x-auto scrollbar-hide">
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+                  selectedCategory === cat
+                    ? 'bg-teal-500 text-white'
+                    : 'bg-slate-800/50 text-gray-400 border border-slate-700/50'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-md mx-auto px-4 py-6">
+        <div className="space-y-4">
+          {filteredNews.map(news => (
+            <div
+              key={news.id}
+              className="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden hover:bg-slate-800/70 transition-all cursor-pointer"
+            >
+              <div className="p-4">
+                <div className="flex items-start gap-3">
+                  <div className="text-3xl flex-shrink-0">{news.image}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-medium ${
+                        news.importance === 'high' 
+                          ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                          : news.importance === 'medium'
+                          ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                          : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+                      }`}>
+                        {news.category}
+                      </span>
+                      <span className="text-xs text-gray-500">{news.time}</span>
+                    </div>
+                    <h3 className="text-sm font-bold text-white mb-2 line-clamp-2">
+                      {news.title}
+                    </h3>
+                    <p className="text-xs text-gray-400 line-clamp-2">
+                      {news.summary}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <BottomNavigation currentTab="news" onNavigate={onNavigate} />
+    </motion.div>
+  );
+}
+
+// ===== 資産画面 (Portfolio Screen) =====
+function PortfolioScreen({ userProgress, onNavigate }) {
+  // ユーザーの仮想資産データ（学習進捗に基づいて生成）
+  const totalValue = 1000000 + (userProgress.totalXp * 100);
+  const cash = 300000 + (userProgress.totalXp * 30);
+  const investedValue = totalValue - cash;
+  
+  const holdings = [
+    { 
+      symbol: 'AAPL', 
+      name: 'Apple', 
+      quantity: 10,
+      avgPrice: 180.50,
+      currentPrice: 189.95,
+      change: '+5.2%',
+      trend: 'up'
+    },
+    { 
+      symbol: 'GOOGL', 
+      name: 'Google', 
+      quantity: 5,
+      avgPrice: 142.30,
+      currentPrice: 139.87,
+      change: '-1.7%',
+      trend: 'down'
+    },
+    { 
+      symbol: 'TSLA', 
+      name: 'Tesla', 
+      quantity: 8,
+      avgPrice: 235.00,
+      currentPrice: 248.42,
+      change: '+5.7%',
+      trend: 'up'
+    }
+  ];
+
+  const formatCurrency = (value) => {
+    return `¥${value.toLocaleString()}`;
+  };
+
+  const calculateGainLoss = (holding) => {
+    const costBasis = holding.quantity * holding.avgPrice * 150; // USD to JPY
+    const currentValue = holding.quantity * holding.currentPrice * 150;
+    const gain = currentValue - costBasis;
+    const percentage = ((gain / costBasis) * 100).toFixed(2);
+    return { gain, percentage, isPositive: gain >= 0 };
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 100 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -100 }}
+      className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 pb-24"
+    >
+      {/* ヘッダー */}
+      <div className="bg-slate-900/95 backdrop-blur-sm shadow-lg border-b border-teal-500/20 sticky top-0 z-10">
+        <div className="max-w-md mx-auto px-4 py-4">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent">
+            💼 資産
+          </h1>
+        </div>
+      </div>
+
+      <div className="max-w-md mx-auto px-4 py-6">
+        {/* 総資産カード */}
+        <div className="bg-gradient-to-br from-teal-500/20 to-cyan-500/20 border border-teal-400/30 rounded-2xl p-6 mb-6 shadow-xl">
+          <div className="text-sm text-teal-300 mb-2">総資産評価額</div>
+          <div className="text-3xl font-bold text-white mb-4">
+            {formatCurrency(totalValue)}
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <div className="text-xs text-gray-400 mb-1">投資額</div>
+              <div className="text-lg font-semibold text-white">{formatCurrency(investedValue)}</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-400 mb-1">現金</div>
+              <div className="text-lg font-semibold text-white">{formatCurrency(cash)}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* 学習で獲得した仮想資金 */}
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mb-6">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xl">🎓</span>
+            <span className="text-sm font-semibold text-amber-300">学習報酬</span>
+          </div>
+          <div className="text-xs text-gray-300">
+            学習で獲得したXP: <span className="font-bold text-amber-400">{userProgress.totalXp}</span>
+          </div>
+          <div className="text-xs text-gray-300 mt-1">
+            報酬総額: <span className="font-bold text-teal-400">{formatCurrency(userProgress.totalXp * 100)}</span>
+          </div>
+        </div>
+
+        {/* 保有銘柄 */}
+        <div>
+          <h2 className="text-lg font-bold text-teal-300 mb-3">保有銘柄</h2>
+          <div className="space-y-3">
+            {holdings.map(holding => {
+              const { gain, percentage, isPositive } = calculateGainLoss(holding);
+              return (
+                <div
+                  key={holding.symbol}
+                  className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <div className="text-sm font-bold text-white">{holding.symbol}</div>
+                      <div className="text-xs text-gray-400">{holding.name}</div>
+                    </div>
+                    <div className={`text-xs font-semibold px-2 py-1 rounded ${
+                      isPositive 
+                        ? 'bg-green-500/20 text-green-400' 
+                        : 'bg-red-500/20 text-red-400'
+                    }`}>
+                      {isPositive ? '+' : ''}{percentage}%
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-xs">
+                    <div>
+                      <div className="text-gray-500">保有数</div>
+                      <div className="text-white font-semibold">{holding.quantity}株</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500">平均取得</div>
+                      <div className="text-white font-semibold">${holding.avgPrice}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500">現在値</div>
+                      <div className="text-white font-semibold">${holding.currentPrice}</div>
+                    </div>
+                  </div>
+                  <div className="mt-2 pt-2 border-t border-slate-700/50">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-400">評価損益</span>
+                      <span className={`font-semibold ${
+                        isPositive ? 'text-green-400' : 'text-red-400'
+                      }`}>
+                        {isPositive ? '+' : ''}{formatCurrency(gain)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* プレースホルダー：今後の機能 */}
+        <div className="mt-6 bg-slate-800/30 border border-slate-700/30 rounded-xl p-6 text-center">
+          <div className="text-3xl mb-2">🚀</div>
+          <div className="text-sm text-gray-400 mb-1">今後の機能</div>
+          <div className="text-xs text-gray-500">
+            取引履歴・パフォーマンス分析・リバランス提案など
+          </div>
+        </div>
+      </div>
+
+      <BottomNavigation currentTab="portfolio" onNavigate={onNavigate} />
+    </motion.div>
+  );
+}
+
+// ===== プロフィール画面 (Profile Screen) =====
+function ProfileScreen({ userProgress, onNavigate }) {
+  const level = Math.floor(userProgress.totalXp / 1000) + 1;
+  const xpForNextLevel = 1000;
+  const currentLevelXp = userProgress.totalXp % 1000;
+  const progressPercentage = (currentLevelXp / xpForNextLevel) * 100;
+
+  const stats = [
+    { label: '総XP', value: userProgress.totalXp, icon: '⭐' },
+    { label: 'レベル', value: level, icon: '🎖️' },
+    { label: '連続日数', value: userProgress.streakDays, icon: '🔥' },
+    { label: 'クリア章', value: Object.keys(userProgress.completedChapters).length, icon: '✅' }
+  ];
+
+  const achievements = [
+    { id: 1, name: '初めの一歩', desc: '最初のレッスンをクリア', earned: true, icon: '🎯' },
+    { id: 2, name: '連続学習', desc: '3日連続で学習', earned: userProgress.streakDays >= 3, icon: '🔥' },
+    { id: 3, name: 'XPマスター', desc: '1000XPを獲得', earned: userProgress.totalXp >= 1000, icon: '⭐' },
+    { id: 4, name: 'パーフェクト', desc: '全問正解でクリア', earned: false, icon: '💯' }
+  ];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 100 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -100 }}
+      className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 pb-24"
+    >
+      {/* ヘッダー */}
+      <div className="bg-slate-900/95 backdrop-blur-sm shadow-lg border-b border-teal-500/20 sticky top-0 z-10">
+        <div className="max-w-md mx-auto px-4 py-4">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent">
+            👤 プロフィール
+          </h1>
+        </div>
+      </div>
+
+      <div className="max-w-md mx-auto px-4 py-6">
+        {/* プロフィールカード */}
+        <div className="bg-gradient-to-br from-teal-500/20 to-cyan-500/20 border border-teal-400/30 rounded-2xl p-6 mb-6 shadow-xl">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center text-3xl">
+              👤
+            </div>
+            <div>
+              <div className="text-xl font-bold text-white">学習者</div>
+              <div className="text-sm text-teal-300">Level {level}</div>
+            </div>
+          </div>
+          
+          {/* レベル進捗 */}
+          <div className="mt-4">
+            <div className="flex justify-between text-xs text-gray-400 mb-2">
+              <span>次のレベルまで</span>
+              <span>{currentLevelXp} / {xpForNextLevel} XP</span>
+            </div>
+            <div className="w-full bg-slate-700/50 rounded-full h-2 overflow-hidden">
+              <div 
+                className="bg-gradient-to-r from-teal-400 to-cyan-500 h-full rounded-full transition-all duration-500"
+                style={{ width: `${progressPercentage}%` }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* 統計情報 */}
+        <div className="mb-6">
+          <h2 className="text-lg font-bold text-teal-300 mb-3">統計</h2>
+          <div className="grid grid-cols-2 gap-3">
+            {stats.map((stat, index) => (
+              <div
+                key={index}
+                className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 text-center"
+              >
+                <div className="text-2xl mb-2">{stat.icon}</div>
+                <div className="text-2xl font-bold text-white mb-1">{stat.value}</div>
+                <div className="text-xs text-gray-400">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 実績 */}
+        <div>
+          <h2 className="text-lg font-bold text-teal-300 mb-3">実績</h2>
+          <div className="space-y-3">
+            {achievements.map(achievement => (
+              <div
+                key={achievement.id}
+                className={`rounded-xl p-4 transition-all ${
+                  achievement.earned
+                    ? 'bg-amber-500/10 border border-amber-500/30'
+                    : 'bg-slate-800/30 border border-slate-700/30 opacity-50'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`text-3xl ${achievement.earned ? '' : 'grayscale'}`}>
+                    {achievement.icon}
+                  </div>
+                  <div className="flex-1">
+                    <div className={`text-sm font-bold mb-1 ${
+                      achievement.earned ? 'text-amber-300' : 'text-gray-500'
+                    }`}>
+                      {achievement.name}
+                    </div>
+                    <div className="text-xs text-gray-400">{achievement.desc}</div>
+                  </div>
+                  {achievement.earned && (
+                    <div className="text-amber-400 text-xl">✓</div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <BottomNavigation currentTab="profile" onNavigate={onNavigate} />
+    </motion.div>
   );
 }
 
