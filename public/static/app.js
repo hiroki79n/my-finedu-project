@@ -398,35 +398,41 @@ function HomeScreen({ userProgress, chapters, onSelectChapter, isChapterUnlocked
         </div>
       </div>
 
-      {/* 山登り学習パス */}
+      {/* 冒険パス */}
       <div className="max-w-sm mx-auto px-3 py-6 relative">
-        {/* 山の背景 */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <svg className="w-full h-full opacity-10">
-            <defs>
-              <linearGradient id="mountainGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" style={{ stopColor: '#14B8A6', stopOpacity: 0.3 }} />
-                <stop offset="100%" style={{ stopColor: '#06B6D4', stopOpacity: 0.1 }} />
-              </linearGradient>
-            </defs>
-            <path
-              d="M 0 800 L 100 600 L 200 700 L 300 400 L 400 500 L 500 200 L 600 300 L 700 100 L 800 0 L 900 100 L 900 1000 L 0 1000 Z"
-              fill="url(#mountainGradient)"
-            />
-          </svg>
+        {/* 背景の装飾要素 */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-5">
+          {/* 星の装飾 */}
+          {[...Array(8)].map((_, i) => (
+            <div
+              key={`star-${i}`}
+              className="absolute text-teal-400"
+              style={{
+                top: `${Math.random() * 80 + 10}%`,
+                left: `${Math.random() * 80 + 10}%`,
+                fontSize: `${Math.random() * 10 + 15}px`,
+                transform: `rotate(${Math.random() * 360}deg)`
+              }}
+            >
+              ✦
+            </div>
+          ))}
         </div>
 
         <div className="relative">
-          {/* レール(線路)のようなパス */}
+          {/* シンプルな冒険パス */}
           <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 400 1200" preserveAspectRatio="xMidYMid meet" style={{ height: `${chapters.length * 200}px` }}>
             <defs>
-              <linearGradient id="railGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" style={{ stopColor: '#14B8A6', stopOpacity: 0.8 }} />
-                <stop offset="50%" style={{ stopColor: '#06B6D4', stopOpacity: 0.9 }} />
-                <stop offset="100%" style={{ stopColor: '#2DD4BF', stopOpacity: 0.7 }} />
+              {/* モダンなグラデーション */}
+              <linearGradient id="pathGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+                <stop offset="0%" style={{ stopColor: '#0891b2', stopOpacity: 0.3 }} />
+                <stop offset="50%" style={{ stopColor: '#14b8a6', stopOpacity: 0.6 }} />
+                <stop offset="100%" style={{ stopColor: '#2dd4bf', stopOpacity: 0.8 }} />
               </linearGradient>
-              <filter id="glow">
-                <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+              
+              {/* ソフトグロー */}
+              <filter id="softGlow">
+                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
                 <feMerge>
                   <feMergeNode in="coloredBlur"/>
                   <feMergeNode in="SourceGraphic"/>
@@ -434,53 +440,67 @@ function HomeScreen({ userProgress, chapters, onSelectChapter, isChapterUnlocked
               </filter>
             </defs>
             
-            {/* メインレール */}
+            {/* クリーンなパスライン */}
             {chapters.map((chapter, index) => {
               if (index === chapters.length - 1) return null;
               
-              // 山登りの曲線 - 下から上へ、左右にジグザグ
               const baseY = (chapters.length - index) * 200;
               const nextBaseY = (chapters.length - index - 1) * 200;
               const isEven = index % 2 === 0;
               const x1 = isEven ? 100 : 300;
               const x2 = !isEven ? 100 : 300;
               
+              const progress = userProgress.completedChapters[chapter.id];
+              const isCompleted = progress?.crownLevel > 0;
+              
               return (
-                <g key={`rail-${index}`}>
-                  {/* 外側のグローライン */}
+                <g key={`path-${index}`}>
+                  {/* メインパス - シンプルな実線 */}
                   <path
-                    d={`M ${x1} ${baseY} Q 200 ${(baseY + nextBaseY) / 2 - 30} ${x2} ${nextBaseY}`}
-                    stroke="url(#railGradient)"
-                    strokeWidth="12"
+                    d={`M ${x1} ${baseY} Q 200 ${(baseY + nextBaseY) / 2 - 20} ${x2} ${nextBaseY}`}
+                    stroke={isCompleted ? 'url(#pathGradient)' : '#334155'}
+                    strokeWidth="3"
                     fill="none"
                     strokeLinecap="round"
-                    filter="url(#glow)"
-                    opacity="0.6"
+                    strokeDasharray={isCompleted ? '0' : '8 4'}
+                    opacity={isCompleted ? 1 : 0.3}
+                    style={{ transition: 'all 0.5s ease' }}
                   />
-                  {/* メインレール */}
-                  <path
-                    d={`M ${x1} ${baseY} Q 200 ${(baseY + nextBaseY) / 2 - 30} ${x2} ${nextBaseY}`}
-                    stroke="url(#railGradient)"
-                    strokeWidth="6"
-                    fill="none"
-                    strokeLinecap="round"
+                  
+                  {/* 完了したパスのグロー効果 */}
+                  {isCompleted && (
+                    <path
+                      d={`M ${x1} ${baseY} Q 200 ${(baseY + nextBaseY) / 2 - 20} ${x2} ${nextBaseY}`}
+                      stroke="url(#pathGradient)"
+                      strokeWidth="8"
+                      fill="none"
+                      strokeLinecap="round"
+                      filter="url(#softGlow)"
+                      opacity="0.4"
+                    />
+                  )}
+                </g>
+              );
+            })}
+            
+            {/* マイルストーンマーカー */}
+            {chapters.map((chapter, index) => {
+              const baseY = (chapters.length - index) * 200;
+              const isEven = index % 2 === 0;
+              const x = isEven ? 100 : 300;
+              const progress = userProgress.completedChapters[chapter.id];
+              const isCompleted = progress?.crownLevel > 0;
+              
+              return (
+                <g key={`marker-${index}`}>
+                  {/* チェックポイントの円 */}
+                  <circle
+                    cx={x}
+                    cy={baseY}
+                    r="4"
+                    fill={isCompleted ? '#14b8a6' : '#475569'}
+                    opacity={isCompleted ? 1 : 0.5}
                   />
-                  {/* レールの枕木 */}
-                  {[0.25, 0.5, 0.75].map((t, i) => {
-                    const y = baseY - (baseY - nextBaseY) * t;
-                    return (
-                      <line
-                        key={`tie-${index}-${i}`}
-                        x1={160}
-                        y1={y}
-                        x2={240}
-                        y2={y}
-                        stroke="#14B8A6"
-                        strokeWidth="2"
-                        opacity="0.3"
-                      />
-                    );
-                  })}
                 </g>
               );
             })}
@@ -530,16 +550,28 @@ function HomeScreen({ userProgress, chapters, onSelectChapter, isChapterUnlocked
           </div>
         </div>
 
-        {/* 山頂 - 次のレベルプレビュー */}
-        <div className="mt-16 text-center relative">
-          <div className="inline-block bg-slate-800/80 backdrop-blur-md border border-teal-500/30 rounded-2xl shadow-2xl p-6 max-w-xs">
-            <div className="text-5xl mb-3 opacity-50">🏔️</div>
-            <div className="text-teal-400 font-bold text-lg">Level 2</div>
-            <div className="text-teal-300/80 text-sm">お金の誕生</div>
-            <div className="text-xs text-gray-500 mt-2">
-              Level 1を完了すると解放
+        {/* ゴール - 次のレベルプレビュー */}
+        <div className="mt-20 text-center relative">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+            className="inline-block bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-md border border-teal-400/20 rounded-3xl shadow-2xl p-6 max-w-xs relative overflow-hidden"
+          >
+            {/* 背景の装飾 */}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-full blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-cyan-500/10 rounded-full blur-2xl" />
+            
+            <div className="relative z-10">
+              <div className="text-4xl mb-3">🏁</div>
+              <div className="text-teal-300 font-bold text-base mb-1">Level 2</div>
+              <div className="text-teal-400/70 text-sm mb-3">お金の誕生</div>
+              <div className="inline-flex items-center gap-1.5 bg-slate-700/50 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs text-gray-400 border border-slate-600/50">
+                <span>🔒</span>
+                <span>Level 1を完了</span>
+              </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
 
@@ -549,65 +581,79 @@ function HomeScreen({ userProgress, chapters, onSelectChapter, isChapterUnlocked
   );
 }
 
-// ===== チャプターノード (山登りダークデザイン - センター寄り、段階的サイズ) =====
+// ===== チャプターノード (モダンでシンプル、冒険的デザイン) =====
 function ChapterNode({ chapter, index, isUnlocked, crownLevel, isCurrent = false, scale = 1.0, onClick }) {
   const isEven = index % 2 === 0;
   const getCrownDisplay = () => {
     if (crownLevel === 0) return null;
-    if (crownLevel === 4) return <span className="text-xl">⭐</span>;
-    return <span className="text-base">{'👑'.repeat(crownLevel)}</span>;
+    if (crownLevel === 4) return <span className="text-sm">⭐</span>;
+    return <span className="text-xs">{'👑'.repeat(crownLevel)}</span>;
   };
 
   // スケールに基づいてサイズを計算
-  const baseSize = 80;
+  const baseSize = 70;
   const nodeSize = Math.round(baseSize * scale);
-  const iconSize = Math.round(30 * scale);
+  const iconSize = Math.round(28 * scale);
   const fontSize = `${iconSize}px`;
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.8, y: 50 }}
+      initial={{ opacity: 0, scale: 0.5, y: 30 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ delay: index * 0.1, type: 'spring', stiffness: 200 }}
-      className="flex items-center justify-center"
+      transition={{ delay: index * 0.08, type: 'spring', stiffness: 300, damping: 20 }}
+      className="flex flex-col items-center justify-center gap-2"
       style={{
-        // センター寄り配置: 左右のオフセットを小さく
-        marginLeft: isEven ? '10%' : '0',
-        marginRight: isEven ? '0' : '10%'
+        marginLeft: isEven ? '8%' : '0',
+        marginRight: isEven ? '0' : '8%'
       }}
     >
       <motion.button
         onClick={onClick}
         disabled={!isUnlocked}
-        whileTap={isUnlocked ? { scale: 0.9 } : {}}
-        className="relative"
+        whileHover={isUnlocked ? { scale: 1.1 } : {}}
+        whileTap={isUnlocked ? { scale: 0.95 } : {}}
+        className="relative group"
         style={{ touchAction: 'manipulation' }}
-        animate={{ scale: isCurrent ? 1.05 : 1 }}
-        transition={{ duration: 0.3 }}
       >
-        {/* グローエフェクト - 現在位置で強調 */}
-        {isUnlocked && (
-          <div 
-            className={`absolute inset-0 rounded-full bg-gradient-to-br ${chapter.color} blur-xl ${isCurrent ? 'opacity-50 animate-pulse' : 'opacity-30'}`}
-            style={{
-              width: `${nodeSize + 20}px`,
-              height: `${nodeSize + 20}px`,
-              left: '-10px',
-              top: '-10px'
-            }}
-          />
+        {/* 現在位置のパルスエフェクト */}
+        {isCurrent && isUnlocked && (
+          <>
+            <motion.div 
+              className="absolute inset-0 rounded-full bg-teal-400/30"
+              style={{
+                width: `${nodeSize + 20}px`,
+                height: `${nodeSize + 20}px`,
+                left: '-10px',
+                top: '-10px'
+              }}
+              animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0, 0.5] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+            <motion.div 
+              className="absolute inset-0 rounded-full bg-teal-400/20"
+              style={{
+                width: `${nodeSize + 10}px`,
+                height: `${nodeSize + 10}px`,
+                left: '-5px',
+                top: '-5px'
+              }}
+              animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0, 0.3] }}
+              transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+            />
+          </>
         )}
 
-        {/* メインノード - ダークモード + スケール対応 */}
+        {/* メインノード - クリーンで現代的 */}
         <div 
           className={`
-            relative rounded-full shadow-2xl flex items-center justify-center
-            transition-all duration-200 border-4
+            relative rounded-full shadow-lg flex items-center justify-center
+            transition-all duration-300 border-2
             ${isUnlocked 
-              ? `bg-gradient-to-br ${chapter.color} border-teal-400/50 cursor-pointer active:shadow-teal-500/50 shadow-teal-500/30` 
-              : 'bg-slate-700 border-slate-600 cursor-not-allowed'
+              ? `bg-gradient-to-br ${chapter.color} border-teal-400/60 cursor-pointer 
+                 hover:shadow-2xl hover:shadow-teal-500/30 hover:border-teal-300` 
+              : 'bg-slate-800/50 border-slate-600/50 cursor-not-allowed backdrop-blur-sm'
             }
-            ${isCurrent ? 'ring-4 ring-teal-400/30' : ''}
+            ${isCurrent && isUnlocked ? 'ring-2 ring-teal-400/50 ring-offset-2 ring-offset-slate-900' : ''}
           `}
           style={{
             width: `${nodeSize}px`,
@@ -618,22 +664,25 @@ function ChapterNode({ chapter, index, isUnlocked, crownLevel, isCurrent = false
           {isUnlocked ? chapter.icon : '🔒'}
         </div>
 
-        {/* Crown表示 - ダークモード + スケール対応 */}
+        {/* Crown バッジ - モダンなデザイン */}
         {crownLevel > 0 && (
-          <div 
-            className="absolute -top-1 -right-1 bg-slate-800 rounded-full shadow-lg px-1.5 py-0.5 border-2 border-teal-400"
+          <motion.div 
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 500, delay: index * 0.08 + 0.3 }}
+            className="absolute -top-1 -right-1 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full shadow-md px-1 py-0.5 border border-amber-200"
             style={{
-              fontSize: `${Math.round(16 * scale)}px`
+              fontSize: `${Math.round(12 * scale)}px`
             }}
           >
             {getCrownDisplay()}
-          </div>
+          </motion.div>
         )}
 
-        {/* 進捗リング - ダークモード + スケール対応 */}
+        {/* 進捗リング - シンプルなデザイン */}
         {isUnlocked && crownLevel > 0 && (
           <svg 
-            className="absolute inset-0 -rotate-90" 
+            className="absolute inset-0" 
             style={{ 
               transform: 'rotate(-90deg)',
               width: `${nodeSize}px`,
@@ -655,25 +704,26 @@ function ChapterNode({ chapter, index, isUnlocked, crownLevel, isCurrent = false
           </svg>
         )}
 
-        {/* タイトル - ダークモード + スケール対応 */}
+      </motion.button>
+
+      {/* チャプター情報 - クリーンでモダン */}
+      <div className="text-center">
         <div 
-          className={`absolute top-full mt-2 w-28 text-center`}
-          style={{
-            fontSize: `${Math.round(12 * scale)}px`,
-            left: '50%',
-            transform: 'translateX(-50%)'
-          }}
+          className={`font-semibold leading-tight transition-colors duration-300 ${
+            isUnlocked ? 'text-teal-300' : 'text-slate-600'
+          } ${isCurrent ? 'text-teal-200' : ''}`}
+          style={{ fontSize: `${Math.round(11 * scale)}px` }}
         >
-          <div className={`font-bold leading-tight ${isUnlocked ? 'text-teal-300' : 'text-gray-600'}`}>
-            {chapter.title}
-          </div>
+          {chapter.title}
+        </div>
+        {isUnlocked && (
           <div 
-            className={`mt-0.5 ${isUnlocked ? 'text-teal-500/70' : 'text-gray-700'}`}
-            style={{ fontSize: `${Math.round(10 * scale)}px` }}
+            className="mt-0.5 text-teal-500/60 font-medium"
+            style={{ fontSize: `${Math.round(9 * scale)}px` }}
           >
             {chapter.totalQuestions}問
           </div>
-        </div>
+        )}
 
         {/* タップフィードバック領域拡大 */}
         <div className="absolute inset-0 -m-4" />
