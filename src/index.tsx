@@ -948,6 +948,110 @@ app.get('/api/transactions/:userId', async (c) => {
   }
 })
 
+// ===== Duolingo風クイズAPI =====
+
+// Chapter & Lesson クイズ取得
+app.get('/api/quiz/chapter/:chapterId/lesson/:lessonId', async (c) => {
+  try {
+    const chapterId = parseInt(c.req.param('chapterId'))
+    const lessonId = parseInt(c.req.param('lessonId'))
+
+    // Chapter 101 Lesson 10101 のクイズデータ（ハードコード版）
+    if (chapterId === 101 && lessonId === 10101) {
+      const questions = [
+        {
+          id: 101001,
+          question: '物々交換とは何ですか?',
+          options: [
+            'お金を使わずに物と物を直接交換すること',
+            'お店で商品を買うこと',
+            '銀行でお金を預けること',
+            '友達にプレゼントをあげること'
+          ],
+          correctAnswer: 0,
+          explanation: '物々交換とは、お金を使わずに物と物を直接交換する取引方法です。人類最古の交換形態です。',
+          xp: 10
+        },
+        {
+          id: 101002,
+          question: '物々交換は、お金が発明される前から存在していた。',
+          options: ['正しい', '間違い'],
+          correctAnswer: 0,
+          explanation: '正しいです。物々交換は貨幣が発明される以前から人類が行っていた最も原始的な経済活動です。',
+          xp: 10
+        },
+        {
+          id: 101003,
+          question: '次のうち、物々交換の例として正しいものはどれですか?',
+          options: [
+            'りんご3個と魚2匹を交換した',
+            '100円でパンを買った',
+            'お小遣いを貯金箱に入れた',
+            '友達にプレゼントをもらった'
+          ],
+          correctAnswer: 0,
+          explanation: 'りんごと魚を直接交換するのが物々交換です。お金を介さない点が重要です。',
+          xp: 10
+        },
+        {
+          id: 101004,
+          question: '物々交換の利点は何ですか?',
+          options: [
+            'お金がなくても取引できる',
+            'いつでも好きなものと交換できる',
+            '値段を計算しなくてよい',
+            '銀行に行かなくてよい'
+          ],
+          correctAnswer: 0,
+          explanation: '物々交換の最大の利点は、お金(貨幣)がなくても物資の交換ができることです。',
+          xp: 10
+        }
+      ]
+      return c.json(questions)
+    }
+
+    // その他のレッスンはダミーデータを返す
+    const dummyQuestions = [
+      {
+        id: lessonId * 1000 + 1,
+        question: `レッスン ${lessonId} の問題1`,
+        options: ['選択肢A', '選択肢B', '選択肢C', '選択肢D'],
+        correctAnswer: 0,
+        explanation: 'これはダミーの説明文です。実際のレッスンコンテンツは順次追加されます。',
+        xp: 10
+      },
+      {
+        id: lessonId * 1000 + 2,
+        question: `レッスン ${lessonId} の問題2`,
+        options: ['選択肢A', '選択肢B', '選択肢C', '選択肢D'],
+        correctAnswer: 1,
+        explanation: 'これはダミーの説明文です。実際のレッスンコンテンツは順次追加されます。',
+        xp: 10
+      }
+    ]
+    return c.json(dummyQuestions)
+
+  } catch (error) {
+    console.error('Get quiz error:', error)
+    return c.json({ error: 'Internal server error' }, 500)
+  }
+})
+
+// クイズ回答記録
+app.post('/api/quiz/answer', async (c) => {
+  try {
+    const { userId, questionId, chapterId, lessonId, selectedAnswer, isCorrect } = await c.req.json()
+    
+    // ログ出力（実際はDBに保存）
+    console.log('Quiz answer:', { userId, questionId, chapterId, lessonId, selectedAnswer, isCorrect })
+    
+    return c.json({ success: true, recorded: true })
+  } catch (error) {
+    console.error('Save answer error:', error)
+    return c.json({ error: 'Internal server error' }, 500)
+  }
+})
+
 // ===== HTMLルート =====
 
 // メインページ
