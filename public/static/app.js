@@ -418,7 +418,7 @@ function HomeScreen({ userProgress, chapters, onSelectChapter, isChapterUnlocked
 
         <div className="relative">
           {/* レール(線路)のようなパス */}
-          <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ height: `${chapters.length * 200}px` }}>
+          <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 400 1200" preserveAspectRatio="xMidYMid meet" style={{ height: `${chapters.length * 200}px` }}>
             <defs>
               <linearGradient id="railGradient" x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" style={{ stopColor: '#14B8A6', stopOpacity: 0.8 }} />
@@ -442,14 +442,14 @@ function HomeScreen({ userProgress, chapters, onSelectChapter, isChapterUnlocked
               const baseY = (chapters.length - index) * 200;
               const nextBaseY = (chapters.length - index - 1) * 200;
               const isEven = index % 2 === 0;
-              const x1 = isEven ? '25%' : '75%';
-              const x2 = !isEven ? '25%' : '75%';
+              const x1 = isEven ? 100 : 300;
+              const x2 = !isEven ? 100 : 300;
               
               return (
                 <g key={`rail-${index}`}>
                   {/* 外側のグローライン */}
                   <path
-                    d={`M ${x1} ${baseY} Q 50% ${(baseY + nextBaseY) / 2 - 30} ${x2} ${nextBaseY}`}
+                    d={`M ${x1} ${baseY} Q 200 ${(baseY + nextBaseY) / 2 - 30} ${x2} ${nextBaseY}`}
                     stroke="url(#railGradient)"
                     strokeWidth="12"
                     fill="none"
@@ -459,7 +459,7 @@ function HomeScreen({ userProgress, chapters, onSelectChapter, isChapterUnlocked
                   />
                   {/* メインレール */}
                   <path
-                    d={`M ${x1} ${baseY} Q 50% ${(baseY + nextBaseY) / 2 - 30} ${x2} ${nextBaseY}`}
+                    d={`M ${x1} ${baseY} Q 200 ${(baseY + nextBaseY) / 2 - 30} ${x2} ${nextBaseY}`}
                     stroke="url(#railGradient)"
                     strokeWidth="6"
                     fill="none"
@@ -471,9 +471,9 @@ function HomeScreen({ userProgress, chapters, onSelectChapter, isChapterUnlocked
                     return (
                       <line
                         key={`tie-${index}-${i}`}
-                        x1="40%"
+                        x1={160}
                         y1={y}
-                        x2="60%"
+                        x2={240}
                         y2={y}
                         stroke="#14B8A6"
                         strokeWidth="2"
@@ -1808,4 +1808,3 @@ function generateDummyQuestions(lesson) {
 
 // ===== アプリ起動 =====
 ReactDOM.render(<App />, document.getElementById('root'));
-t.getElementById('root'));
