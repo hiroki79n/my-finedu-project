@@ -1774,4 +1774,15 @@ function generateDummyQuestions(lesson) {
 }
 
 // ===== アプリ起動 =====
-ReactDOM.render(<App />, document.getElementById('root'));
+console.log('FinGo App Starting...');
+console.log('React:', typeof React);
+console.log('ReactDOM:', typeof ReactDOM);
+console.log('Motion:', typeof Motion);
+console.log('Root element:', document.getElementById('root'));
+
+try {
+  ReactDOM.render(<App />, document.getElementById('root'));
+  console.log('FinGo App Rendered Successfully!');
+} catch (error) {
+  console.error('FinGo App Render Error:', error);
+}
