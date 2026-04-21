@@ -374,78 +374,50 @@ function HomeScreen({ userProgress, chapters, onSelectChapter, isChapterUnlocked
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 pb-20"
+      className="min-h-screen bg-gradient-to-b from-teal-50 via-cyan-50 to-blue-50 pb-20"
     >
-      {/* ダークモードヘッダー */}
-      <div className="bg-slate-900/95 backdrop-blur-sm shadow-lg border-b border-teal-500/20 sticky top-0 z-10">
+      {/* Duolingo風ヘッダー */}
+      <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-sm mx-auto px-3 py-3">
           <div className="flex items-center justify-between mb-2">
-            <div className="text-xl font-bold bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent">
+            <div className="text-xl font-bold text-teal-600">
               FinGo
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="flex items-center gap-1 bg-amber-500/20 backdrop-blur-sm px-2 py-1 rounded-full border border-amber-500/30">
-                <span className="text-amber-400">🔥</span>
-                <span className="text-sm font-bold text-amber-300">{userProgress.streakDays}</span>
+              <div className="flex items-center gap-0.5 bg-orange-100 px-1.5 py-0.5 rounded-full border border-orange-200">
+                <span className="text-orange-500 text-sm">🔥</span>
+                <span className="text-xs font-bold text-orange-600">{userProgress.streakDays}</span>
               </div>
-              <div className="flex items-center gap-1 bg-teal-500/20 backdrop-blur-sm px-2 py-1 rounded-full border border-teal-500/30">
-                <span className="text-teal-400">⭐</span>
-                <span className="text-sm font-bold text-teal-300">{userProgress.totalXp}</span>
+              <div className="flex items-center gap-0.5 bg-amber-100 px-1.5 py-0.5 rounded-full border border-amber-200">
+                <span className="text-amber-500 text-sm">⭐</span>
+                <span className="text-xs font-bold text-amber-600">{userProgress.totalXp}</span>
               </div>
             </div>
           </div>
-          <div className="text-xs text-teal-400/80 text-center font-medium">Level 1: 交換の始まり 🏔️</div>
+          <div className="text-xs text-gray-600 text-center font-medium">Level 1: 交換の始まり</div>
         </div>
       </div>
 
-      {/* 冒険パス */}
+      {/* Duolingo風学習パス */}
       <div className="max-w-sm mx-auto px-3 py-6 relative">
-        {/* 背景の装飾要素 */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-5">
-          {/* 星の装飾 */}
-          {[...Array(8)].map((_, i) => (
-            <div
-              key={`star-${i}`}
-              className="absolute text-teal-400"
-              style={{
-                top: `${Math.random() * 80 + 10}%`,
-                left: `${Math.random() * 80 + 10}%`,
-                fontSize: `${Math.random() * 10 + 15}px`,
-                transform: `rotate(${Math.random() * 360}deg)`
-              }}
-            >
-              ✦
-            </div>
-          ))}
-        </div>
-
         <div className="relative">
-          {/* シンプルな冒険パス */}
-          <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 400 1200" preserveAspectRatio="xMidYMid meet" style={{ height: `${chapters.length * 200}px` }}>
+          {/* Duolingo風の太いパスライン */}
+          <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 400 1200" preserveAspectRatio="xMidYMid meet" style={{ height: `${chapters.length * 180}px` }}>
             <defs>
-              {/* モダンなグラデーション */}
-              <linearGradient id="pathGradient" x1="0%" y1="100%" x2="0%" y2="0%">
-                <stop offset="0%" style={{ stopColor: '#0891b2', stopOpacity: 0.3 }} />
-                <stop offset="50%" style={{ stopColor: '#14b8a6', stopOpacity: 0.6 }} />
-                <stop offset="100%" style={{ stopColor: '#2dd4bf', stopOpacity: 0.8 }} />
+              {/* Duolingo風のグラデーション */}
+              <linearGradient id="duolingoGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+                <stop offset="0%" style={{ stopColor: '#10b981', stopOpacity: 1 }} />
+                <stop offset="50%" style={{ stopColor: '#14b8a6', stopOpacity: 1 }} />
+                <stop offset="100%" style={{ stopColor: '#06b6d4', stopOpacity: 1 }} />
               </linearGradient>
-              
-              {/* ソフトグロー */}
-              <filter id="softGlow">
-                <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-                <feMerge>
-                  <feMergeNode in="coloredBlur"/>
-                  <feMergeNode in="SourceGraphic"/>
-                </feMerge>
-              </filter>
             </defs>
             
-            {/* クリーンなパスライン */}
+            {/* 太い実線パス - Duolingoスタイル */}
             {chapters.map((chapter, index) => {
               if (index === chapters.length - 1) return null;
               
-              const baseY = (chapters.length - index) * 200;
-              const nextBaseY = (chapters.length - index - 1) * 200;
+              const baseY = (chapters.length - index) * 180;
+              const nextBaseY = (chapters.length - index - 1) * 180;
               const isEven = index % 2 === 0;
               const x1 = isEven ? 100 : 300;
               const x2 = !isEven ? 100 : 300;
@@ -455,82 +427,53 @@ function HomeScreen({ userProgress, chapters, onSelectChapter, isChapterUnlocked
               
               return (
                 <g key={`path-${index}`}>
-                  {/* メインパス - シンプルな実線 */}
+                  {/* 背景パス（グレー） */}
                   <path
-                    d={`M ${x1} ${baseY} Q 200 ${(baseY + nextBaseY) / 2 - 20} ${x2} ${nextBaseY}`}
-                    stroke={isCompleted ? 'url(#pathGradient)' : '#334155'}
-                    strokeWidth="3"
+                    d={`M ${x1} ${baseY} Q 200 ${(baseY + nextBaseY) / 2} ${x2} ${nextBaseY}`}
+                    stroke="#e5e7eb"
+                    strokeWidth="12"
                     fill="none"
                     strokeLinecap="round"
-                    strokeDasharray={isCompleted ? '0' : '8 4'}
-                    opacity={isCompleted ? 1 : 0.3}
-                    style={{ transition: 'all 0.5s ease' }}
                   />
                   
-                  {/* 完了したパスのグロー効果 */}
+                  {/* 完了したパス（グラデーション） */}
                   {isCompleted && (
                     <path
-                      d={`M ${x1} ${baseY} Q 200 ${(baseY + nextBaseY) / 2 - 20} ${x2} ${nextBaseY}`}
-                      stroke="url(#pathGradient)"
-                      strokeWidth="8"
+                      d={`M ${x1} ${baseY} Q 200 ${(baseY + nextBaseY) / 2} ${x2} ${nextBaseY}`}
+                      stroke="url(#duolingoGradient)"
+                      strokeWidth="12"
                       fill="none"
                       strokeLinecap="round"
-                      filter="url(#softGlow)"
-                      opacity="0.4"
                     />
                   )}
                 </g>
               );
             })}
-            
-            {/* マイルストーンマーカー */}
-            {chapters.map((chapter, index) => {
-              const baseY = (chapters.length - index) * 200;
-              const isEven = index % 2 === 0;
-              const x = isEven ? 100 : 300;
-              const progress = userProgress.completedChapters[chapter.id];
-              const isCompleted = progress?.crownLevel > 0;
-              
-              return (
-                <g key={`marker-${index}`}>
-                  {/* チェックポイントの円 */}
-                  <circle
-                    cx={x}
-                    cy={baseY}
-                    r="4"
-                    fill={isCompleted ? '#14b8a6' : '#475569'}
-                    opacity={isCompleted ? 1 : 0.5}
-                  />
-                </g>
-              );
-            })}
           </svg>
 
-          {/* チャプターノード - 山を登るように配置 (センター寄り、段階的サイズ) */}
-          <div className="relative" style={{ paddingTop: `${chapters.length * 200 - 200}px` }}>
+          {/* チャプターノード - Duolingo風配置 */}
+          <div className="relative" style={{ paddingTop: `${chapters.length * 180 - 180}px` }}>
             {chapters.map((chapter, index) => {
               const isUnlocked = isChapterUnlocked(chapter);
               const progress = userProgress.completedChapters[chapter.id];
               const crownLevel = progress?.crownLevel || 0;
               
-              // 現在の進捗に基づいて「現在位置」を決定
               const currentChapterIndex = chapters.findIndex(ch => !userProgress.completedChapters[ch.id]?.crownLevel);
               const targetIndex = currentChapterIndex === -1 ? chapters.length - 1 : currentChapterIndex;
               
-              // 現在位置からの距離に基づいてサイズを計算
               const distance = Math.abs(index - targetIndex);
               let scale = 1.0;
-              if (distance === 0) scale = 1.2; // 現在位置: 最大
-              else if (distance === 1) scale = 1.0; // 1つ離れた位置
-              else if (distance === 2) scale = 0.85; // 2つ離れた位置
-              else scale = 0.7; // それ以上離れた位置
+              if (distance === 0) scale = 1.15;
+              else if (distance === 1) scale = 1.0;
+              else if (distance === 2) scale = 0.9;
+              else scale = 0.85;
               
               return (
                 <div
                   key={chapter.id}
                   className="absolute"
                   style={{ 
-                    top: `${(chapters.length - index - 1) * 200}px`,
+                    top: `${(chapters.length - index - 1) * 180}px`,
                     left: 0,
                     right: 0
                   }}
@@ -550,26 +493,20 @@ function HomeScreen({ userProgress, chapters, onSelectChapter, isChapterUnlocked
           </div>
         </div>
 
-        {/* ゴール - 次のレベルプレビュー */}
+        {/* ゴール - Duolingo風 */}
         <div className="mt-20 text-center relative">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8 }}
-            className="inline-block bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-md border border-teal-400/20 rounded-3xl shadow-2xl p-6 max-w-xs relative overflow-hidden"
+            className="inline-block bg-white rounded-3xl shadow-lg border-2 border-gray-200 p-6 max-w-xs"
           >
-            {/* 背景の装飾 */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-full blur-3xl" />
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-cyan-500/10 rounded-full blur-2xl" />
-            
-            <div className="relative z-10">
-              <div className="text-4xl mb-3">🏁</div>
-              <div className="text-teal-300 font-bold text-base mb-1">Level 2</div>
-              <div className="text-teal-400/70 text-sm mb-3">お金の誕生</div>
-              <div className="inline-flex items-center gap-1.5 bg-slate-700/50 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs text-gray-400 border border-slate-600/50">
-                <span>🔒</span>
-                <span>Level 1を完了</span>
-              </div>
+            <div className="text-4xl mb-3">🏆</div>
+            <div className="text-gray-800 font-bold text-base mb-1">Level 2</div>
+            <div className="text-gray-600 text-sm mb-3">お金の誕生</div>
+            <div className="inline-flex items-center gap-1.5 bg-gray-100 px-3 py-1.5 rounded-full text-xs text-gray-600 border border-gray-200">
+              <span>🔒</span>
+              <span>Level 1を完了</span>
             </div>
           </motion.div>
         </div>
@@ -581,79 +518,87 @@ function HomeScreen({ userProgress, chapters, onSelectChapter, isChapterUnlocked
   );
 }
 
-// ===== チャプターノード (モダンでシンプル、冒険的デザイン) =====
+// ===== チャプターノード (Duolingoスタイル) =====
 function ChapterNode({ chapter, index, isUnlocked, crownLevel, isCurrent = false, scale = 1.0, onClick }) {
   const isEven = index % 2 === 0;
   const getCrownDisplay = () => {
     if (crownLevel === 0) return null;
-    if (crownLevel === 4) return <span className="text-sm">⭐</span>;
-    return <span className="text-xs">{'👑'.repeat(crownLevel)}</span>;
+    if (crownLevel === 4) return <span className="text-base">⭐</span>;
+    return <span className="text-sm">{'👑'.repeat(crownLevel)}</span>;
   };
 
-  // スケールに基づいてサイズを計算
-  const baseSize = 70;
+  // Duolingo風の大きなノードサイズ
+  const baseSize = 85;
   const nodeSize = Math.round(baseSize * scale);
-  const iconSize = Math.round(28 * scale);
+  const iconSize = Math.round(36 * scale);
   const fontSize = `${iconSize}px`;
+
+  // Duolingo風の色
+  const getNodeColors = () => {
+    if (!isUnlocked) {
+      return {
+        bg: 'bg-gray-300',
+        border: 'border-gray-400',
+        shadow: 'shadow-md'
+      };
+    }
+    if (crownLevel === 0) {
+      return {
+        bg: 'bg-gradient-to-br from-teal-400 to-teal-500',
+        border: 'border-teal-600',
+        shadow: 'shadow-lg shadow-teal-200/50'
+      };
+    }
+    return {
+      bg: 'bg-gradient-to-br from-amber-400 to-amber-500',
+      border: 'border-amber-600',
+      shadow: 'shadow-lg shadow-amber-200/50'
+    };
+  };
+
+  const colors = getNodeColors();
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.5, y: 30 }}
+      initial={{ opacity: 0, scale: 0.3, y: 20 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ delay: index * 0.08, type: 'spring', stiffness: 300, damping: 20 }}
-      className="flex flex-col items-center justify-center gap-2"
+      transition={{ delay: index * 0.06, type: 'spring', stiffness: 400, damping: 25 }}
+      className="flex flex-col items-center justify-center gap-3"
       style={{
-        marginLeft: isEven ? '8%' : '0',
-        marginRight: isEven ? '0' : '8%'
+        marginLeft: isEven ? '5%' : '0',
+        marginRight: isEven ? '0' : '5%'
       }}
     >
       <motion.button
         onClick={onClick}
         disabled={!isUnlocked}
-        whileHover={isUnlocked ? { scale: 1.1 } : {}}
-        whileTap={isUnlocked ? { scale: 0.95 } : {}}
-        className="relative group"
+        whileHover={isUnlocked ? { y: -5 } : {}}
+        whileTap={isUnlocked ? { scale: 0.92 } : {}}
+        className="relative"
         style={{ touchAction: 'manipulation' }}
       >
-        {/* 現在位置のパルスエフェクト */}
+        {/* 現在位置の強調 */}
         {isCurrent && isUnlocked && (
-          <>
-            <motion.div 
-              className="absolute inset-0 rounded-full bg-teal-400/30"
-              style={{
-                width: `${nodeSize + 20}px`,
-                height: `${nodeSize + 20}px`,
-                left: '-10px',
-                top: '-10px'
-              }}
-              animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0, 0.5] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
-            <motion.div 
-              className="absolute inset-0 rounded-full bg-teal-400/20"
-              style={{
-                width: `${nodeSize + 10}px`,
-                height: `${nodeSize + 10}px`,
-                left: '-5px',
-                top: '-5px'
-              }}
-              animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0, 0.3] }}
-              transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
-            />
-          </>
+          <motion.div 
+            className="absolute inset-0 rounded-full bg-teal-300/40"
+            style={{
+              width: `${nodeSize + 16}px`,
+              height: `${nodeSize + 16}px`,
+              left: '-8px',
+              top: '-8px'
+            }}
+            animate={{ scale: [1, 1.15, 1] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+          />
         )}
 
-        {/* メインノード - クリーンで現代的 */}
+        {/* Duolingo風の大きなノード */}
         <div 
           className={`
-            relative rounded-full shadow-lg flex items-center justify-center
-            transition-all duration-300 border-2
-            ${isUnlocked 
-              ? `bg-gradient-to-br ${chapter.color} border-teal-400/60 cursor-pointer 
-                 hover:shadow-2xl hover:shadow-teal-500/30 hover:border-teal-300` 
-              : 'bg-slate-800/50 border-slate-600/50 cursor-not-allowed backdrop-blur-sm'
-            }
-            ${isCurrent && isUnlocked ? 'ring-2 ring-teal-400/50 ring-offset-2 ring-offset-slate-900' : ''}
+            relative rounded-full flex items-center justify-center
+            transition-all duration-300 border-[3px]
+            ${colors.bg} ${colors.border} ${colors.shadow}
+            ${isUnlocked ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}
           `}
           style={{
             width: `${nodeSize}px`,
@@ -664,72 +609,47 @@ function ChapterNode({ chapter, index, isUnlocked, crownLevel, isCurrent = false
           {isUnlocked ? chapter.icon : '🔒'}
         </div>
 
-        {/* Crown バッジ - モダンなデザイン */}
+        {/* Crownバッジ - Duolingoスタイル */}
         {crownLevel > 0 && (
           <motion.div 
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 500, delay: index * 0.08 + 0.3 }}
-            className="absolute -top-1 -right-1 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full shadow-md px-1 py-0.5 border border-amber-200"
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: 'spring', stiffness: 500, delay: index * 0.06 + 0.2 }}
+            className="absolute -top-2 -right-2 bg-white rounded-full shadow-md px-1.5 py-1 border-2 border-gray-200"
             style={{
-              fontSize: `${Math.round(12 * scale)}px`
+              fontSize: `${Math.round(14 * scale)}px`
             }}
           >
             {getCrownDisplay()}
           </motion.div>
         )}
 
-        {/* 進捗リング - シンプルなデザイン */}
-        {isUnlocked && crownLevel > 0 && (
-          <svg 
-            className="absolute inset-0" 
-            style={{ 
-              transform: 'rotate(-90deg)',
-              width: `${nodeSize}px`,
-              height: `${nodeSize}px`
-            }}
-          >
-            <circle
-              cx="50%"
-              cy="50%"
-              r={nodeSize / 2 - 6}
-              stroke="#14B8A6"
-              strokeWidth={Math.max(2, Math.round(3 * scale))}
-              fill="none"
-              strokeDasharray={`${(crownLevel / 4) * 240 * scale} ${240 * scale}`}
-              strokeLinecap="round"
-              opacity="0.8"
-              filter="url(#glow)"
-            />
-          </svg>
+        {/* 完了チェックマーク */}
+        {crownLevel > 0 && (
+          <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 bg-white rounded-full p-1 shadow-md border-2 border-green-500">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M13 4L6 11L3 8" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
         )}
-
       </motion.button>
 
-      {/* チャプター情報 - クリーンでモダン */}
-      <div className="text-center">
+      {/* チャプター情報 - Duolingoスタイル */}
+      <div className="text-center max-w-[100px]">
         <div 
-          className={`font-semibold leading-tight transition-colors duration-300 ${
-            isUnlocked ? 'text-teal-300' : 'text-slate-600'
-          } ${isCurrent ? 'text-teal-200' : ''}`}
-          style={{ fontSize: `${Math.round(11 * scale)}px` }}
+          className={`font-bold leading-tight ${
+            isUnlocked ? 'text-gray-800' : 'text-gray-500'
+          } ${isCurrent ? 'text-teal-600' : ''}`}
+          style={{ fontSize: `${Math.round(12 * scale)}px` }}
         >
           {chapter.title}
         </div>
-        {isUnlocked && (
-          <div 
-            className="mt-0.5 text-teal-500/60 font-medium"
-            style={{ fontSize: `${Math.round(9 * scale)}px` }}
-          >
-            {chapter.totalQuestions}問
-          </div>
-        )}
       </div>
     </motion.div>
   );
 }
 
-// ===== ボトムナビゲーション (ダークモード - 5タブ) =====
+// ===== ボトムナビゲーション (Duolingo風) =====
 function BottomNavigation({ currentTab, onNavigate }) {
   const tabs = [
     { id: 'home', icon: '🏠', label: 'ホーム' },
@@ -740,7 +660,7 @@ function BottomNavigation({ currentTab, onNavigate }) {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-md border-t border-teal-500/20 shadow-2xl z-20">
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-20">
       <div className="max-w-sm mx-auto px-2 py-2 safe-area-bottom">
         <div className="flex items-center justify-around">
           {tabs.map(tab => (
@@ -749,8 +669,8 @@ function BottomNavigation({ currentTab, onNavigate }) {
               onClick={() => onNavigate && onNavigate(tab.id)}
               className={`flex flex-col items-center py-2 px-2 rounded-lg transition-all ${
                 currentTab === tab.id 
-                  ? 'text-teal-400 bg-teal-500/10' 
-                  : 'text-gray-500 hover:text-gray-400'
+                  ? 'text-teal-600 bg-teal-50' 
+                  : 'text-gray-500 hover:text-gray-700'
               }`}
               style={{ touchAction: 'manipulation' }}
             >
