@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinGo - 動作確認ページ</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 50%, #14b8a6 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #0891b2;
+            font-size: 32px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .ok { background: #d1fae5; color: #065f46; border: 2px solid #10b981; }
+        .error { background: #fee2e2; color: #991b1b; border: 2px solid #ef4444; }
+        .icon { font-size: 24px; }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin-top: 20px;
+            background: linear-gradient(135deg, #0ea5e9, #14b8a6);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .btn:hover { transform: scale(1.05); }
+        .btn:active { transform: scale(0.95); }
+        .info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0f9ff;
+            border-radius: 10px;
+            font-size: 14px;
+            color: #0369a1;
+            border: 2px solid #bae6fd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 FinGo 動作確認</h1>
+        <div id="results">
+            <div class="status ok">
+                <span class="icon">⏳</span>
+                <span>チェック中...</span>
+            </div>
+        </div>
+        <button class="btn" onclick="location.href='/'">メインアプリを開く</button>
+        <div class="info">
+            <strong>📝 このページについて:</strong><br>
+            FinGoアプリが正常に動作しているかを確認するための診断ページです。全てのチェック項目が緑色（✓）になっていれば、アプリは正常に動作しています。
+        </div>
+    </div>
+    
+    <script>
+        const results = document.getElementById('results');
+        results.innerHTML = '';
+        
+        const checks = [
+            {
+                name: 'サーバー接続',
+                test: async () => {
+                    const res = await fetch('/');
+                    return res.ok;
+                }
+            },
+            {
+                name: 'HTMLページ取得',
+                test: async () => {
+                    const res = await fetch('/');
+                    const html = await res.text();
+                    return html.length > 1000;
+                }
+            },
+            {
+                name: 'app.jsスクリプト',
+                test: async () => {
+                    const res = await fetch('/static/app.js');
+                    return res.ok && res.headers.get('content-type').includes('javascript');
+                }
+            },
+            {
+                name: 'React ライブラリ',
+                test: async () => {
+                    const res = await fetch('https://unpkg.com/react@18/umd/react.production.min.js');
+                    return res.ok;
+                }
+            },
+            {
+                name: 'Babel トランスパイラ',
+                test: async () => {
+                    const res = await fetch('https://unpkg.com/@babel/standalone/babel.min.js');
+                    return res.ok;
+                }
+            }
+        ];
+        
+        async function runChecks() {
+            for (const check of checks) {
+                try {
+                    const passed = await check.test();
+                    results.innerHTML += `
+                        <div class="status ${passed ? 'ok' : 'error'}">
+                            <span class="icon">${passed ? '✓' : '✗'}</span>
+                            <span>${check.name}</span>
+                        </div>
+                    `;
+                } catch (e) {
+                    results.innerHTML += `
+                        <div class="status error">
+                            <span class="icon">✗</span>
+                            <span>${check.name} (エラー: ${e.message})</span>
+                        </div>
+                    `;
+                }
+            }
+            
+            // 最終判定
+            const allPassed = !results.innerHTML.includes('class="status error"');
+            results.innerHTML += `
+                <div class="status ${allPassed ? 'ok' : 'error'}" style="margin-top: 20px; font-weight: bold; font-size: 18px;">
+                    <span class="icon">${allPassed ? '🎉' : '⚠️'}</span>
+                    <span>${allPassed ? 'すべて正常です！' : '一部に問題があります'}</span>
+                </div>
+            `;
+        }
+        
+        runChecks();
+    </script>
+</body>
+</html>

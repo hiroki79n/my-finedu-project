@@ -374,13 +374,13 @@ function HomeScreen({ userProgress, chapters, onSelectChapter, isChapterUnlocked
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="min-h-screen bg-gradient-to-b from-teal-50 via-cyan-50 to-blue-50 pb-20"
+      className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 pb-20"
     >
       {/* Duolingo風ヘッダー */}
-      <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
+      <div className="bg-slate-800/80 backdrop-blur-sm shadow-lg border-b border-slate-700 sticky top-0 z-10">
         <div className="max-w-sm mx-auto px-3 py-3">
           <div className="flex items-center justify-between mb-2">
-            <div className="text-xl font-bold text-teal-600">
+            <div className="text-xl font-bold text-teal-400">
               FinGo
             </div>
             <div className="flex items-center gap-1.5">
@@ -394,7 +394,7 @@ function HomeScreen({ userProgress, chapters, onSelectChapter, isChapterUnlocked
               </div>
             </div>
           </div>
-          <div className="text-xs text-gray-600 text-center font-medium">Level 1: 交換の始まり</div>
+          <div className="text-xs text-teal-300 text-center font-medium">Level 1: 交換の始まり</div>
         </div>
       </div>
 
@@ -499,12 +499,12 @@ function HomeScreen({ userProgress, chapters, onSelectChapter, isChapterUnlocked
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8 }}
-            className="inline-block bg-white rounded-3xl shadow-lg border-2 border-gray-200 p-6 max-w-xs"
+            className="inline-block bg-slate-800 rounded-3xl shadow-xl border-2 border-teal-500 p-6 max-w-xs"
           >
             <div className="text-4xl mb-3">🏆</div>
-            <div className="text-gray-800 font-bold text-base mb-1">Level 2</div>
-            <div className="text-gray-600 text-sm mb-3">お金の誕生</div>
-            <div className="inline-flex items-center gap-1.5 bg-gray-100 px-3 py-1.5 rounded-full text-xs text-gray-600 border border-gray-200">
+            <div className="text-teal-300 font-bold text-base mb-1">Level 2</div>
+            <div className="text-slate-400 text-sm mb-3">お金の誕生</div>
+            <div className="inline-flex items-center gap-1.5 bg-slate-700 px-3 py-1.5 rounded-full text-xs text-slate-300 border border-slate-600">
               <span>🔒</span>
               <span>Level 1を完了</span>
             </div>
@@ -537,8 +537,8 @@ function ChapterNode({ chapter, index, isUnlocked, crownLevel, isCurrent = false
   const getNodeColors = () => {
     if (!isUnlocked) {
       return {
-        bg: 'bg-gray-300',
-        border: 'border-gray-400',
+        bg: 'bg-slate-700',
+        border: 'border-slate-600',
         shadow: 'shadow-md'
       };
     }
@@ -546,13 +546,13 @@ function ChapterNode({ chapter, index, isUnlocked, crownLevel, isCurrent = false
       return {
         bg: 'bg-gradient-to-br from-teal-400 to-teal-500',
         border: 'border-teal-600',
-        shadow: 'shadow-lg shadow-teal-200/50'
+        shadow: 'shadow-lg shadow-teal-500/50'
       };
     }
     return {
       bg: 'bg-gradient-to-br from-amber-400 to-amber-500',
       border: 'border-amber-600',
-      shadow: 'shadow-lg shadow-amber-200/50'
+      shadow: 'shadow-lg shadow-amber-500/50'
     };
   };
 
@@ -615,7 +615,7 @@ function ChapterNode({ chapter, index, isUnlocked, crownLevel, isCurrent = false
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: 'spring', stiffness: 500, delay: index * 0.06 + 0.2 }}
-            className="absolute -top-2 -right-2 bg-white rounded-full shadow-md px-1.5 py-1 border-2 border-gray-200"
+            className="absolute -top-2 -right-2 bg-slate-800 rounded-full shadow-lg px-1.5 py-1 border-2 border-teal-500"
             style={{
               fontSize: `${Math.round(14 * scale)}px`
             }}
@@ -626,7 +626,7 @@ function ChapterNode({ chapter, index, isUnlocked, crownLevel, isCurrent = false
 
         {/* 完了チェックマーク */}
         {crownLevel > 0 && (
-          <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 bg-white rounded-full p-1 shadow-md border-2 border-green-500">
+          <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 bg-slate-800 rounded-full p-1 shadow-lg border-2 border-green-500">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M13 4L6 11L3 8" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
@@ -638,8 +638,8 @@ function ChapterNode({ chapter, index, isUnlocked, crownLevel, isCurrent = false
       <div className="text-center max-w-[100px]">
         <div 
           className={`font-bold leading-tight ${
-            isUnlocked ? 'text-gray-800' : 'text-gray-500'
-          } ${isCurrent ? 'text-teal-600' : ''}`}
+            isUnlocked ? 'text-teal-300' : 'text-slate-500'
+          } ${isCurrent ? 'text-teal-400' : ''}`}
           style={{ fontSize: `${Math.round(12 * scale)}px` }}
         >
           {chapter.title}
@@ -660,7 +660,7 @@ function BottomNavigation({ currentTab, onNavigate }) {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-20">
+    <div className="fixed bottom-0 left-0 right-0 bg-slate-800/90 backdrop-blur-sm border-t border-slate-700 shadow-2xl z-20">
       <div className="max-w-sm mx-auto px-2 py-2 safe-area-bottom">
         <div className="flex items-center justify-around">
           {tabs.map(tab => (
@@ -669,8 +669,8 @@ function BottomNavigation({ currentTab, onNavigate }) {
               onClick={() => onNavigate && onNavigate(tab.id)}
               className={`flex flex-col items-center py-2 px-2 rounded-lg transition-all ${
                 currentTab === tab.id 
-                  ? 'text-teal-600 bg-teal-50' 
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'text-teal-400 bg-teal-500/20' 
+                  : 'text-slate-400 hover:text-teal-300'
               }`}
               style={{ touchAction: 'manipulation' }}
             >
