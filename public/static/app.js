@@ -1485,99 +1485,241 @@ function QuizScreen({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col">
-      {/* モバイル最適化プログレスバー */}
-      <div className="bg-slate-900/95 backdrop-blur-sm shadow-lg border-b border-teal-500/20">
-        <div className="h-1.5 bg-gray-200">
-          <div 
-            className="h-full bg-gradient-to-r from-teal-500 to-cyan-500 transition-all duration-300"
-            style={{ width: `${progress}%` }}
-          />
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex flex-col relative overflow-hidden">
+      {/* 山の背景装飾 */}
+      <div className="absolute inset-0 pointer-events-none">
+        {/* 遠くの山々 */}
+        <div className="absolute bottom-0 left-0 right-0 opacity-20">
+          <svg viewBox="0 0 1200 400" className="w-full">
+            <path d="M0 400 L200 250 L400 300 L600 200 L800 280 L1000 220 L1200 300 L1200 400 Z" fill="#1e293b"/>
+          </svg>
         </div>
-        <div className="px-4 py-2 flex justify-between items-center">
-          <div className="text-xs text-teal-400/80 font-medium">
-            {quizState.currentIndex + 1} / {quizState.questions.length}
+        {/* 中間の山々 */}
+        <div className="absolute bottom-0 left-0 right-0 opacity-30">
+          <svg viewBox="0 0 1200 350" className="w-full">
+            <path d="M0 350 L300 200 L500 250 L700 150 L900 220 L1200 180 L1200 350 Z" fill="#334155"/>
+          </svg>
+        </div>
+        {/* 手前の山 */}
+        <div className="absolute bottom-0 left-0 right-0 opacity-40">
+          <svg viewBox="0 0 1200 300" className="w-full">
+            <path d="M0 300 L400 150 L600 200 L800 100 L1200 150 L1200 300 Z" fill="#475569"/>
+          </svg>
+        </div>
+      </div>
+
+      {/* 山登り進捗表示 */}
+      <div className="bg-slate-900/95 backdrop-blur-sm shadow-lg border-b border-teal-500/20 relative z-10">
+        <div className="h-2 bg-slate-700 relative overflow-hidden">
+          {/* ベース進捗バー */}
+          <div 
+            className="h-full bg-gradient-to-r from-teal-500 via-cyan-500 to-blue-500 transition-all duration-500 relative"
+            style={{ width: `${progress}%` }}
+          >
+            {/* 登山者アイコン */}
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2">
+              <motion.div
+                animate={{ 
+                  y: [0, -3, 0],
+                  rotate: [0, -5, 0, 5, 0]
+                }}
+                transition={{ 
+                  duration: 1.5, 
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                className="text-2xl drop-shadow-lg"
+              >
+                🧗
+              </motion.div>
+            </div>
           </div>
-          <div className="text-xs font-bold text-teal-600 bg-teal-50 px-2 py-1 rounded-full">
-            +{quizState.score} XP
+          {/* 山頂フラッグ */}
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 text-lg">
+            🚩
+          </div>
+        </div>
+        <div className="px-4 py-2.5 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <span className="text-teal-400 text-lg">⛰️</span>
+            <span className="text-xs text-teal-300/90 font-medium">
+              問題 {quizState.currentIndex + 1} / {quizState.questions.length}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-teal-400 bg-teal-500/20 px-2.5 py-1 rounded-full border border-teal-500/30">
+              ⭐ +{quizState.score} XP
+            </span>
+            <span className="text-xs text-slate-400">
+              {Math.round(progress)}%
+            </span>
           </div>
         </div>
       </div>
 
-      {/* 問題エリア - モバイル最適化 */}
-      <div className="flex-1 flex items-start justify-center p-3 pt-4 overflow-y-auto">
+      {/* 問題エリア - 山登りカード */}
+      <div className="flex-1 flex items-center justify-center p-4 relative z-10">
         <div className="max-w-sm w-full">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentQuestion.id}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-slate-800/90 backdrop-blur-md border border-teal-500/20 rounded-3xl shadow-2xl p-5"
+              initial={{ opacity: 0, y: 30, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -30, scale: 0.9 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+              className="relative"
             >
-              {/* 問題文 - モバイル用フォントサイズ */}
-              <h2 className="text-lg font-bold text-teal-100 mb-6 leading-relaxed">
-                {currentQuestion.question}
-              </h2>
+              {/* 山小屋風カード */}
+              <div className="bg-gradient-to-br from-slate-800/95 to-slate-900/95 backdrop-blur-md border-2 border-teal-500/30 rounded-3xl shadow-2xl p-6 relative overflow-hidden">
+                {/* 山小屋の屋根装飾 */}
+                <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-teal-500/10 to-transparent"></div>
+                
+                {/* 高度表示バッジ */}
+                <div className="absolute top-4 right-4 bg-slate-700/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-teal-500/40 flex items-center gap-1.5">
+                  <span className="text-base">🏔️</span>
+                  <span className="text-xs font-bold text-teal-300">
+                    {quizState.currentIndex + 1}合目
+                  </span>
+                </div>
 
-              {/* 選択肢 - モバイル最適化 */}
-              <div className="space-y-2.5">
-                {currentQuestion.options.map((option, index) => (
-                  <AnswerButton
-                    key={index}
-                    option={option}
-                    index={index}
-                    selected={selectedAnswer === index}
-                    correct={currentQuestion.correctAnswer === index}
-                    showFeedback={showFeedback}
-                    onClick={() => handleAnswer(index)}
-                  />
-                ))}
+                {/* 問題文 */}
+                <h2 className="text-xl font-bold text-teal-100 mb-8 mt-2 leading-relaxed pr-20">
+                  {currentQuestion.question}
+                </h2>
+
+                {/* 選択肢 - 登山ルート風 */}
+                <div className="space-y-3">
+                  {currentQuestion.options.map((option, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <AnswerButton
+                        option={option}
+                        index={index}
+                        selected={selectedAnswer === index}
+                        correct={currentQuestion.correctAnswer === index}
+                        showFeedback={showFeedback}
+                        onClick={() => handleAnswer(index)}
+                      />
+                    </motion.div>
+                  ))}
+                </div>
+
+                {/* フィードバック - 山小屋の看板風 */}
+                {showFeedback && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+                    className="mt-6 relative"
+                  >
+                    <div className={`p-5 rounded-2xl backdrop-blur-sm border-2 relative overflow-hidden ${
+                      isCorrect 
+                        ? 'bg-gradient-to-br from-green-500/20 to-teal-500/20 border-green-500/50' 
+                        : 'bg-gradient-to-br from-red-500/20 to-orange-500/20 border-red-500/50'
+                    }`}>
+                      {/* 装飾エフェクト */}
+                      <div className="absolute top-0 right-0 text-6xl opacity-10">
+                        {isCorrect ? '🎉' : '💪'}
+                      </div>
+                      
+                      <div className={`font-bold mb-3 text-lg flex items-center gap-2 ${
+                        isCorrect ? 'text-green-400' : 'text-red-400'
+                      }`}>
+                        <span className="text-3xl">{isCorrect ? '✅' : '❌'}</span>
+                        <span>{isCorrect ? '正解！前進できます！' : '惜しい！再挑戦しましょう'}</span>
+                      </div>
+                      <div className="text-sm text-slate-200 leading-relaxed relative z-10">
+                        {currentQuestion.explanation}
+                      </div>
+                      
+                      {/* XP獲得表示 */}
+                      {isCorrect && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ delay: 0.3, type: 'spring', stiffness: 500 }}
+                          className="mt-3 inline-flex items-center gap-2 bg-amber-500/20 border border-amber-500/40 px-3 py-1.5 rounded-full"
+                        >
+                          <span className="text-amber-400 text-base">⭐</span>
+                          <span className="text-amber-300 font-bold text-sm">+{currentQuestion.xp || 10} XP</span>
+                        </motion.div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
               </div>
 
-              {/* フィードバック - モバイル最適化 */}
-              {showFeedback && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  className="mt-5 p-4 rounded-2xl bg-slate-700/50 backdrop-blur-sm border border-teal-500/30"
-                >
-                  <div className={`font-bold mb-2 text-base flex items-center gap-2 ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
-                    <span className="text-2xl">{isCorrect ? '✅' : '❌'}</span>
-                    <span>{isCorrect ? '正解！' : '不正解'}</span>
-                  </div>
-                  <div className="text-sm text-teal-200/90 leading-relaxed">
-                    {currentQuestion.explanation}
-                  </div>
-                </motion.div>
-              )}
+              {/* 応援メッセージ */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                className="mt-4 text-center text-xs text-teal-400/60 flex items-center justify-center gap-2"
+              >
+                <span>🌟</span>
+                <span>頂上まであと {quizState.questions.length - quizState.currentIndex - 1} 問</span>
+                <span>🌟</span>
+              </motion.div>
             </motion.div>
           </AnimatePresence>
         </div>
       </div>
 
-      {/* モバイル最適化アクションボタン */}
-      <div className="bg-slate-900/95 backdrop-blur-sm border-t border-teal-500/20 p-4 safe-area-bottom">
+      {/* アクションボタン - 登山装備風 */}
+      <div className="bg-gradient-to-t from-slate-900 via-slate-900/95 to-transparent backdrop-blur-sm border-t border-teal-500/20 p-4 safe-area-bottom relative z-10">
         <div className="max-w-md mx-auto">
           {!showFeedback ? (
             <button
               onClick={handleSubmit}
               disabled={selectedAnswer === null}
-              className="w-full py-4 rounded-2xl font-bold text-white text-lg bg-gradient-to-r from-teal-500 to-cyan-500 
-                disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed
-                active:scale-95 shadow-lg transition-all"
+              className="w-full py-4 rounded-2xl font-bold text-white text-lg 
+                bg-gradient-to-r from-teal-500 via-cyan-500 to-blue-500
+                disabled:from-slate-600 disabled:to-slate-700 disabled:cursor-not-allowed
+                active:scale-95 shadow-xl transition-all relative overflow-hidden
+                border-2 border-teal-400/30 disabled:border-slate-600"
               style={{ touchAction: 'manipulation' }}
             >
-              回答する
+              <span className="relative z-10 flex items-center justify-center gap-2">
+                <span>🧗</span>
+                <span>登る</span>
+              </span>
+              {selectedAnswer !== null && (
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent"
+                  initial={{ x: '-100%' }}
+                  animate={{ x: '100%' }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                />
+              )}
             </button>
           ) : (
             <button
               onClick={handleNext}
-              className="w-full py-4 rounded-2xl font-bold text-white text-lg bg-gradient-to-r from-teal-600 to-cyan-600
-                active:scale-95 shadow-lg transition-all"
+              className="w-full py-4 rounded-2xl font-bold text-white text-lg 
+                bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600
+                active:scale-95 shadow-xl transition-all
+                border-2 border-teal-400/50"
               style={{ touchAction: 'manipulation' }}
             >
-              {quizState.currentIndex + 1 < quizState.questions.length ? '次へ ➜' : '結果を見る 🎉'}
+              <span className="flex items-center justify-center gap-2">
+                {quizState.currentIndex + 1 < quizState.questions.length ? (
+                  <>
+                    <span>次の山へ</span>
+                    <span>⛰️</span>
+                    <span>➜</span>
+                  </>
+                ) : (
+                  <>
+                    <span>🏆</span>
+                    <span>山頂到達！</span>
+                    <span>🎉</span>
+                  </>
+                )}
+              </span>
             </button>
           )}
         </div>
