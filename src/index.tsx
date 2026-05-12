@@ -1087,7 +1087,7 @@ app.get('/', (c) => {
     </script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Quicksand:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap');
         
         :root {
             --color-primary: #14B8A6;
@@ -1097,8 +1097,8 @@ app.get('/', (c) => {
             --color-surface: #1E293B;
             --color-text: #F0FDFA;
             --color-textSecondary: #5EEAD4;
-            --font-primary: 'Inter', sans-serif;
-            --font-heading: 'Inter', sans-serif;
+            --font-primary: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-heading: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
             --border-radius: 0.5rem;
         }
         

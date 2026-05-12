@@ -380,9 +380,11 @@ function HomeScreen({ userProgress, chapters, onSelectChapter, isChapterUnlocked
       <div className="bg-slate-800/80 backdrop-blur-sm shadow-lg border-b border-slate-700 sticky top-0 z-10">
         <div className="max-w-sm mx-auto px-3 py-3">
           <div className="flex items-center justify-between mb-2">
-            <div className="text-xl font-bold text-teal-400">
-              FinGo
-            </div>
+            <img 
+              src="https://www.genspark.ai/api/files/s/gj5g7PY7" 
+              alt="FinGo" 
+              className="h-8 w-auto"
+            />
             <div className="flex items-center gap-1.5">
               <div className="flex items-center gap-0.5 bg-orange-100 px-1.5 py-0.5 rounded-full border border-orange-200">
                 <span className="text-orange-500 text-sm">🔥</span>
